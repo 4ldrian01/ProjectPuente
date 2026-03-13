@@ -1,0 +1,31 @@
+# ==============================================================
+# ProjectPuente - Backend Dependencies
+# ==============================================================
+# Install: pip install -r requirements.txt
+# ==============================================================
+
+# Django & REST Framework
+django>=5.0,<7.0
+djangorestframework>=3.15,<4.0
+django-cors-headers>=4.3,<5.0
+
+# Database
+psycopg2-binary>=2.9,<3.0
+
+# Environment Variables
+python-dotenv>=1.0,<2.0
+
+# ── ML Stack: NLLB-200 + LoRA (Primary Engine) ──
+torch>=2.2.0
+transformers>=4.44.0
+sentencepiece>=0.2.0
+accelerate>=0.30.0
+peft>=0.11.0
+bitsandbytes>=0.43.0       # 8-bit quantization
+protobuf>=4.25.0
+
+# ── Gemini Fallback (optional — remove once NLLB is stable) ──
+google-genai>=1.0,<2.0
+
+# ── Speech Synthesis (optional — requires outbound internet to Microsoft TTS) ──
+edge-tts>=7.2.0,<8.0

@@ -1,0 +1,10 @@
+{
+  "name": "project-puente",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "backend": "cd backend && python manage.py runserver",
+    "frontend": "cd frontend && npm run dev",
+    "start": "run_project.bat"
+  }
+}

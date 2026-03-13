@@ -1,0 +1,3061 @@
+{
+  "metadata": {
+    "source": "chavacano-to-english-parallel-sentences.csv",
+    "processing_date": "2026-02-17T23:14:12.450192",
+    "language_pair": [
+      "cbk_Latn",
+      "eng_Latn"
+    ],
+    "total_pairs": 234,
+    "nllb_200_ready": true,
+    "data_split_suggestion": {
+      "train": 187,
+      "dev": 23,
+      "test": 23
+    }
+  },
+  "entries": [
+    {
+      "chavacano": "de edad",
+      "english": "aged, old",
+      "type": "adjective",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 622
+    },
+    {
+      "chavacano": "diferencia (1)",
+      "english": "difference, variance, distinctness, contrast, discrepancy",
+      "type": "noun",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.7,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 712
+    },
+    {
+      "chavacano": "muchas gracias",
+      "english": "thank you very much",
+      "type": "interjection",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 1571
+    },
+    {
+      "chavacano": "muchas veces",
+      "english": "often, many times, frequent",
+      "type": "adverb",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.9,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 1572
+    },
+    {
+      "chavacano": "mucho veces",
+      "english": "often, many times, frequent",
+      "type": "adverb",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.9,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 1574
+    },
+    {
+      "chavacano": "no hay niuno",
+      "english": "none of them or you",
+      "type": "pronoun",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 1618
+    },
+    {
+      "chavacano": "que tal",
+      "english": "how are you?",
+      "type": "interjection",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 1907
+    },
+    {
+      "chavacano": "sobre salta",
+      "english": "to surprise, to shock, to amaze, to astonish",
+      "type": "verb",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.5,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2078
+    },
+    {
+      "chavacano": "sobre saltao",
+      "english": "surprised, shocked, amazed, astonished",
+      "type": "adjective",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.7,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2079
+    },
+    {
+      "chavacano": "buenas dias",
+      "english": "good morning",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2309
+    },
+    {
+      "chavacano": "buenas tardes",
+      "english": "goot afternoon",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2310
+    },
+    {
+      "chavacano": "buenas noches",
+      "english": "good evening",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2311
+    },
+    {
+      "chavacano": "de nada",
+      "english": "you're welcome",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2313
+    },
+    {
+      "chavacano": "dispensa kumigo",
+      "english": "excuse me",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.9,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2315
+    },
+    {
+      "chavacano": "quetal ya tu",
+      "english": "how are you",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2316
+    },
+    {
+      "chavacano": "bueno gracias",
+      "english": "i'm good thank you",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2317
+    },
+    {
+      "chavacano": "donde esta el bano",
+      "english": "where is the nearest toilet",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2318
+    },
+    {
+      "chavacano": "donde esta el casillas",
+      "english": "where is the nearest comfort room",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2319
+    },
+    {
+      "chavacano": "con el gas station",
+      "english": "where is the nearest gas station",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2320
+    },
+    {
+      "chavacano": "onde puede compra gasolina",
+      "english": "where can i buy gas",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2321
+    },
+    {
+      "chavacano": "estasyon del pulis",
+      "english": "where is the nearest police station",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2322
+    },
+    {
+      "chavacano": "donde esta el hospital",
+      "english": "where is the nearest hospital",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2323
+    },
+    {
+      "chavacano": "donde esta la farmacia",
+      "english": "where is the nearest pharmacy",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2324
+    },
+    {
+      "chavacano": "donde esta el hotel",
+      "english": "where is the nearest hotel",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2325
+    },
+    {
+      "chavacano": "paquilaya yo puede llega na la hotel",
+      "english": "how do i get to the hotel",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2326
+    },
+    {
+      "chavacano": "paquilaya yo puede llega na la hospital",
+      "english": "how do i get to the hospital",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2327
+    },
+    {
+      "chavacano": "paquilaya yo puede llega na la gas station",
+      "english": "how do i get to the gas station",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2328
+    },
+    {
+      "chavacano": "paquilaya yo puede llega na la farmacia",
+      "english": "how do i get to the pharmacy",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2329
+    },
+    {
+      "chavacano": "paquilaya yo puede llega na la pulis",
+      "english": "how do i get to the police station",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2330
+    },
+    {
+      "chavacano": "cuanto el pasaje para mala hotel",
+      "english": "how much is the fare to the hotel",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2331
+    },
+    {
+      "chavacano": "cuanto el pasaje para ir la hospital",
+      "english": "how much is the fare to the",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2332
+    },
+    {
+      "chavacano": "cuanto el pasaje para de la gas station",
+      "english": "how much is the fare to the",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.9,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2333
+    },
+    {
+      "chavacano": "cuanto el pasaje parana la farmacia",
+      "english": "how much is the fare to the",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2334
+    },
+    {
+      "chavacano": "cuanto el pasaje para na la pulis",
+      "english": "how much is the fare to the",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2335
+    },
+    {
+      "chavacano": "puede yo saca mi sinsilyo",
+      "english": "may i have my change",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2336
+    },
+    {
+      "chavacano": "para anay pabor",
+      "english": "stop please",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2337
+    },
+    {
+      "chavacano": "quiere yo man reserva un cuarto",
+      "english": "i would like to book a room",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2338
+    },
+    {
+      "chavacano": "quiere yo man saca un cuarto",
+      "english": "i would like to book a room",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2339
+    },
+    {
+      "chavacano": "tiene pa oste maga cuarto",
+      "english": "do you have rooms available",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2340
+    },
+    {
+      "chavacano": "cosa hora tu man check-in",
+      "english": "what time is check-in",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2341
+    },
+    {
+      "chavacano": "cosa hora tu man check-out",
+      "english": "what time is check-out",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2342
+    },
+    {
+      "chavacano": "tiene cuidao",
+      "english": "travel safely",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2343
+    },
+    {
+      "chavacano": "cuanto este",
+      "english": "how much is this",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2344
+    },
+    {
+      "chavacano": "puede yo compra ansina cantidad de 10",
+      "english": "may i buy 10 of this",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2345
+    },
+    {
+      "chavacano": "tiene oste mas grande",
+      "english": "do you have this in a bigger size",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2346
+    },
+    {
+      "chavacano": "tiene oste mas jutay",
+      "english": "do you have this in a smaller size",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2347
+    },
+    {
+      "chavacano": "quiere era yo man order",
+      "english": "i would like to order please",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2348
+    },
+    {
+      "chavacano": "puede yo man order",
+      "english": "i would like to order please",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2349
+    },
+    {
+      "chavacano": "puede oste kita con el [certain ingredient] na diamon comida favor",
+      "english": "may we remove [certain ingredient] from the dish please",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2350
+    },
+    {
+      "chavacano": "dulce el comida",
+      "english": "the dish is sweet",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2351
+    },
+    {
+      "chavacano": "agriu el comida",
+      "english": "the dish is sour",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2352
+    },
+    {
+      "chavacano": "salaw el comida",
+      "english": "the dish is salty",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2353
+    },
+    {
+      "chavacano": "puede yo pidi ayuda",
+      "english": "may i ask for help",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2354
+    },
+    {
+      "chavacano": "cosa ya hora",
+      "english": "what time is it",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2355
+    },
+    {
+      "chavacano": "cosa hora ya",
+      "english": "what time is it",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2356
+    },
+    {
+      "chavacano": "perdido yo",
+      "english": "i'm lost",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2357
+    },
+    {
+      "chavacano": "necita yo direccion",
+      "english": "i need directions",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2358
+    },
+    {
+      "chavacano": "malo yo ta sinti",
+      "english": "i am sick",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.9,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2359
+    },
+    {
+      "chavacano": "irido yo",
+      "english": "i am injured",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2360
+    },
+    {
+      "chavacano": "ya perde di mio phone",
+      "english": "i lost my phone",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2361
+    },
+    {
+      "chavacano": "ya perdi di mio wallet",
+      "english": "i lost my wallet",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2362
+    },
+    {
+      "chavacano": "ya perdi di mio bag",
+      "english": "i lost my bag",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2363
+    },
+    {
+      "chavacano": "que tal? hola!",
+      "english": "hello (general greeting)",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2366
+    },
+    {
+      "chavacano": "como esta usted",
+      "english": "how are you? (formal)",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2367
+    },
+    {
+      "chavacano": "que tal man usted",
+      "english": "how are you? (informal)",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2368
+    },
+    {
+      "chavacano": "que tal man evos",
+      "english": "how are you? (informal)",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2369
+    },
+    {
+      "chavacano": "muy bien, gracias. y tu?",
+      "english": "reply to 'how are you?' (informal)",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2370
+    },
+    {
+      "chavacano": "muy bien, gracias. y usted?",
+      "english": "reply to 'how are you?' (formal)",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2371
+    },
+    {
+      "chavacano": "bueno man, gracias. y tu?",
+      "english": "reply to 'how are you?' (informal)",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2372
+    },
+    {
+      "chavacano": "bueno man, gracias. y usted?",
+      "english": "reply to 'how are you?'",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2373
+    },
+    {
+      "chavacano": "hace mucho tiempo no hay mira yo contigo",
+      "english": "long time no see",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.8,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2374
+    },
+    {
+      "chavacano": "por cuantos tiempo no hay mira",
+      "english": "long time no see",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2375
+    },
+    {
+      "chavacano": "cosa di uste nombre?",
+      "english": "what's your name? (formal)",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2376
+    },
+    {
+      "chavacano": "cosa su gracia?",
+      "english": "what's your name? (very formal)",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.9,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2377
+    },
+    {
+      "chavacano": "cosa tu nombre?",
+      "english": "what's your name? (informal)",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2378
+    },
+    {
+      "chavacano": "cosa de vos nombre?",
+      "english": "what's your name? (informal)",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2379
+    },
+    {
+      "chavacano": "vos nombre cosa?",
+      "english": "what's your name?",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2380
+    },
+    {
+      "chavacano": "mi nombre es",
+      "english": "my name is",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2381
+    },
+    {
+      "chavacano": "mi nombre",
+      "english": "my name is",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2382
+    },
+    {
+      "chavacano": "de donde lugar tu?",
+      "english": "where are you from? (informal)",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2383
+    },
+    {
+      "chavacano": "de donde lugar usted?",
+      "english": "where are you from? (formal)",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2384
+    },
+    {
+      "chavacano": "de donde lugar vos?",
+      "english": "where are you from? (coarse)",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2385
+    },
+    {
+      "chavacano": "mucho gusto de conocer contigo",
+      "english": "pleased to meet you",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.9,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2387
+    },
+    {
+      "chavacano": "alegre yo conoce contigo",
+      "english": "pleased to meet you",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2388
+    },
+    {
+      "chavacano": "anda ya yo",
+      "english": "goodbye (said by the one leaving)",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.7,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2390
+    },
+    {
+      "chavacano": "hay vene ya yo",
+      "english": "goodbye (i'll return already)",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.9,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2392
+    },
+    {
+      "chavacano": "buena suerte",
+      "english": "good luck!",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2393
+    },
+    {
+      "chavacano": "que tiene un buen dia",
+      "english": "have a nice day",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2395
+    },
+    {
+      "chavacano": "buen apetito",
+      "english": "have a nice meal",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2396
+    },
+    {
+      "chavacano": "buen aprovecho",
+      "english": "have a nice meal",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2397
+    },
+    {
+      "chavacano": "come ya",
+      "english": "have a nice meal",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.9,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2398
+    },
+    {
+      "chavacano": "que tiene tu un buen viaje",
+      "english": "have a good journey",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2399
+    },
+    {
+      "chavacano": "que tiene vos un buen viaje",
+      "english": "have a good journey",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2400
+    },
+    {
+      "chavacano": "que tiene usted un buen viaje",
+      "english": "have a good journey",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.9,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2401
+    },
+    {
+      "chavacano": "no sabe yo",
+      "english": "i don't know",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2402
+    },
+    {
+      "chavacano": "ta entende, tu?",
+      "english": "do you understand?",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2403
+    },
+    {
+      "chavacano": "ta entende yo",
+      "english": "i understand",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2404
+    },
+    {
+      "chavacano": "si, ta entende yo",
+      "english": "i understand",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2405
+    },
+    {
+      "chavacano": "jendeh yo ta entende",
+      "english": "i don't understand",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2406
+    },
+    {
+      "chavacano": "por favor habla mas despacio",
+      "english": "please speak more slowly",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2407
+    },
+    {
+      "chavacano": "favor escribi ese",
+      "english": "please write it down",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2408
+    },
+    {
+      "chavacano": "favor, habla otra ves",
+      "english": "please say that again",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2409
+    },
+    {
+      "chavacano": "sabe tu combersa ingles?",
+      "english": "do you speak english?",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2410
+    },
+    {
+      "chavacano": "habla usted chabacano?",
+      "english": "do you speak chabacano? (formal)",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2411
+    },
+    {
+      "chavacano": "habla ba tu chabacano?",
+      "english": "do you speak chabacano? (informal)",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2412
+    },
+    {
+      "chavacano": "habla evos chabacano?",
+      "english": "do you speak chabacano? (informal)",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2413
+    },
+    {
+      "chavacano": "si, un poco",
+      "english": "yes, a little (reply to 'do you speak ...?')",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.5,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2414
+    },
+    {
+      "chavacano": "como se dice ... en chabacano?",
+      "english": "how do you say ... in chabacano?",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2415
+    },
+    {
+      "chavacano": "como se habla ... en chabacano?",
+      "english": "how do you say ... in chabacano?",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2416
+    },
+    {
+      "chavacano": "que modo se dice ... en chabacano?",
+      "english": "how do you say ... in chabacano?",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2417
+    },
+    {
+      "chavacano": "sabe tu combersa otro lenguahe, hinde lang chavacano?",
+      "english": "do you speak a language other than chabacano?",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2418
+    },
+    {
+      "chavacano": "con permiso",
+      "english": "excuse me",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2420
+    },
+    {
+      "chavacano": "tabih po",
+      "english": "excuse me",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2421
+    },
+    {
+      "chavacano": "no hay de que",
+      "english": "reply to thank you",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2424
+    },
+    {
+      "chavacano": "donde esta el inodoro?",
+      "english": "where's the toilet / bathroom?",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2425
+    },
+    {
+      "chavacano": "este caballero hay paga para todo",
+      "english": "this gentleman will pay for everything (formal)",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2426
+    },
+    {
+      "chavacano": "este hombre hay paga para todo",
+      "english": "this gentleman will pay for everything (informal)",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2427
+    },
+    {
+      "chavacano": "este dama hay paga para todo",
+      "english": "this lady will pay for everything (formal)",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2428
+    },
+    {
+      "chavacano": "este mujer hay paga para todo",
+      "english": "this lady will pay for everything (informal)",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2429
+    },
+    {
+      "chavacano": "quiere usted baila conmigo?",
+      "english": "would you like to dance with me? (formal)",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2430
+    },
+    {
+      "chavacano": "quiere ba tu baila conmigo?",
+      "english": "would you like to dance with me? (informal)",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2431
+    },
+    {
+      "chavacano": "quiere evos baila conmigo?",
+      "english": "would you like to dance with me? (informal)",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2432
+    },
+    {
+      "chavacano": "tan triste yo kontigo",
+      "english": "i miss you",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.7,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2433
+    },
+    {
+      "chavacano": "ama yo contigo",
+      "english": "i love you",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2434
+    },
+    {
+      "chavacano": "ta ama yo contigo",
+      "english": "i love you (formal)",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2435
+    },
+    {
+      "chavacano": "contigo ta ama",
+      "english": "i love you (informal)",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2436
+    },
+    {
+      "chavacano": "quiere yo",
+      "english": "i love you",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2437
+    },
+    {
+      "chavacano": "quiere yo contigo",
+      "english": "i love you",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.9,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2438
+    },
+    {
+      "chavacano": "recupera usted pronto!",
+      "english": "get well soon",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.9,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2439
+    },
+    {
+      "chavacano": "recupera tu pronto!",
+      "english": "get well soon",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.9,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2440
+    },
+    {
+      "chavacano": "recupera vos pronto!",
+      "english": "get well soon",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.9,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2441
+    },
+    {
+      "chavacano": "deja conmigo!",
+      "english": "leave me alone!",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2442
+    },
+    {
+      "chavacano": "llama con el policia!",
+      "english": "call the police!",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2450
+    },
+    {
+      "chavacano": "feliz pascuas",
+      "english": "christmas greetings",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2451
+    },
+    {
+      "chavacano": "prospero año nuevo",
+      "english": "new year greetings",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2452
+    },
+    {
+      "chavacano": "felices pascua",
+      "english": "easter greetings",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2453
+    },
+    {
+      "chavacano": "feliz cumpleaños",
+      "english": "birthday greetings",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2454
+    },
+    {
+      "chavacano": "jendeh gayot bastante un lenguaje lang",
+      "english": "one language is never enough",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2455
+    },
+    {
+      "chavacano": "jendeh gayot bastante un idioma lang",
+      "english": "one language is never enough",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2456
+    },
+    {
+      "chavacano": "mio banca lleno de anguilas",
+      "english": "my hovercraft is full of eels",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2457
+    },
+    {
+      "chavacano": "mio hovercraft lleno de anguilas",
+      "english": "my hovercraft is full of eels",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2458
+    },
+    {
+      "chavacano": "arroz arroz",
+      "english": "very serious",
+      "type": "idiomatic expression",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2459
+    },
+    {
+      "chavacano": "juego juego lang kita, no hace arroz arroz el juego",
+      "english": "it’s just a game. don’t take it seriously",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2460
+    },
+    {
+      "chavacano": "ya arya conele de suyo nana cuando ya sabe cae ta man novio-novio",
+      "english": "her mother drove her away when the mother knew that she’s having a boyfriend",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2462
+    },
+    {
+      "chavacano": "bien balimbing gayot diamond barrio capitan",
+      "english": "our barangay captain is a turncoat person",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2464
+    },
+    {
+      "chavacano": "man sungkit gayod yo el maga estrella para contigo",
+      "english": "i will reach for the stars for you",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.9,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2466
+    },
+    {
+      "chavacano": "travesa yo monte y aplaya para mira lang contigo",
+      "english": "i will cross the mountain and sea jusft to see you",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2467
+    },
+    {
+      "chavacano": "bulao man gayod este si juan. pensa'y pensa con el novia",
+      "english": "juan is out of his mind. he always thinks of his girlfriend",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2470
+    },
+    {
+      "chavacano": "bungul man gayod vo! saca daw quel oh!",
+      "english": "you’re so deaf! get that one!",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2472
+    },
+    {
+      "chavacano": "busca cen",
+      "english": "to find ways to earn money, to earn for a living, to work",
+      "type": "idiomatic expression",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.5,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2473
+    },
+    {
+      "chavacano": "pang, dale comigo cen",
+      "english": "dad, give me money",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2474
+    },
+    {
+      "chavacano": "luego ya, noy. busca anay yo cen",
+      "english": "later, son. i will still look for it",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2475
+    },
+    {
+      "chavacano": "busca la vida/la vida",
+      "english": "to earn for a living, to work",
+      "type": "idiomatic expression",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2476
+    },
+    {
+      "chavacano": "ta busca/ta man la vida pa mi tata",
+      "english": "my father is still working or earning for a living",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2477
+    },
+    {
+      "chavacano": "enante pa yo ya habla cae baña. cabrito gaja este ele oh",
+      "english": "i have already told you to take a bath. maybe you are a goat",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2479
+    },
+    {
+      "chavacano": "caliente boca",
+      "english": "used when something bad happened because someone said it",
+      "type": "idiomatic expression",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.5,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2480
+    },
+    {
+      "chavacano": "bien caliente boca man gayod vos! ya perde ya lng yo na puestahan",
+      "english": "you really have a hot mouth! (look) i lost in betting",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2481
+    },
+    {
+      "chavacano": "yan cavana ya sila dos",
+      "english": "they’re done having sex",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2483
+    },
+    {
+      "chavacano": "libre tamen alli. cencillo lang se contigo",
+      "english": "you also treat us. it’s just nothing to you",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2485
+    },
+    {
+      "chavacano": "ya queda cencillo el motor por causa na accidente",
+      "english": "the motorcycle broke into pieces because of the accident",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2486
+    },
+    {
+      "chavacano": "claro ya el basilan",
+      "english": "expression of certainty or of favorable conclusion especially when someone or a group is likely to win a game",
+      "type": "idiomatic expression",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.5,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2487
+    },
+    {
+      "chavacano": "gana ya kita. claro ya el basilan",
+      "english": "i can already see that we will win",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2488
+    },
+    {
+      "chavacano": "conviene con vos! ama pa con ele",
+      "english": "you deserve it! go and love him/her again",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2490
+    },
+    {
+      "chavacano": "si leo cuero",
+      "english": "leo is uncircumcised",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2492
+    },
+    {
+      "chavacano": "mio nana cuchara malabao",
+      "english": "my mother is gossiper",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2494
+    },
+    {
+      "chavacano": "quien aquel ele? bien ma-cupal man aquel",
+      "english": "who is he/she? he/she is very arrogant",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2496
+    },
+    {
+      "chavacano": "de alla alla",
+      "english": "one who lives in a very far place",
+      "type": "idiomatic expression",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.7,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2497
+    },
+    {
+      "chavacano": "bien alboroto man gayod kamo. de alla alla siguro kamo",
+      "english": "you are very noisy. you probably live in a very far place",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2498
+    },
+    {
+      "chavacano": "mira kita tom and jerry",
+      "english": "let’s watch tom and jerry",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2500
+    },
+    {
+      "chavacano": "de loco se",
+      "english": "that’s foolish",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2501
+    },
+    {
+      "chavacano": "ta duele mi orejas cada vez le conversa",
+      "english": "it’s irritable every time he/she speaks",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2503
+    },
+    {
+      "chavacano": "ya habla ya no anda alla. tampa duro man gayod. conviene con vos",
+      "english": "i told you not to go there. you think you’re brave. good for you",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2505
+    },
+    {
+      "chavacano": "evos ya",
+      "english": "used to tell that someone acts like somebody",
+      "type": "idiomatic expression",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.5,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2506
+    },
+    {
+      "chavacano": "evos ya! cosa bo ta pensa comigo, no sabe?",
+      "english": "you already! what do you think of me, i don’t know it?",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2507
+    },
+    {
+      "chavacano": "grande tai",
+      "english": "a rich or influential person",
+      "type": "idiomatic expression",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.9,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2508
+    },
+    {
+      "chavacano": "grande tai daw aquel quien ya muri alla oh",
+      "english": "accordingly, that man who passed away is influential/rich",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2509
+    },
+    {
+      "chavacano": "grueso cara",
+      "english": "shameless, without shame",
+      "type": "idiomatic expression",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.9,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2510
+    },
+    {
+      "chavacano": "hinde gane aquel ele invitado pero talla na cumpleaño de juan. grueso man aquel el cara",
+      "english": "he/she is not invited at the birthday party of juan. his/her face is thick",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2511
+    },
+    {
+      "chavacano": "hirvi sangre",
+      "english": "angry; used to tell that someone/something causes someone to be angry",
+      "type": "idiomatic expression",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.5,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2512
+    },
+    {
+      "chavacano": "maca hirvi sangre man gayod mira con aquellos de coche ta buta lang basura na camino",
+      "english": "it makes me angry when i see people in the car throwing waste along the road.”",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2513
+    },
+    {
+      "chavacano": "diutay se",
+      "english": "very big",
+      "type": "idiomatic expression",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2514
+    },
+    {
+      "chavacano": "jutay se pescao",
+      "english": "that fish is very big",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2515
+    },
+    {
+      "chavacano": "taqui lang gane vos na computeran! bien labuyuin gayod vos noy",
+      "english": "you are just here at the internet cafe! you are so class-cutter",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2517
+    },
+    {
+      "chavacano": "larga palabra",
+      "english": "a promise, a curse, say something bad",
+      "type": "idiomatic expression",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.7,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2518
+    },
+    {
+      "chavacano": "ta llora si juana",
+      "english": "juana is crying",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2519
+    },
+    {
+      "chavacano": "por que daw?",
+      "english": "why is that so?",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2520
+    },
+    {
+      "chavacano": "ya larga con ele palabra disuyo tata",
+      "english": "her father said something bad to her",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2521
+    },
+    {
+      "chavacano": "lava mano",
+      "english": "does not want to accept responsibility or does not want to admit the fault",
+      "type": "idiomatic expression",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.5,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2522
+    },
+    {
+      "chavacano": "habla ya el verdad. no mas ya lava mano",
+      "english": "just tell the truth. stop washing your hands",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2523
+    },
+    {
+      "chavacano": "ma eche",
+      "english": "not straightforward",
+      "type": "idiomatic expression",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.9,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2524
+    },
+    {
+      "chavacano": "hace claro. bien ma eche gayod tu",
+      "english": "make it clear. you are not straightforward",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2525
+    },
+    {
+      "chavacano": "marca palabra",
+      "english": "to promise",
+      "type": "idiomatic expression",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2526
+    },
+    {
+      "chavacano": "nunca gayod yo pidi ayuda con vos! marca vos mi palabra",
+      "english": "i will never help you. mark my word",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.9,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2527
+    },
+    {
+      "chavacano": "donde tu anda?",
+      "english": "where are you going?",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2529
+    },
+    {
+      "chavacano": "alla na merloquet",
+      "english": "somewhere very far",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2530
+    },
+    {
+      "chavacano": "si nene dol moneca de pogon si ta llora",
+      "english": "nene looks ugly when she cries",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2532
+    },
+    {
+      "chavacano": "muerto de risas",
+      "english": "used to express extreme happiness; extreme laugh",
+      "type": "idiomatic expression",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.7,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2533
+    },
+    {
+      "chavacano": "maca muri gayod na risas si vice ganda",
+      "english": "vice ganda will really cause us to laugh extremely",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2534
+    },
+    {
+      "chavacano": "juga kamo kanila? na lata lang kamo",
+      "english": "are you going to play with them? you will not win",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2536
+    },
+    {
+      "chavacano": "nineteen ninety calawang",
+      "english": "very old",
+      "type": "idiomatic expression",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.7,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2537
+    },
+    {
+      "chavacano": "nineteen ninety calawang pa man gayod se cancion",
+      "english": "that song is very old",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.7,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2538
+    },
+    {
+      "chavacano": "no hay chance",
+      "english": "used to tell that someone/something is not beneficial",
+      "type": "idiomatic expression",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.5,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2539
+    },
+    {
+      "chavacano": "no hay chance sigi con robin",
+      "english": "there is nothing we can get from being with robin",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2540
+    },
+    {
+      "chavacano": "piti pies/pitik pies",
+      "english": "to look for a way to cause conflict/trouble",
+      "type": "idiomatic expression",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.7,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2541
+    },
+    {
+      "chavacano": "si arnel ta busca gayod piti pies",
+      "english": "arnel is really looking for trouble",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2542
+    },
+    {
+      "chavacano": "poco se/ese",
+      "english": "enormous; large in number",
+      "type": "idiomatic expression",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.9,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2543
+    },
+    {
+      "chavacano": "poco se gente na paseo del mar",
+      "english": "there are so many people at the paseo del mar",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2544
+    },
+    {
+      "chavacano": "por pecho",
+      "english": "to take seriously",
+      "type": "idiomatic expression",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2545
+    },
+    {
+      "chavacano": "no hace por pecho el cosa yo ya habla. broma lang aquel",
+      "english": "do not take seriously what i said. it’s just a joke",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2546
+    },
+    {
+      "chavacano": "queda blanco el uwak",
+      "english": "used to express impossibility",
+      "type": "idiomatic expression",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2547
+    },
+    {
+      "chavacano": "man libre yo contigo si queda blanco el uwak",
+      "english": "i will treat you if the crow will turn into black",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2548
+    },
+    {
+      "chavacano": "libre daw conmigo",
+      "english": "(you) treat me",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2550
+    },
+    {
+      "chavacano": "bien seco gayod yo ahora",
+      "english": "i have really nothing now",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2551
+    },
+    {
+      "chavacano": "siembra caña",
+      "english": "to hold a grudge or resentment",
+      "type": "idiomatic expression",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.7,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2552
+    },
+    {
+      "chavacano": "no mas man broma-broma con lizel cae ta siembra se caña",
+      "english": "don’t you ever make joke with lizel because she really holds a grudge",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2553
+    },
+    {
+      "chavacano": "suda frio",
+      "english": "to be nervous, tensed, worried, anxious",
+      "type": "idiomatic expression",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.5,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2554
+    },
+    {
+      "chavacano": "ya suda ya lang yo frio enantes na recitacion",
+      "english": "i was nervous earlier during the recitation",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2555
+    },
+    {
+      "chavacano": "dinigrido man se dituyo un ojos. quien contigo ya supla?",
+      "english": "your eye is black. who hit you?",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.9,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2557
+    },
+    {
+      "chavacano": "ta mira",
+      "english": "i think",
+      "type": "idiomatic expression",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2558
+    },
+    {
+      "chavacano": "ta mira yo man separtahan se sila",
+      "english": "i think they will be separated",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2559
+    },
+    {
+      "chavacano": "talli pa el luz",
+      "english": "used when someone insists that he/she is telling the truth",
+      "type": "idiomatic expression",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.7,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2560
+    },
+    {
+      "chavacano": "nohay daw clase luego habla si sir",
+      "english": "there will bo no class this afternoon according to our teacher",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2561
+    },
+    {
+      "chavacano": "todo bagon",
+      "english": "that’s a lie",
+      "type": "phrase",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2562
+    },
+    {
+      "chavacano": "deberasan ba. talli pa el luz",
+      "english": "it’s true. i’m telling the truth",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2563
+    },
+    {
+      "chavacano": "tampa si quien",
+      "english": "used with someone who feels or thinks that he/she is important or is somebody",
+      "type": "idiomatic expression",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.5,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2564
+    },
+    {
+      "chavacano": "no queda tampa si quien si juga basketball",
+      "english": "don’t act as if you’re somebody when you play basketball",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2565
+    },
+    {
+      "chavacano": "por que daw ya accidenta si junjun?",
+      "english": "why did junjun involve in an accident?",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2567
+    },
+    {
+      "chavacano": "tomao daw aquel ele",
+      "english": "because he was drunk accordingly",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2568
+    },
+    {
+      "chavacano": "bien guapo gayod yo",
+      "english": "i am so handsome",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2570
+    },
+    {
+      "chavacano": "tu cuidao",
+      "english": "it’s up to you",
+      "type": "idiomatic expression",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2572
+    },
+    {
+      "chavacano": "enamora ya gaha yo con ele? ta mira uste?",
+      "english": "am i going to court her already? what do you think?",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2573
+    },
+    {
+      "chavacano": "utuk bulinao",
+      "english": "narrow mind or one who thinks narrowly",
+      "type": "idiomatic expression",
+      "category": "phrase",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 0.5,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2574
+    },
+    {
+      "chavacano": "bien utuk bulinao man gayod bo!",
+      "english": "you really have a narrow mind",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2575
+    },
+    {
+      "chavacano": "noy, baña ya cae yagit ya gayod tu",
+      "english": "kid, take a shower already because you look so untidy",
+      "type": "phrase",
+      "category": "sentence",
+      "source": "chavacano-english-parallel-corpus",
+      "alignment_score": 1.0,
+      "languages": [
+        "cbk_Latn",
+        "eng_Latn"
+      ],
+      "row_id": 2577
+    }
+  ]
+}

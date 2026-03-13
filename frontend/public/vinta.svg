@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="sailGrad" x1="16" y1="4" x2="16" y2="22" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FACC15"/>
+      <stop offset="50%" stop-color="#D946EF"/>
+      <stop offset="100%" stop-color="#D946EF"/>
+    </linearGradient>
+  </defs>
+  <!-- Sail -->
+  <path d="M16 4L24 22H8L16 4Z" fill="url(#sailGrad)"/>
+  <!-- Mast -->
+  <rect x="15" y="3" width="2" height="23" fill="#F5F5F5" rx="1"/>
+  <!-- Hull -->
+  <path d="M6 24C6 24 9 26 16 26C23 26 26 24 26 24L24 22H8L6 24Z" fill="#D946EF"/>
+  <!-- Base -->
+  <ellipse cx="16" cy="26" rx="10" ry="2" fill="#FACC15" opacity="0.9"/>
+  <!-- Flag -->
+  <path d="M17 3L21 5L17 7V3Z" fill="#FACC15"/>
+</svg>

@@ -1,0 +1,26 @@
+{
+  "name": "PUENTE — Cultural Translation",
+  "short_name": "PUENTE",
+  "description": "Offline-first neural machine translation for Philippine languages with Wiki-Voz cultural integration",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#121212",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/vinta.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/vinta.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["education", "utilities"],
+  "lang": "en"
+}

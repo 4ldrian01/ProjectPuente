@@ -1,0 +1,69 @@
+# ══════════════════════════════════════════════════════════════
+#  ProjectPuente — .gitignore
+# ══════════════════════════════════════════════════════════════
+
+# ── Python ────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+.eggs/
+dist/
+build/
+
+# ── Virtual Environments ─────────────────────────────────────
+venv/
+.venv/
+env/
+.env
+!.env.example
+
+# ── IDE & Editors ─────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── OS Artifacts ──────────────────────────────────────────────
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# ── Django ────────────────────────────────────────────────────
+db.sqlite3
+*.log
+staticfiles/
+media/
+
+# ── ML Models (large binary weights) ─────────────────────────
+ml_models/nllb-200-distilled-600M/
+ml_models/lora-cbk-formal/
+ml_models/lora-cbk-street/
+ml_models/*.bin
+ml_models/*.safetensors
+ml_models/*.pt
+ml_models/*.onnx
+ml_models/*.h5
+!ml_models/.gitkeep
+!ml_models/*.py
+!ml_models/*.md
+
+# ── PyTorch / HuggingFace Cache ──────────────────────────────
+.cache/
+*.ckpt
+
+# ── Jupyter ───────────────────────────────────────────────────
+.ipynb_checkpoints/
+
+# ── Node / Frontend ──────────────────────────────────────────
+node_modules/
+frontend/dist/
+frontend/dist-ssr/
+*.local
+
+# ── Misc ──────────────────────────────────────────────────────
+*.bak
+*.tmp
+*.orig

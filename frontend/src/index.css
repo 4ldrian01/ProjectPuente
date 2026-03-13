@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@source "../index.html";
+@source "./**/*.{js,jsx,ts,tsx}";
+
+@theme {
+  --color-bg-dark: #121212;
+  --color-bg-card: #1E1E1E;
+  --color-bg-elevated: #2A2A2A;
+  --color-accent-magenta: #D946EF;
+  --color-accent-gold: #FACC15;
+  --color-text-primary: #F5F5F5;
+  --color-text-secondary: #A3A3A3;
+  --color-border-subtle: #333333;
+}

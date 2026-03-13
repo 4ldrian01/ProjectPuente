@@ -1,0 +1,46 @@
+{
+  "generation_date": "2026-02-17T23:14:21.924326",
+  "total_pipelines": 4,
+  "successful_pipelines": 3,
+  "total_entries": 2835,
+  "pipelines": [
+    {
+      "name": "PDF Dictionary Extraction",
+      "status": "FAILED",
+      "error": "Traceback (most recent call last):\n  File \"C:\\Users\\User's\\ALL FILES - MACHINE LEARNING\\ProjectPuente\\notebooks\\scripts\\extract_chavacano_pdf_REFINED.py\", line 9, in <module>\n    import pdfplumber\nModuleNotFoundError: No module named 'pdfplumber'\n"
+    },
+    {
+      "name": "CSV Parallel Sentences",
+      "status": "SUCCESS",
+      "output_file": "chavacano_parallel_sentences_nllb.json",
+      "stats": {
+        "total_entries": 234,
+        "source": "chavacano-to-english-parallel-sentences.csv",
+        "language": "cbk_Latn",
+        "nllb_ready": true
+      }
+    },
+    {
+      "name": "Tatoeba Archive Processing",
+      "status": "SUCCESS",
+      "output_file": "tatoeba_parallel_nllb.json",
+      "stats": {
+        "total_entries": 2504,
+        "source": "Tatoeba Project (cbk-en)",
+        "language": "cbk_Latn",
+        "nllb_ready": true
+      }
+    },
+    {
+      "name": "CreoleVal Remote Harvest",
+      "status": "SUCCESS",
+      "output_file": "creole_rc_chavacano_nllb.json",
+      "stats": {
+        "total_entries": 97,
+        "source": "CreoleVal (hclent/CreoleVal)",
+        "language": "cbk_Latn",
+        "nllb_ready": true
+      }
+    }
+  ]
+}

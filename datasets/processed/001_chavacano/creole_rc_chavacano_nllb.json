@@ -1,0 +1,887 @@
+{
+  "metadata": {
+    "source": "CreoleVal (hclent/CreoleVal)",
+    "task": "relation_classification",
+    "harvest_date": "2026-02-17T23:14:21.634670",
+    "language": "cbk_Latn",
+    "total_sentences": 97,
+    "nllb_200_ready": true,
+    "license": "CC BY-SA 4.0",
+    "url": "https://raw.githubusercontent.com/hclent/CreoleVal/main/nlu/relation_classification/data/relation_extraction/cbk-zam.csv"
+  },
+  "entries": [
+    {
+      "text": "Un ciudad na Chile el Lota que tiene populacion de 49,089 residente (2002)",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 74,
+      "word_count": 13,
+      "row_id": 0
+    },
+    {
+      "text": "Un pulico de Georgia si Mariam Kvrivishvili",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 43,
+      "word_count": 7,
+      "row_id": 1
+    },
+    {
+      "text": "Belgrade el centro ciuded na Pais del Serbia",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 44,
+      "word_count": 8,
+      "row_id": 2
+    },
+    {
+      "text": "Un cantora si Mila Nitich de Ukraine",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 36,
+      "word_count": 7,
+      "row_id": 3
+    },
+    {
+      "text": "Un lugar que tiene mga casarias el Soponya na probincia de Fejér na Hangaria",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 76,
+      "word_count": 14,
+      "row_id": 4
+    },
+    {
+      "text": "Un cantor si Juanes de pop music na Colombia",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 44,
+      "word_count": 9,
+      "row_id": 5
+    },
+    {
+      "text": "Un pulitico de Georgia si Davit Bakradze",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 40,
+      "word_count": 7,
+      "row_id": 6
+    },
+    {
+      "text": "Un ciudad na Italia el Baselga de Piné na costa norte del Trento",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 64,
+      "word_count": 13,
+      "row_id": 7
+    },
+    {
+      "text": "Un pulitico de Georgia si Shalva Shavgulidze",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 44,
+      "word_count": 7,
+      "row_id": 8
+    },
+    {
+      "text": "Un lugar que tiene mga casarias el Szár na probincia de Fejér na Hangaria",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 73,
+      "word_count": 14,
+      "row_id": 9
+    },
+    {
+      "text": "Un ciudad na Chile el Coronel que tiene populacion de 95.527 residente (2002)",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 77,
+      "word_count": 13,
+      "row_id": 10
+    },
+    {
+      "text": "Un pulitico de Georgia si Akaki Bobokhidze",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 42,
+      "word_count": 7,
+      "row_id": 11
+    },
+    {
+      "text": "Un Pilipino-Americano singer de R&B y soul [mga clase de cancion] si Allan Pineda Lindo, o mas conocido como si apl.de.ap (quien ya nase del Nobyembre 28, 1974)",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 160,
+      "word_count": 28,
+      "row_id": 12
+    },
+    {
+      "text": "Un pulitico de antes na Pilipinas si Erineo Maliksi (1938-2021)",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 63,
+      "word_count": 10,
+      "row_id": 13
+    },
+    {
+      "text": "Un cantor de pop [clase de cancion] si Nina Kralic (quien ya nase del 1992)",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 75,
+      "word_count": 15,
+      "row_id": 14
+    },
+    {
+      "text": "Un lugar que tiene mga casarias el Pákozd na probincia de Fejér na Hangaria",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 75,
+      "word_count": 14,
+      "row_id": 15
+    },
+    {
+      "text": "Un pulitico de Georgia si Ana Buchukuri",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 39,
+      "word_count": 7,
+      "row_id": 16
+    },
+    {
+      "text": "Un pulitico de Georgia si Vera Kobalia",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 38,
+      "word_count": 7,
+      "row_id": 17
+    },
+    {
+      "text": "Un pulitico de Georgia si Isko Daseni",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 37,
+      "word_count": 7,
+      "row_id": 18
+    },
+    {
+      "text": "Caracas el centro ciudad del Pais/Nacion de Venezuela",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 53,
+      "word_count": 8,
+      "row_id": 19
+    },
+    {
+      "text": "Un singer si Ariana Grande",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 26,
+      "word_count": 5,
+      "row_id": 20
+    },
+    {
+      "text": "Un cantora si Nini Shermadini",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 29,
+      "word_count": 5,
+      "row_id": 21
+    },
+    {
+      "text": "Un lugar el Lebanon na Asia",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 27,
+      "word_count": 6,
+      "row_id": 22
+    },
+    {
+      "text": "Un pulitico de Georgia si Giorgi Godabrelidze",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 45,
+      "word_count": 7,
+      "row_id": 23
+    },
+    {
+      "text": "Un pulitico de Georgia si Aleko Elisashvili",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 43,
+      "word_count": 7,
+      "row_id": 24
+    },
+    {
+      "text": "Un nacion el Papua New Guinea na Oceania",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 40,
+      "word_count": 8,
+      "row_id": 25
+    },
+    {
+      "text": "Un pulitico de Georgia si Giorgi (Gigi) Ugulava",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 47,
+      "word_count": 8,
+      "row_id": 26
+    },
+    {
+      "text": "Un lugar que tiene mga casarias el Perkáta na probincia de Fejér na Hangaria",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 76,
+      "word_count": 14,
+      "row_id": 27
+    },
+    {
+      "text": "Un pais el Bangladesh na costa sur del Asia",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 43,
+      "word_count": 9,
+      "row_id": 28
+    },
+    {
+      "text": "Un ciudad na Argentina el Rosario que tiene populacion de 1.036.286 residente (2009)",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 84,
+      "word_count": 13,
+      "row_id": 29
+    },
+    {
+      "text": "Lisbon amo el capital del Portugal",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 34,
+      "word_count": 6,
+      "row_id": 30
+    },
+    {
+      "text": "Un singer de pop pati soul clase de mga cancion si Emilija Kokić (quien ya nase del 1968)",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 89,
+      "word_count": 18,
+      "row_id": 31
+    },
+    {
+      "text": "Un lugar na Europa el Belgium",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 29,
+      "word_count": 6,
+      "row_id": 32
+    },
+    {
+      "text": "Un pulitico de Georgia si Kakha Kuchava",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 39,
+      "word_count": 7,
+      "row_id": 33
+    },
+    {
+      "text": "Un cantora si Sopho Khalvashi",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 29,
+      "word_count": 5,
+      "row_id": 34
+    },
+    {
+      "text": "Un singer si Bebe Rexha",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 23,
+      "word_count": 5,
+      "row_id": 35
+    },
+    {
+      "text": "Un ciudad na costa sur-este na estado de Goiás na Brazil el Catalão",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 67,
+      "word_count": 13,
+      "row_id": 36
+    },
+    {
+      "text": "Un pulitico de Georgia si Tariel Nakaidze",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 41,
+      "word_count": 7,
+      "row_id": 37
+    },
+    {
+      "text": "Un lugar que tiene mga casarias el Óbarok na probincia de Fejér na Hangaria",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 75,
+      "word_count": 14,
+      "row_id": 38
+    },
+    {
+      "text": "Un lugar que tiene mga casarias el Sárkeszi na probincia de Fejér na Hangaria",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 77,
+      "word_count": 14,
+      "row_id": 39
+    },
+    {
+      "text": "Un cantora si Nina Sublatti (Sulneridze)",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 40,
+      "word_count": 6,
+      "row_id": 40
+    },
+    {
+      "text": "Un pulitico de Gerogia si Shalva Papuashvili",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 44,
+      "word_count": 7,
+      "row_id": 41
+    },
+    {
+      "text": "Un nacion na Asia el Singapore",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 30,
+      "word_count": 6,
+      "row_id": 42
+    },
+    {
+      "text": "Un singer de pop pati soul music si Franka Batelić (quien ya nase del 1992)",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 75,
+      "word_count": 15,
+      "row_id": 43
+    },
+    {
+      "text": "Un ciudad na Canada el Toronto que tiene populacion de 2.731.571 residente (2016)",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 81,
+      "word_count": 13,
+      "row_id": 44
+    },
+    {
+      "text": "Un pais na Asia el Brunei",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 25,
+      "word_count": 6,
+      "row_id": 45
+    },
+    {
+      "text": "Un singer de fado music na Portugal si Ana Moura",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 48,
+      "word_count": 10,
+      "row_id": 46
+    },
+    {
+      "text": "Paris amo el capital del France",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 31,
+      "word_count": 6,
+      "row_id": 47
+    },
+    {
+      "text": "Un probincia na Argentina el Córdoba que tiene populacion de 1.329.604 residente, des de 2010",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 93,
+      "word_count": 15,
+      "row_id": 48
+    },
+    {
+      "text": "Un pulitico de Georgia si Khatia Dekanoidze",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 43,
+      "word_count": 7,
+      "row_id": 49
+    },
+    {
+      "text": "Un lugar que tiene mga casarias el Tác na probincia de Fejér na Hangaria",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 72,
+      "word_count": 14,
+      "row_id": 50
+    },
+    {
+      "text": "Un pulitico de Georgia si Levan Khabeishvili",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 44,
+      "word_count": 7,
+      "row_id": 51
+    },
+    {
+      "text": "Berlin el centro ciudad (na Pais) del Germany",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 45,
+      "word_count": 8,
+      "row_id": 52
+    },
+    {
+      "text": "Un lugar que tiene mga casarias el Sárkeresztes na probincia de Fejér na Hangaria",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 81,
+      "word_count": 14,
+      "row_id": 53
+    },
+    {
+      "text": "Tbilisi amo el centro ciudad (na Pais) del Georgia",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 50,
+      "word_count": 9,
+      "row_id": 54
+    },
+    {
+      "text": "Un ciudad na Argentina el Paraná que tiene populacion de 283.710 residente (2013)",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 81,
+      "word_count": 13,
+      "row_id": 55
+    },
+    {
+      "text": "Un ciudad na Espana el Barcelona, y este el capital (city) del Catalonia",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 72,
+      "word_count": 13,
+      "row_id": 56
+    },
+    {
+      "text": "Un municipalidad na probincia de Granada na Espana el Láchar",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 60,
+      "word_count": 10,
+      "row_id": 57
+    },
+    {
+      "text": "Un ciudad na Chile el Monte Águila",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 34,
+      "word_count": 7,
+      "row_id": 58
+    },
+    {
+      "text": "Un lugar que tiene mga casarias na probincia de Fejér na Hangaria el Újbarok",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 76,
+      "word_count": 14,
+      "row_id": 59
+    },
+    {
+      "text": "Un cantora de Ukraine si Natalia Morozova",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 41,
+      "word_count": 7,
+      "row_id": 60
+    },
+    {
+      "text": "Un lugar que tiene mga casarias na probincia de Fejér na Hangaria el Úrhida",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 75,
+      "word_count": 14,
+      "row_id": 61
+    },
+    {
+      "text": "Un lugar que tiene mga casarias na probincia de Fejér na Hangaria el Sárosd",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 75,
+      "word_count": 14,
+      "row_id": 62
+    },
+    {
+      "text": "Un pulitico de Gerogia si Elene Khoshtaria",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 42,
+      "word_count": 7,
+      "row_id": 63
+    },
+    {
+      "text": "Un pulitico de Georgia si Akaki Minashvili",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 42,
+      "word_count": 7,
+      "row_id": 64
+    },
+    {
+      "text": "Parte de Asia el Sri Lanka",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 26,
+      "word_count": 6,
+      "row_id": 65
+    },
+    {
+      "text": "Un cantora pati actres si Demi Diometria Devonne Lovato (quien ya nase del 20 del Agosto 1992)",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 94,
+      "word_count": 17,
+      "row_id": 66
+    },
+    {
+      "text": "Amsterdam el centro ciudad (na Pais) del Netherlands",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 52,
+      "word_count": 8,
+      "row_id": 67
+    },
+    {
+      "text": "Un singer si Lela Tsurtsumia",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 28,
+      "word_count": 5,
+      "row_id": 68
+    },
+    {
+      "text": "Un cantor si Cher Lloyd",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 23,
+      "word_count": 5,
+      "row_id": 69
+    },
+    {
+      "text": "Beijing el centro ciudad (na Pais) del China",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 44,
+      "word_count": 8,
+      "row_id": 70
+    },
+    {
+      "text": "Un cantora si Anna Netrebko (quien ya nase del 1971)",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 52,
+      "word_count": 10,
+      "row_id": 71
+    },
+    {
+      "text": "Un pulitico de Georgia si Zaza Lominadze",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 40,
+      "word_count": 7,
+      "row_id": 72
+    },
+    {
+      "text": "Un ciudad na Turkey el Edirne",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 29,
+      "word_count": 6,
+      "row_id": 73
+    },
+    {
+      "text": "Un ciudad na Argentina el Reconquista que tiene populacion de 99.288 residente (2010)",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 85,
+      "word_count": 13,
+      "row_id": 74
+    },
+    {
+      "text": "Roma el centro ciudad (na Pais) del Italia/Italy",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 48,
+      "word_count": 8,
+      "row_id": 75
+    },
+    {
+      "text": "Un ciudad na Netherlands el Utrecht que tiene populacion de 324.723 residente (2013)",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 84,
+      "word_count": 13,
+      "row_id": 76
+    },
+    {
+      "text": "Locao na Costa Norte del Amerika el Cuba",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 40,
+      "word_count": 8,
+      "row_id": 77
+    },
+    {
+      "text": "Un ciudad na Germany el Düsseldorf",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 34,
+      "word_count": 6,
+      "row_id": 78
+    },
+    {
+      "text": "Un singer de fado na Portugal si Cristina Branco",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 48,
+      "word_count": 9,
+      "row_id": 79
+    },
+    {
+      "text": "Un lugar que tiene mga casarias na probincia de Fejér na Hangaria el Tordas",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 75,
+      "word_count": 14,
+      "row_id": 80
+    },
+    {
+      "text": "Un lugar que tiene mga casarias na probincia de Fejér na Hangaria el Vereb",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 74,
+      "word_count": 14,
+      "row_id": 81
+    },
+    {
+      "text": "Un ciudad na Switzerland el Zurich que tiene populacion de 392.062 residente (2012)",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 83,
+      "word_count": 13,
+      "row_id": 82
+    },
+    {
+      "text": "Un pulitico de Georgia si Levan Varshalomidze",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 45,
+      "word_count": 7,
+      "row_id": 83
+    },
+    {
+      "text": "Un pulitico de Georgia si Nona Mamulashvili",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 43,
+      "word_count": 7,
+      "row_id": 84
+    },
+    {
+      "text": "Un lugar que tiene mga casarias na probincia de Fejér na Hangaria el Pátka",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 74,
+      "word_count": 14,
+      "row_id": 85
+    },
+    {
+      "text": "Un singer si Billie Eilish",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 26,
+      "word_count": 5,
+      "row_id": 86
+    },
+    {
+      "text": "Un probincia na Argentina el Corrientes que tiene populacion de 346.334 residente (2010)",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 88,
+      "word_count": 13,
+      "row_id": 87
+    },
+    {
+      "text": "Locao na Asia el Israel",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 23,
+      "word_count": 5,
+      "row_id": 88
+    },
+    {
+      "text": "Un cantora si Lena Belkina (quien ya nase del 1987)",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 51,
+      "word_count": 10,
+      "row_id": 89
+    },
+    {
+      "text": "Nuuk el centro ciudad (na Pais) del Greenland",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 45,
+      "word_count": 8,
+      "row_id": 90
+    },
+    {
+      "text": "Un lugar que tiene mga casarias na probincia de Fejér na Hangaria/Hungary el Vértesacsa",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 87,
+      "word_count": 14,
+      "row_id": 91
+    },
+    {
+      "text": "Un pulitico de Georgia si Davit Kirkitadze",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 42,
+      "word_count": 7,
+      "row_id": 92
+    },
+    {
+      "text": "Un probincia na Argentina el Mendoza que tiene populacion de 114.822 residente (2010)",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 85,
+      "word_count": 13,
+      "row_id": 93
+    },
+    {
+      "text": "Un pulitico de Georgia si Irakli Beraia",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 39,
+      "word_count": 7,
+      "row_id": 94
+    },
+    {
+      "text": "Un pulitico de Georgia si Irakli Zarkua",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 39,
+      "word_count": 7,
+      "row_id": 95
+    },
+    {
+      "text": "Un ciudad na Netherlands el Rotterdam que tiene populacion de 617.347 residente (2012)",
+      "language": "cbk_Latn",
+      "source": "CreoleVal_RelationClassification",
+      "quality_score": 1.0,
+      "length": 86,
+      "word_count": 13,
+      "row_id": 96
+    }
+  ]
+}
