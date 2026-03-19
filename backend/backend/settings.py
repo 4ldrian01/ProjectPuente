@@ -75,17 +75,12 @@ TEMPLATES = [
 WSGI_APPLICATION = 'backend.wsgi.application'
 
 # ---------------------------------------------------------------------------
-# Database — PostgreSQL via environment variables
+# Database — SQLite (default for local/offline development)
 # ---------------------------------------------------------------------------
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME', 'puente_db'),
-        'USER': os.getenv('DB_USER', 'postgres'),
-        'PASSWORD': os.getenv('DB_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', '5432'),
-        'CONN_MAX_AGE': 600,  # Reuse connections for 10 minutes
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
@@ -134,10 +129,11 @@ STATIC_URL = 'static/'
 # ---------------------------------------------------------------------------
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# ---------------------------------------------------------------------------
-# Google Gemini API
-# ---------------------------------------------------------------------------
-GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY', '')
+# Strict offline simulation mode for Chapter 1-3 evaluation.
+# When enabled, online services like edge-tts are disabled.
+STRICT_OFFLINE_MODE = os.getenv('STRICT_OFFLINE_MODE', 'False').lower() in (
+    'true', '1', 'yes',
+)
 
 # ---------------------------------------------------------------------------
 # Edge TTS (optional speech synthesis)

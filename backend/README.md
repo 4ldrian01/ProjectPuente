@@ -3,8 +3,8 @@
 This backend is a Django + DRF API with three runtime layers:
 
 - core API endpoints for translation, health, Wiki-Voz, and TTS
-- PostgreSQL for `CulturalTerm` and `TranslationLog`
-- optional cloud fallbacks for Gemini and Edge TTS
+- SQLite for `CulturalTerm` and `TranslationLog`
+- local NLLB translation with optional Edge TTS
 
 ## Required system software
 
@@ -12,9 +12,9 @@ This backend is a Django + DRF API with three runtime layers:
 |---|---:|---|
 | Python | 3.12.x | Matches the configured workspace virtual environment |
 | pip | Yes | Used for `requirements.txt` |
-| PostgreSQL | 17 | Main database used by Django |
+| SQLite | Built-in | Main database used by Django (`backend/db.sqlite3`) |
 | Node.js | No | Frontend only |
-| Internet access | Optional | Needed only for Gemini fallback and `edge-tts` speech synthesis |
+| Internet access | Optional | Needed only for `edge-tts` speech synthesis |
 
 ## Python packages in `requirements.txt`
 
@@ -25,7 +25,6 @@ This backend is a Django + DRF API with three runtime layers:
 | `django` | Main web framework |
 | `djangorestframework` | API views, serializers, testing client |
 | `django-cors-headers` | LAN-friendly CORS for the Vite frontend |
-| `psycopg2-binary` | PostgreSQL driver |
 | `python-dotenv` | Loads `backend/.env` |
 
 ### Local translation + ML runtime
@@ -40,11 +39,10 @@ This backend is a Django + DRF API with three runtime layers:
 | `bitsandbytes` | Optional 8-bit quantization |
 | `protobuf` | Transformer/model serialization support |
 
-### Optional cloud/runtime add-ons
+### Optional runtime add-ons
 
 | Package | Purpose | Notes |
 |---|---|---|
-| `google-genai` | Gemini fallback translation | Used only when the local NLLB model is unavailable |
 | `edge-tts` | Speech synthesis endpoint at `/api/tts/` | Requires outbound internet to Microsoft's TTS service |
 
 ## Environment variables
@@ -55,13 +53,7 @@ Copy `backend/.env.example` to `backend/.env` and set at least these values:
 |---|---:|---|
 | `SECRET_KEY` | Yes | Django secret key |
 | `DEBUG` | Yes | Development mode toggle |
-| `DB_NAME` | Yes | PostgreSQL database name |
-| `DB_USER` | Yes | PostgreSQL user |
-| `DB_PASSWORD` | Yes | PostgreSQL password |
-| `DB_HOST` | Yes | PostgreSQL host |
-| `DB_PORT` | Yes | PostgreSQL port |
 | `ML_MODEL_PATH` | Recommended | Local NLLB model directory |
-| `GOOGLE_API_KEY` | Optional | Enables Gemini fallback |
 | `EDGE_TTS_VOICE_EN` | Optional | Override English voice |
 | `EDGE_TTS_VOICE_TL` | Optional | Override Tagalog voice |
 | `EDGE_TTS_VOICE_CBK` | Optional | Override Chavacano voice |
@@ -83,5 +75,5 @@ Copy `backend/.env.example` to `backend/.env` and set at least these values:
 ## Notes
 
 - Translation remains offline-first when the NLLB model is present locally.
-- Gemini and Edge TTS are both optional online services.
+- Edge TTS is an optional online service.
 - If you want the whole stack in one environment, install backend dependencies first, then see `../ml_models/README.md` and `../notebooks/README.md` for the extra packages used outside the live API.

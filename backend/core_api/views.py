@@ -3,7 +3,6 @@ core_api/views.py — Translation & Wiki-Voz API for Project Puente.
 
 Primary engine: NLLB-200-distilled-600M (8-bit quantized, Singleton loaded
 via apps.py) with LoRA adapters for formal/street Chavacano.
-Fallback engine: Google Gemini Cloud API (only when NLLB model is unavailable).
 
 Features:
   - English Pivot routing for non-English language pairs
@@ -55,30 +54,6 @@ SUPPORTED_LANGUAGES = {
     'ceb':  'Cebuano/Bisaya',
 }
 
-# ---------------------------------------------------------------------------
-# Gemini fallback (only when NLLB model is not loaded)
-# ---------------------------------------------------------------------------
-GEMINI_MODEL_CANDIDATES = (
-    'gemini-2.0-flash',
-    'gemini-1.5-flash-latest',
-    'gemini-1.5-flash-8b',
-    'gemini-1.5-flash',
-)
-
-SYSTEM_FORMAL = (
-    "You are an expert multilingual translator specializing in Zamboanga languages "
-    "and Philippine dialects. Translate the following text using the HIGH variety — "
-    "formal, respectful, and grammatically precise. Preserve cultural nuance. "
-    "Return ONLY the translated text, no explanations."
-)
-
-SYSTEM_STREET = (
-    "You are an expert multilingual translator specializing in Zamboanga languages "
-    "and Philippine dialects. Translate the following text using the LOW variety — "
-    "casual street slang, colloquial, and natural everyday speech. "
-    "Return ONLY the translated text, no explanations."
-)
-
 EDGE_TTS_DEFAULT_VOICES = {
     'en': 'en-US-EmmaMultilingualNeural',
     'tl': 'fil-PH-BlessicaNeural',
@@ -86,6 +61,11 @@ EDGE_TTS_DEFAULT_VOICES = {
     'hil': 'fil-PH-BlessicaNeural',
     'ceb': 'fil-PH-AngeloNeural',
 }
+
+
+def is_strict_offline_mode():
+    """Return True when strict offline simulation mode is enabled."""
+    return bool(getattr(settings, 'STRICT_OFFLINE_MODE', False))
 
 
 def is_edge_tts_available():
@@ -145,53 +125,6 @@ def _synthesize_speech_bytes(text, lang_code, voice_override=None):
         raise RuntimeError('edge-tts returned no audio data.')
 
     return bytes(audio_bytes), selected_voice
-
-
-def _get_gemini_client():
-    """Configure and return Gemini client instance (fallback only)."""
-    try:
-        from google import genai
-    except ImportError:
-        raise ValueError(
-            'google-genai is not installed and NLLB-200 model is unavailable. '
-            'Install ML dependencies or google-genai.'
-        )
-    api_key = getattr(settings, 'GOOGLE_API_KEY', '')
-    if not api_key or api_key == 'YOUR_GEMINI_API_KEY_HERE':
-        raise ValueError(
-            'GOOGLE_API_KEY is not configured and NLLB-200 model is unavailable. '
-            'Set it in backend/.env or install the NLLB model.'
-        )
-    return genai.Client(api_key=api_key)
-
-
-def _generate_translation_gemini(client, user_prompt, system_prompt):
-    """Generate translation with fallback across Gemini model aliases."""
-    from google import genai as _genai
-
-    last_error = None
-    for model_name in GEMINI_MODEL_CANDIDATES:
-        try:
-            response = client.models.generate_content(
-                model=model_name,
-                contents=user_prompt,
-                config=_genai.types.GenerateContentConfig(
-                    system_instruction=system_prompt,
-                    temperature=0.3,
-                ),
-            )
-            translated_text = (response.text or '').strip().strip('"').strip("'")
-            if translated_text:
-                return translated_text, model_name
-        except Exception as exc:
-            last_error = exc
-            error_text = str(exc).lower()
-            if 'not_found' in error_text or 'not found' in error_text:
-                continue
-            raise
-    raise RuntimeError(
-        f'No available Gemini model alias succeeded. Last error: {last_error}'
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -276,7 +209,7 @@ class APIRootView(APIView):
         return Response({
             'project': 'Project Puente Backend',
             'status': 'online',
-            'engine': 'nllb-200' if CoreApiConfig.model_loaded else 'gemini-fallback',
+            'engine': 'nllb-200' if CoreApiConfig.model_loaded else 'offline-model-missing',
             'endpoints': {
                 'admin': '/admin/',
                 'translate': '/api/translate/',
@@ -361,46 +294,24 @@ class TranslateView(APIView):
             input_chars=len(text),
         )
 
-        # 4. Translate — NLLB-200 primary, Gemini fallback ------------------
+        # 4. Translate — NLLB-200 local engine only -------------------------
         try:
-            if CoreApiConfig.model_loaded:
-                # ── PRIMARY: Local NLLB-200 + LoRA ──
-                translated_text, latency_ms, tokens_in, tokens_out, pivot_used, model_used = (
-                    nllb_translate(text, source_lang, target_lang, mode)
+            if not CoreApiConfig.model_loaded:
+                raise ValueError(
+                    'Local NLLB model is unavailable. '
+                    'Install it in ml_models/nllb-200-distilled-600M and restart backend.'
                 )
-                log_entry.output_text = translated_text
-                log_entry.input_tokens = tokens_in
-                log_entry.output_tokens = tokens_out
-                log_entry.latency_ms = latency_ms
-                log_entry.pivot_used = pivot_used
-                log_entry.model_name = model_used
-                log_entry.status = 'success'
 
-            else:
-                # ── FALLBACK: Gemini Cloud API ──
-                system_prompt = SYSTEM_FORMAL if mode == 'formal' else SYSTEM_STREET
-                is_auto = source_lang == 'auto'
-                src_label = 'the auto-detected source language' if is_auto else SUPPORTED_LANGUAGES[source_lang]
-                tgt_label = SUPPORTED_LANGUAGES[target_lang]
-
-                user_prompt = f'Translate from {src_label} to {tgt_label}:\n\n"{text}"'
-                if wiki_match:
-                    user_prompt += (
-                        f'\n\nCultural context (Wiki-Voz): '
-                        f'The term "{wiki_match.term}" means: {wiki_match.definition}'
-                    )
-
-                client = _get_gemini_client()
-                translated_text, model_used = _generate_translation_gemini(
-                    client=client,
-                    user_prompt=user_prompt,
-                    system_prompt=system_prompt,
-                )
-                log_entry.output_text = translated_text
-                log_entry.latency_ms = (time.perf_counter() - start_time) * 1000
-                log_entry.pivot_used = False
-                log_entry.model_name = model_used
-                log_entry.status = 'success'
+            translated_text, latency_ms, tokens_in, tokens_out, pivot_used, model_used = (
+                nllb_translate(text, source_lang, target_lang, mode)
+            )
+            log_entry.output_text = translated_text
+            log_entry.input_tokens = tokens_in
+            log_entry.output_tokens = tokens_out
+            log_entry.latency_ms = latency_ms
+            log_entry.pivot_used = pivot_used
+            log_entry.model_name = model_used
+            log_entry.status = 'success'
 
         except ValueError as e:
             log_entry.latency_ms = (time.perf_counter() - start_time) * 1000
@@ -420,18 +331,10 @@ class TranslateView(APIView):
             log_entry.model_name = getattr(log_entry, 'model_name', 'unknown') or 'unknown'
             log_entry.save()
 
-            error_text = str(e).lower()
-            response_status = status.HTTP_500_INTERNAL_SERVER_ERROR
-            friendly_message = f'Translation failed: {e}'
-
-            if 'resource_exhausted' in error_text or 'quota' in error_text:
-                response_status = status.HTTP_429_TOO_MANY_REQUESTS
-                friendly_message = 'API quota exceeded. Try again later.'
-            elif 'permission_denied' in error_text or 'api key not valid' in error_text:
-                response_status = status.HTTP_403_FORBIDDEN
-                friendly_message = 'API key was rejected. Verify configuration.'
-
-            return Response({'error': friendly_message}, status=response_status)
+            return Response(
+                {'error': f'Translation failed: {e}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
         # 5. Save log entry -------------------------------------------------
         log_entry.wiki_voz_triggered = wiki_match is not None
@@ -462,7 +365,7 @@ class TranslateView(APIView):
 class WikiVozView(APIView):
     """
     GET /api/wiki/?q=<term>
-    Returns matching CulturalTerm entries from PostgreSQL.
+    Returns matching CulturalTerm entries from SQLite.
     Without query, returns all entries (for frontend term-map loading).
     """
 
@@ -491,6 +394,17 @@ class TextToSpeechView(APIView):
     """
 
     def post(self, request):
+        if is_strict_offline_mode():
+            return Response(
+                {
+                    'error': (
+                        'Text-to-speech is disabled in strict offline mode '
+                        'because edge-tts requires internet access.'
+                    ),
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
         serializer = TextToSpeechRequestSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(
@@ -542,19 +456,22 @@ class HealthCheckView(APIView):
     def get(self, request):
         nllb_loaded = CoreApiConfig.model_loaded
         lora_modes = list(CoreApiConfig.lora_adapters.keys())
-
-        # Fallback: check if Gemini is configured
-        api_key = getattr(settings, 'GOOGLE_API_KEY', '')
-        gemini_configured = bool(api_key and api_key != 'YOUR_GEMINI_API_KEY_HERE')
-        tts_available = is_edge_tts_available()
+        strict_offline = is_strict_offline_mode()
+        tts_available = is_edge_tts_available() and not strict_offline
 
         return Response({
             'status': 'ok',
-            'engine': 'nllb-200-distilled-600M' if nllb_loaded else 'gemini-fallback',
+            'engine': (
+                'nllb-200-distilled-600M'
+                if nllb_loaded
+                else 'offline-model-missing'
+            ),
             'nllb_loaded': nllb_loaded,
             'lora_adapters': lora_modes,
-            'api_key_configured': gemini_configured or nllb_loaded,
+            'api_key_configured': nllb_loaded,
             'tts_available': tts_available,
             'tts_engine': 'edge-tts' if tts_available else 'unavailable',
+            'strict_offline_mode': strict_offline,
+            'cloud_fallback_allowed': False,
             'supported_languages': list(SUPPORTED_LANGUAGES.keys()),
         })

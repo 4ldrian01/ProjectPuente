@@ -160,7 +160,7 @@ export default function SettingsScreen({ health, onRefreshHealth, onClose }) {
               <span className={`w-2 h-2 rounded-full animate-pulse ${
                 health?.nllbLoaded ? 'bg-emerald-400' : 'bg-amber-400'
               }`} />
-              {health?.nllbLoaded ? 'Loaded' : 'Not Loaded (Gemini Fallback)'}
+              {health?.nllbLoaded ? 'Loaded' : 'Not Loaded'}
             </span>
           </div>
 
