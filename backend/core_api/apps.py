@@ -8,6 +8,7 @@ per-request reloading.
 """
 
 import os
+import sys
 import logging
 
 from django.apps import AppConfig
@@ -28,8 +29,28 @@ class CoreApiConfig(AppConfig):
 
     def ready(self):
         """Load NLLB-200 + LoRA once at server startup (Singleton)."""
-        # Prevent double-load from Django auto-reloader
-        if os.environ.get('RUN_MAIN') != 'true':
+        # Allow explicit opt-out for lightweight management tasks.
+        if os.environ.get('PUENTE_LOAD_MODEL_ON_STARTUP', 'true').lower() in ('0', 'false', 'no', 'off'):
+            logger.info('Skipping NLLB-200 load (PUENTE_LOAD_MODEL_ON_STARTUP is disabled).')
+            return
+
+        # Skip heavy model init for common one-off management commands.
+        skip_commands = {
+            'test',
+            'migrate',
+            'makemigrations',
+            'collectstatic',
+            'createsuperuser',
+            'shell',
+            'dbshell',
+        }
+        active_args = set(sys.argv[1:])
+        if active_args.intersection(skip_commands):
+            logger.info('Skipping NLLB-200 load for management command: %s', ' '.join(sys.argv[1:]))
+            return
+
+        # Prevent double-load from Django auto-reloader during runserver.
+        if 'runserver' in sys.argv and os.environ.get('RUN_MAIN') != 'true':
             return
         if CoreApiConfig.model_loaded:
             return

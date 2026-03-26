@@ -12,8 +12,14 @@ class TranslateRequestSerializer(serializers.Serializer):
     Max 250 characters to prevent OOM on 8GB RAM with NLLB-200 inference.
     """
     text = serializers.CharField(max_length=250, required=True)
-    source_lang = serializers.CharField(max_length=10, required=True)
-    target_lang = serializers.CharField(max_length=10, required=True)
+    source_lang = serializers.ChoiceField(
+        choices=['auto', 'en', 'tl', 'cbk', 'hil', 'ceb'],
+        required=True,
+    )
+    target_lang = serializers.ChoiceField(
+        choices=['en', 'tl', 'cbk', 'hil', 'ceb'],
+        required=True,
+    )
     mode = serializers.ChoiceField(
         choices=['formal', 'street'],
         default='formal',

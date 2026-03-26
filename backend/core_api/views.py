@@ -55,6 +55,10 @@ SUPPORTED_LANGUAGES = {
     'ceb':  'Cebuano/Bisaya',
 }
 
+TARGET_LANGUAGES = {
+    code: label for code, label in SUPPORTED_LANGUAGES.items() if code != 'auto'
+}
+
 # ---------------------------------------------------------------------------
 # Gemini fallback (only when NLLB model is not loaded)
 # ---------------------------------------------------------------------------
@@ -95,6 +99,11 @@ def is_edge_tts_available():
     except ImportError:
         return False
     return True
+
+
+def _estimate_token_count(text):
+    """Fast fallback token estimate for pass-through or non-NLLB paths."""
+    return len((text or '').split())
 
 
 def _get_edge_tts_voice(lang_code, voice_override=None):
@@ -310,17 +319,6 @@ class TranslateView(APIView):
         target_lang = serializer.validated_data['target_lang']
         mode = serializer.validated_data.get('mode', 'formal')
 
-        if source_lang not in SUPPORTED_LANGUAGES:
-            return Response(
-                {'errors': {'source_lang': f'Unsupported. Valid: {list(SUPPORTED_LANGUAGES.keys())}'}},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if target_lang not in SUPPORTED_LANGUAGES:
-            return Response(
-                {'errors': {'target_lang': f'Unsupported. Valid: {list(SUPPORTED_LANGUAGES.keys())}'}},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         # 2. Wiki-Voz interception ------------------------------------------
         wiki_match = CulturalTerm.objects.filter(term__iexact=text.strip()).first()
         wiki_data = None
@@ -332,10 +330,13 @@ class TranslateView(APIView):
             source_lang != 'auto'
             and FLORES_MAP.get(source_lang) == FLORES_MAP.get(target_lang)
         ):
+            passthrough_tokens = _estimate_token_count(text)
             log_entry = TranslationLog(
                 source_lang=source_lang, target_lang=target_lang,
                 mode=mode, input_text=text, input_chars=len(text),
+                input_tokens=passthrough_tokens,
                 output_text=text, latency_ms=0.0, status='success',
+                output_tokens=passthrough_tokens,
                 model_name='passthrough', pivot_used=False,
                 wiki_voz_triggered=wiki_match is not None,
                 wiki_voz_term=wiki_match.term if wiki_match else '',
@@ -345,7 +346,9 @@ class TranslateView(APIView):
                 'translated_text': text, 'source_lang': source_lang,
                 'target_lang': target_lang, 'mode': mode,
                 'model': 'passthrough', 'latency_ms': 0.0,
-                'tokens_in': 0, 'tokens_out': 0, 'pivot_used': False,
+                'tokens_in': passthrough_tokens,
+                'tokens_out': passthrough_tokens,
+                'pivot_used': False,
             }
             if wiki_data:
                 payload['wiki_voz'] = wiki_data
@@ -381,7 +384,7 @@ class TranslateView(APIView):
                 system_prompt = SYSTEM_FORMAL if mode == 'formal' else SYSTEM_STREET
                 is_auto = source_lang == 'auto'
                 src_label = 'the auto-detected source language' if is_auto else SUPPORTED_LANGUAGES[source_lang]
-                tgt_label = SUPPORTED_LANGUAGES[target_lang]
+                tgt_label = TARGET_LANGUAGES[target_lang]
 
                 user_prompt = f'Translate from {src_label} to {tgt_label}:\n\n"{text}"'
                 if wiki_match:
@@ -469,10 +472,10 @@ class WikiVozView(APIView):
     def get(self, request):
         query = request.query_params.get('q', '').strip()
         if query:
-            terms = CulturalTerm.objects.filter(term__icontains=query)[:20]
+            terms = CulturalTerm.objects.filter(term__icontains=query).order_by('term')[:20]
         else:
             # Return ALL terms so frontend can build dynamic CULTURAL_TERMS_MAP
-            terms = CulturalTerm.objects.all()[:100]
+            terms = CulturalTerm.objects.order_by('term')[:100]
         serializer = CulturalTermSerializer(terms, many=True)
         return Response({'results': serializer.data})
 

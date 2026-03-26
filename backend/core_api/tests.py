@@ -81,6 +81,16 @@ class TranslateSerializerTests(TestCase):
         s = TranslateRequestSerializer(data=data)
         self.assertFalse(s.is_valid())
 
+    def test_target_auto_rejected(self):
+        data = {
+            'text': 'hello',
+            'source_lang': 'en',
+            'target_lang': 'auto',
+        }
+        s = TranslateRequestSerializer(data=data)
+        self.assertFalse(s.is_valid())
+        self.assertIn('target_lang', s.errors)
+
 
 class TextToSpeechSerializerTests(TestCase):
     """Validate Edge TTS request payloads."""
