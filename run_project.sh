@@ -6,9 +6,43 @@
 #  Frontend: http://0.0.0.0:5173  (LAN accessible)
 # ============================================================
 
-set -e
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+BACKEND_ONLY=false
+FRONTEND_ONLY=false
+
+for arg in "$@"; do
+	case "$arg" in
+		--backend-only)
+			BACKEND_ONLY=true
+			;;
+		--frontend-only)
+			FRONTEND_ONLY=true
+			;;
+		*)
+			echo "[ERROR] Unknown option: $arg"
+			echo "Usage: $0 [--backend-only|--frontend-only]"
+			exit 1
+			;;
+	esac
+done
+
+if [ "$BACKEND_ONLY" = true ] && [ "$FRONTEND_ONLY" = true ]; then
+	echo "[ERROR] Use only one of --backend-only or --frontend-only."
+	exit 1
+fi
+
+if [ ! -f "$SCRIPT_DIR/backend/manage.py" ]; then
+	echo "[ERROR] backend/manage.py not found. Run this script from the project root."
+	exit 1
+fi
+
+if [ ! -f "$SCRIPT_DIR/frontend/package.json" ]; then
+	echo "[ERROR] frontend/package.json not found."
+	exit 1
+fi
 
 if [ -x "$SCRIPT_DIR/.venv/bin/python" ]; then
 	PYTHON_CMD="$SCRIPT_DIR/.venv/bin/python"
@@ -20,6 +54,28 @@ else
 	PYTHON_CMD="$(command -v python)"
 fi
 
+if ! command -v "$PYTHON_CMD" >/dev/null 2>&1; then
+	echo "[ERROR] Python executable not found: $PYTHON_CMD"
+	exit 1
+fi
+
+if ! command -v npm >/dev/null 2>&1; then
+	echo "[ERROR] npm not found in PATH. Install Node.js 20+."
+	exit 1
+fi
+
+if [ "$BACKEND_ONLY" = true ]; then
+	cd "$SCRIPT_DIR/backend"
+	PUENTE_LOAD_MODEL_ON_STARTUP=true "$PYTHON_CMD" manage.py runserver 0.0.0.0:8000
+	exit $?
+fi
+
+if [ "$FRONTEND_ONLY" = true ]; then
+	cd "$SCRIPT_DIR/frontend"
+	npm run dev -- --host 0.0.0.0
+	exit $?
+fi
+
 echo ""
 echo "  ========================================"
 echo "   Project Puente - Starting Servers"
@@ -28,7 +84,7 @@ echo ""
 
 # Start Backend (Django)
 cd "$SCRIPT_DIR/backend"
-"$PYTHON_CMD" manage.py runserver 0.0.0.0:8000 &
+PUENTE_LOAD_MODEL_ON_STARTUP=true "$PYTHON_CMD" manage.py runserver 0.0.0.0:8000 &
 BACKEND_PID=$!
 
 sleep 3
@@ -39,13 +95,20 @@ npm run dev -- --host 0.0.0.0 &
 FRONTEND_PID=$!
 
 LAN_IP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "YOUR_IP")
+if [ -z "$LAN_IP" ]; then
+	LAN_IP="YOUR_IP"
+fi
 
 echo ""
-echo "  [OK] Python   → $PYTHON_CMD"
-echo "  [OK] Backend  → http://0.0.0.0:8000  (LAN: http://${LAN_IP}:8000)"
-echo "  [OK] Frontend → http://0.0.0.0:5173  (LAN: http://${LAN_IP}:5173)"
+echo "  [OK] Python   -> $PYTHON_CMD"
+echo "  [OK] Backend  -> http://0.0.0.0:8000  (LAN: http://${LAN_IP}:8000)"
+echo "  [OK] Frontend -> http://0.0.0.0:5173  (LAN: http://${LAN_IP}:5173)"
 echo ""
-echo "  Press Ctrl+C to stop both servers."
+echo "  Running in current terminal (no extra windows). Press Ctrl+C to stop both servers."
 
-trap "kill $BACKEND_PID $FRONTEND_PID 2>/dev/null; exit 0" INT TERM
+cleanup() {
+	kill "$BACKEND_PID" "$FRONTEND_PID" 2>/dev/null || true
+}
+
+trap cleanup INT TERM EXIT
 wait

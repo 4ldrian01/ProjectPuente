@@ -3,6 +3,7 @@ import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react-swc'
 import { VitePWA } from 'vite-plugin-pwa'
 
+/* global process */
 const disablePwaForCurrentPath = process.cwd().includes("'")
 
 // https://vite.dev/config/

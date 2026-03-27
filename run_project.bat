@@ -1,10 +1,12 @@
 @echo off
 REM ============================================================
-REM  Project Puente — Run Both Servers (Windows) — LAN Ready
+REM  Project Puente — Run Both Servers (Windows) — VS Code terminal
 REM ============================================================
 REM  Backend:  http://0.0.0.0:8000  (LAN accessible)
-REM  Frontend: http://localhost:5173
+REM  Frontend: http://0.0.0.0:5173  (LAN accessible)
 REM ============================================================
+
+setlocal
 
 echo.
 echo  ========================================
@@ -13,27 +15,38 @@ echo  ========================================
 echo.
 
 set "ROOT_DIR=%~dp0"
-set "PYTHON_EXE=python"
+set "PS_SCRIPT=%ROOT_DIR%run_project.ps1"
+set "EXIT_CODE=0"
 
-if exist "%ROOT_DIR%.venv\Scripts\python.exe" (
-	set "PYTHON_EXE=%ROOT_DIR%.venv\Scripts\python.exe"
-) else if exist "%ROOT_DIR%venv\Scripts\python.exe" (
-	set "PYTHON_EXE=%ROOT_DIR%venv\Scripts\python.exe"
+if not exist "%PS_SCRIPT%" (
+	echo [ERROR] run_project.ps1 not found.
+	set "EXIT_CODE=1"
+	goto :end
 )
 
-REM Start Backend (Django) — bind 0.0.0.0 for LAN access
-start "Puente Backend" cmd /k "cd /d ""%ROOT_DIR%backend"" && ""%PYTHON_EXE%"" manage.py runserver 0.0.0.0:8000"
+if not exist "%ROOT_DIR%backend\manage.py" (
+	echo [ERROR] backend\manage.py not found. Run this script from the project root.
+	set "EXIT_CODE=1"
+	goto :end
+)
 
-REM Wait a moment for backend to initialize
-timeout /t 5 /nobreak >nul
+if not exist "%ROOT_DIR%frontend\package.json" (
+	echo [ERROR] frontend\package.json not found.
+	set "EXIT_CODE=1"
+	goto :end
+)
 
-REM Start Frontend (Vite) — bind 0.0.0.0 for LAN access
-start "Puente Frontend" cmd /k "cd /d ""%ROOT_DIR%frontend"" && npm run dev -- --host 0.0.0.0"
+where powershell >nul 2>nul
+if errorlevel 1 (
+	echo [ERROR] powershell was not found in PATH.
+	set "EXIT_CODE=1"
+	goto :end
+)
 
-echo.
-echo  [OK] Python   → %PYTHON_EXE%
-echo  [OK] Backend  → http://0.0.0.0:8000  (LAN: http://YOUR_IP:8000)
-echo  [OK] Frontend → http://0.0.0.0:5173  (LAN: http://YOUR_IP:5173)
-echo.
-echo  Press any key to close this launcher...
-pause >nul
+echo [INFO] Running launcher in current terminal (no extra cmd/powershell windows)...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%PS_SCRIPT%" %*
+set "EXIT_CODE=%ERRORLEVEL%"
+
+:end
+endlocal
+exit /b %EXIT_CODE%

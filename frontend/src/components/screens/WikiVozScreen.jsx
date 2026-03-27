@@ -44,7 +44,7 @@ export default function WikiVozScreen({ apiUrl, backendUp, ttsAvailable }) {
         if (!cancelled) setApiError(true)
       })
     return () => { cancelled = true }
-  }, [])
+  }, [apiUrl])
 
   // Use API data when available, fall back to hardcoded seed data
   const allEntries = apiEntries || WIKI_VOZ_ENTRIES
