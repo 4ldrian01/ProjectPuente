@@ -64,16 +64,55 @@ if ! command -v npm >/dev/null 2>&1; then
 	exit 1
 fi
 
+is_port_in_use() {
+	local port="$1"
+
+	if command -v ss >/dev/null 2>&1; then
+		ss -ltn 2>/dev/null | awk '{print $4}' | grep -Eq "(^|:)${port}$"
+		return $?
+	fi
+
+	if command -v lsof >/dev/null 2>&1; then
+		lsof -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1
+		return $?
+	fi
+
+	if command -v netstat >/dev/null 2>&1; then
+		netstat -an 2>/dev/null | grep -E "[\.:]${port}[[:space:]].*LISTEN" >/dev/null
+		return $?
+	fi
+
+	return 1
+}
+
 if [ "$BACKEND_ONLY" = true ]; then
+	if is_port_in_use 8000; then
+		echo "[ERROR] Port 8000 is already in use. Stop the existing process before running backend-only mode."
+		exit 1
+	fi
 	cd "$SCRIPT_DIR/backend"
 	PUENTE_LOAD_MODEL_ON_STARTUP=true "$PYTHON_CMD" manage.py runserver 0.0.0.0:8000
 	exit $?
 fi
 
 if [ "$FRONTEND_ONLY" = true ]; then
+	if is_port_in_use 5173; then
+		echo "[ERROR] Port 5173 is already in use. Stop the existing process before running frontend-only mode."
+		exit 1
+	fi
 	cd "$SCRIPT_DIR/frontend"
 	npm run dev -- --host 0.0.0.0
 	exit $?
+fi
+
+if is_port_in_use 8000; then
+	echo "[ERROR] Port 8000 is already in use. Stop the existing process before starting the full stack."
+	exit 1
+fi
+
+if is_port_in_use 5173; then
+	echo "[ERROR] Port 5173 is already in use. Stop the existing process before starting the full stack."
+	exit 1
 fi
 
 echo ""

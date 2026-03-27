@@ -45,7 +45,6 @@ export default function TranslateScreen({
   ttsAvailable,
   loraAdapters = [],
   nllbLoaded = false,
-  translationEngine = 'unknown',
 }) {
   const initialSettings = useMemo(() => loadSettings(), [])
 

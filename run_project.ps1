@@ -117,19 +117,25 @@ if ($BackendOnly -and $FrontendOnly) {
 }
 
 if ($BackendOnly) {
+    if (Test-PortListening -Port 8000) {
+        throw 'Port 8000 is already in use. Stop the existing process before running backend-only mode.'
+    }
     Start-Backend
 }
 
 if ($FrontendOnly) {
+    if (Test-PortListening -Port 5173) {
+        throw 'Port 5173 is already in use. Stop the existing process before running frontend-only mode.'
+    }
     Start-Frontend
 }
 
 if (Test-PortListening -Port 8000) {
-    Write-Warning 'Port 8000 is already listening. Backend may fail to start in a new process.'
+    throw 'Port 8000 is already in use. Stop the existing process before starting the full stack.'
 }
 
 if (Test-PortListening -Port 5173) {
-    Write-Warning 'Port 5173 is already listening. Frontend may fail to start in a new process.'
+    throw 'Port 5173 is already in use. Stop the existing process before starting the full stack.'
 }
 
 $previousLoadFlag = $env:PUENTE_LOAD_MODEL_ON_STARTUP
