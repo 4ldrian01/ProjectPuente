@@ -2,13 +2,13 @@
 
 **Preserving Understanding through Enhanced Neural Translation Engines**
 
-> Offline-first neural machine translation for Philippine heritage languages, deployed on a campus LAN with optional online services for Gemini fallback and Edge TTS.
+> Offline-first neural machine translation for Philippine heritage languages, deployed on a campus LAN with local NLLB translation and optional Edge TTS.
 
 | | |
 |---|---|
 | **Languages** | English, Tagalog, Chavacano de Zamboanga, Hiligaynon, Cebuano/Bisaya |
 | **ML Model** | NLLB-200-distilled-600M (INT8 quantized) + LoRA adapters |
-| **Stack** | Django 5 + DRF, React 19 + Vite 7, PostgreSQL 17, PyTorch 2, edge-tts |
+| **Stack** | Django 5 + DRF, React 19 + Vite 7, SQLite, PyTorch 2, edge-tts |
 | **Deployment** | LAN-only edge device (8 GB RAM, RTX 3050 Ti 4 GB VRAM) |
 
 ---
@@ -21,13 +21,13 @@ Install these once before running the project:
 
 - **Python 3.11 or 3.12** with `venv`
 - **Node.js 20+** with `npm`
-- **PostgreSQL 17** with a database/user for Django
+- **SQLite** (built into Python; no separate DB server needed)
 - **Git** for cloning the repository
 - **Optional but recommended:** NVIDIA CUDA-capable setup if you want faster local NLLB inference
 
 What the install steps below will pull in for you:
 
-- `backend/requirements.txt` installs Django, DRF, PostgreSQL driver, PyTorch + Transformers, `google-genai`, and `edge-tts`
+- `backend/requirements.txt` installs Django, DRF, CORS, PyTorch + Transformers, and `edge-tts`
 - `frontend/package.json` installs React, Vite, axios, PWA tooling, and linting packages
 - `notebooks/README.md` lists the extra notebook-only packages such as JupyterLab, pandas, datasets, sacrebleu, and PDF/data-cleaning helpers
 
@@ -41,13 +41,13 @@ python -m venv .venv && source .venv/bin/activate   # Linux/macOS
 cd backend
 pip install -r requirements.txt
 cp .env.example .env   # Edit .env with your DB credentials and SECRET_KEY
+# Optional: keep STRICT_OFFLINE_MODE=True in backend/.env for Chapter 1-3 offline simulation
 
-# 3. Database setup (PostgreSQL must already be running)
+# 3. Database setup (SQLite file is created automatically)
 python manage.py migrate
 python manage.py createsuperuser
 
-# 4. Download the optional local NLLB-200 model (~2.4 GB one-time download)
-#    Skip this if you only want Gemini fallback for now.
+# 4. Download the local NLLB-200 model (~2.4 GB one-time download)
 cd ../ml_models
 python download_model.py
 
@@ -66,13 +66,21 @@ cd ..
 
 **Backend:** `http://0.0.0.0:8000` | **Frontend:** `http://0.0.0.0:5173` | **Admin:** `http://localhost:8000/admin/`
 
+### Zorin Linux Commands
+
+```bash
+cd ~/Desktop/Machine\ Learning/ProjectPuente
+chmod +x run_project.sh
+./run_project.sh
+```
+
 ### Installation notes by area
 
 | Area | Installed from | Includes |
 |---|---|---|
-| Backend/API | `backend/requirements.txt` | Django, DRF, CORS, PostgreSQL driver, dotenv |
+| Backend/API | `backend/requirements.txt` | Django, DRF, CORS, dotenv |
 | Local ML runtime | `backend/requirements.txt` | PyTorch, Transformers, SentencePiece, PEFT, Accelerate, bitsandbytes, protobuf |
-| Optional online services | `backend/requirements.txt` | Gemini fallback via `google-genai`, speech via `edge-tts` |
+| Optional online services | `backend/requirements.txt` | Speech via `edge-tts` |
 | Frontend | `frontend/package.json` | React, Vite, axios, Tailwind, PWA tooling, ESLint |
 | Notebook extras | see `notebooks/README.md` | JupyterLab, pandas, datasets, evaluate, sacrebleu, pdfplumber, Beautiful Soup |
 
@@ -101,20 +109,20 @@ cd ..
 │               DJANGO DRF BACKEND (0.0.0.0:8000)                         │
 │  ┌────────────────────────┴───────────────────────────────────────────┐  │
 │  │  Routing Agent — urls.py → views.py                               │  │
-│  │  POST /api/translate/  →  TranslateView (NLLB primary → Gemini)   │  │
-│  │  GET  /api/wiki/?q=    →  WikiVozView (PostgreSQL CulturalTerm)   │  │
+│  │  POST /api/translate/  →  TranslateView (NLLB local inference)     │  │
+│  │  GET  /api/wiki/?q=    →  WikiVozView (SQLite CulturalTerm)       │  │
 │  │  GET  /api/health/     →  HealthCheckView (NLLB + LoRA status)    │  │
 │  └──────────┬─────────────────────────────────┬──────────────────────┘  │
 │             │                                 │                          │
 │  ┌──────────▼──────────────┐  ┌───────────────▼──────────────────────┐  │
 │  │  Interceptor Agent      │  │  Neural Agent (apps.py Singleton)    │  │
 │  │  CulturalTerm.filter()  │  │  NLLB-200-distilled-600M (8-bit)    │  │
-│  │  PostgreSQL O(log n)    │  │  + LoRA formal/street adapters       │  │
+│  │  SQLite lookup          │  │  + LoRA formal/street adapters       │  │
 │  │  → Wiki-Voz injection   │  │  + English pivot for non-EN pairs    │  │
-│  └─────────────────────────┘  │  FALLBACK: Gemini Cloud API          │  │
+│  └─────────────────────────┘  │  Local-only translation runtime      │  │
 │                               └──────────────────────────────────────┘  │
 │  ┌───────────────────────────────────────────────────────────────────┐  │
-│  │  Observer Agent — TranslationLog model → PostgreSQL               │  │
+│  │  Observer Agent — TranslationLog model → SQLite                   │  │
 │  │  latency_ms, tokens_in/out, pivot_used, status, wiki_voz_term    │  │
 │  └───────────────────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────────────────┘
@@ -138,9 +146,9 @@ To keep installation sane, each layer now has its own dependency guide:
 
 | Area | Main dependencies |
 |---|---|
-| Backend/API | `django`, `djangorestframework`, `django-cors-headers`, `psycopg2-binary`, `python-dotenv` |
+| Backend/API | `django`, `djangorestframework`, `django-cors-headers`, `python-dotenv` |
 | Local translation runtime | `torch`, `transformers`, `sentencepiece`, `accelerate`, `peft`, `bitsandbytes`, `protobuf` |
-| Optional cloud add-ons | `google-genai`, `edge-tts` |
+| Optional online add-ons | `edge-tts` |
 | Frontend runtime | `react`, `react-dom`, `axios` |
 | Frontend tooling | `vite`, `vite-plugin-pwa`, `tailwindcss`, `eslint` and related plugins |
 | Notebook extras | `jupyterlab`, `ipykernel`, `pandas`, `datasets`, `evaluate`, `sacrebleu`, `pdfplumber`, `beautifulsoup4`, `clean-text[gpl]`, `wandb` |
@@ -234,8 +242,7 @@ ProjectPuente/
 | Django REST Framework | ≥3.15.0 | REST API serialization + views |
 | django-cors-headers | ≥4.7.0 | LAN CORS support |
 | python-dotenv | ≥1.0.0 | Environment variable loading from `backend/.env` |
-| PostgreSQL | 17 | Primary database (CulturalTerm + TranslationLog) |
-| psycopg2-binary | ≥2.9.0 | PostgreSQL driver |
+| SQLite | Built-in | Primary database (CulturalTerm + TranslationLog) |
 
 ### ML / Neural Agent
 
@@ -247,7 +254,6 @@ ProjectPuente/
 | accelerate | ≥0.30.0 | Device mapping (CPU/CUDA) |
 | PEFT | ≥0.11.0 | LoRA adapter loading + switching |
 | bitsandbytes | ≥0.43.0 | 8-bit quantization (reduces 2.4GB → ~1.2GB) |
-| google-genai | ≥1.0, <2.0 | Gemini Cloud API (fallback only) |
 | edge-tts | ≥7.2.0, <8.0 | Backend speech synthesis for the TTS buttons |
 
 ### Target Hardware
@@ -257,7 +263,7 @@ ProjectPuente/
 | CPU | Ryzen 5 / Intel i5 (AVX2 required for PyTorch) |
 | RAM | 8 GB minimum |
 | OS | Windows 11 + WSL2 |
-| Network | Campus LAN; internet optional for Gemini fallback and Edge TTS |
+| Network | Campus LAN; internet optional for Edge TTS |
 | Storage | ~3 GB for model weights + adapters |
 
 ---
@@ -283,7 +289,7 @@ This is implemented in `nllb_translate()` in `views.py`.
 
 ## Translation Engine
 
-### Dual-Engine Design
+### Local-Engine Design
 
 ```
 TranslateView.post(request)
@@ -298,13 +304,9 @@ TranslateView.post(request)
 │   │   ├── num_beams=4, max_new_tokens=128
 │   │   └── Return (text, latency_ms, tokens_in, tokens_out, pivot_used)
 │   │
-│   └── NO → FALLBACK: Gemini Cloud API
-│       ├── Build prompt with SYSTEM_FORMAL or SYSTEM_STREET
-│       ├── Inject Wiki-Voz cultural context if matched
-│       ├── Try model candidates: gemini-2.0-flash → 1.5-flash-latest → etc.
-│       └── Return (text, model_name)
+│   └── NO → Return 503 (local model missing)
 │
-└── Log everything to TranslationLog (PostgreSQL)
+└── Log everything to TranslationLog (SQLite)
 ```
 
 ### Singleton Model Loading
@@ -317,7 +319,7 @@ The NLLB-200 model is loaded **exactly once** during Django's startup via `CoreA
 4. Iterate `ml_models/lora-cbk-{formal,street}/` → load LoRA adapters via PEFT `load_adapter()`
 5. Set `CoreApiConfig.model_loaded = True`
 
-If `ml_models/` is empty, the system gracefully falls back to Gemini Cloud API.
+If `ml_models/` is empty, translation requests return a clear 503 until the local model is installed.
 
 ### LoRA Adapter Strategy
 
@@ -561,7 +563,7 @@ Run: `cd backend && python manage.py test core_api`
 |---|---|
 | `core_api/apps.py` | Singleton NLLB-200 loader with 8-bit quantization + LoRA |
 | `core_api/models.py` | +TranslationLog model, +language/category on CulturalTerm |
-| `core_api/views.py` | NLLB primary engine + Gemini fallback + English pivot + logging |
+| `core_api/views.py` | NLLB local engine + English pivot + logging |
 | `core_api/serializers.py` | text max_length 2000→250 |
 | `core_api/admin.py` | +TranslationLog admin panel |
 | `core_api/tests.py` | 28 tests covering validation, Wiki-Voz, health, and TTS |

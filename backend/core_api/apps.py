@@ -63,7 +63,7 @@ class CoreApiConfig(AppConfig):
         if not os.path.isdir(MODEL_DIR):
             logger.warning(
                 'NLLB-200 model directory not found at %s. '
-                'Translation will use FALLBACK mode (no local ML). '
+                'Translation requests will be unavailable until the model is installed. '
                 'Run the model download script first.',
                 MODEL_DIR,
             )
@@ -156,6 +156,6 @@ class CoreApiConfig(AppConfig):
             )
 
         except Exception:
-            logger.exception('Failed to load NLLB-200 model — fallback mode active.')
+            logger.exception('Failed to load NLLB-200 model.')
             CoreApiConfig.model_loaded = False
 

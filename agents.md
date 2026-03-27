@@ -18,7 +18,7 @@ Request Flow:
       ▼                                     ▼
 [Interceptor Agent]                   [Neural Agent]
   CulturalTerm.filter()               NLLB-200 + LoRA
-  PostgreSQL lookup                    or Gemini fallback
+    SQLite lookup                        local-only translation
       │                                     │
       └──────────────┬──────────────────────┘
                      │
@@ -98,8 +98,7 @@ wiki_match = CulturalTerm.objects.filter(term__iexact=text.strip()).first()
 
 if wiki_match:
     wiki_data = CulturalTermSerializer(wiki_match).data
-    # Inject cultural context into Gemini prompt (fallback mode only)
-    user_prompt += f'\nCultural context (Wiki-Voz): "{wiki_match.term}" means: {wiki_match.definition}'
+    # Attach cultural context metadata to the API response payload
 ```
 
 ### Data Flow
@@ -133,12 +132,11 @@ if wiki_match:
 ## Agent 3: Neural Agent (Translation Engine)
 
 ### Role
-Execute translation using the locally loaded NLLB-200 model with LoRA adapters, or Gemini Cloud API as fallback.
+Execute translation using the locally loaded NLLB-200 model with LoRA adapters.
 
 ### Implementation
 - **Model Loader:** [core_api/apps.py](backend/core_api/apps.py) — `CoreApiConfig.ready()`
 - **Inference:** [core_api/views.py](backend/core_api/views.py) — `nllb_translate()`, `_infer_once()`
-- **Fallback:** [core_api/views.py](backend/core_api/views.py) — `_generate_translation_gemini()`
 
 ### Primary Engine: NLLB-200 + LoRA
 
@@ -205,29 +203,11 @@ def nllb_translate(text, src_code, tgt_code, mode='formal'):
 | `hil` | `hil_Latn` | Yes — native NLLB-200 support |
 | `auto` | `eng_Latn` | Defaults to English |
 
-### Fallback Engine: Gemini Cloud API
+### Model Availability Behavior
 
-Active only when `CoreApiConfig.model_loaded == False` (i.e., model weights not in `ml_models/`).
-
-```python
-# Model candidate priority list
-GEMINI_MODEL_CANDIDATES = (
-    'gemini-2.0-flash',
-    'gemini-1.5-flash-latest',
-    'gemini-1.5-flash-8b',
-    'gemini-1.5-flash',
-)
-
-# System prompts for sociolinguistic modes
-SYSTEM_FORMAL = "...formal, respectful, grammatically precise..."
-SYSTEM_STREET = "...casual street slang, colloquial, everyday speech..."
-```
-
-The fallback:
-1. Builds a text prompt with source/target language labels
-2. Injects Wiki-Voz cultural context if a term was matched
-3. Iterates through Gemini model candidates until one succeeds
-4. Returns translated text + model name used
+When `CoreApiConfig.model_loaded == False`, translate requests return HTTP 503
+with a clear message instructing the operator to install the local model in
+`ml_models/nllb-200-distilled-600M`.
 
 ### LoRA Adapter Selection
 
@@ -358,16 +338,15 @@ const [health, setHealth] = useState({
     backendUp: false,
     nllbLoaded: false,        // NEW: NLLB-200 model loaded?
     loraAdapters: [],         // NEW: ['formal', 'street']
-    apiKeyConfigured: false,
     engine: 'unknown',
 })
 ```
 
 The `apiReady` prop passed to TranslateScreen:
 ```javascript
-apiReady={health.backendUp && (health.nllbLoaded || health.apiKeyConfigured)}
+apiReady={health.backendUp && health.nllbLoaded}
 ```
-This means the translate button is enabled if **either** NLLB is loaded **or** Gemini is configured.
+This means the translate button is enabled only when the backend is reachable and the local model is loaded.
 
 ### TranslateScreen Features
 
@@ -416,9 +395,9 @@ useEffect(() => {
 }, [autoTranslate, defaultSourceLang, defaultTargetLang, speechEnabled])
 ```
 
-Settings includes NLLB model status display (instead of Gemini API key):
+Settings includes NLLB model status display:
 ```jsx
-<span>{health?.nllbLoaded ? 'Loaded' : 'Not Loaded (Gemini Fallback)'}</span>
+<span>{health?.nllbLoaded ? 'Loaded' : 'Not Loaded'}</span>
 {health?.loraAdapters?.length > 0 && (
     <span>LoRA: {health.loraAdapters.join(', ')}</span>
 )}
@@ -476,7 +455,7 @@ VitePWA({
    │   ├── Hop 1: _infer_once(model, tok, "Mahal kita", tgl_Latn, eng_Latn) → "I love you"
    │   ├── Hop 2: _infer_once(model, tok, "I love you", eng_Latn, cbk_Latn) → "Ta ama yo contigo"
    │   └── Return: ("Ta ama yo contigo", 1840.5, 12, 8, True, "nllb-200+lora-cbk-formal")
-   └── NO: _generate_translation_gemini() → Gemini Cloud API fallback
+    └── NO: return HTTP 503 (local model missing)
 
 6. [Observer Agent] TranslationLog.save()
    └── latency_ms=1840.5, pivot_used=True, status='success', tokens_in=12, tokens_out=8
@@ -496,9 +475,7 @@ VitePWA({
 | Empty text | Serializer | 400 | Field validation error |
 | Text > 250 chars | Serializer | 400 | "Ensure this field has no more than 250 characters" |
 | Unsupported language | SUPPORTED_LANGUAGES check | 400 | "Unsupported. Valid: [auto, en, tl, cbk, hil, ceb]" |
-| No NLLB + no Gemini API key | `_get_gemini_client()` | 503 | "GOOGLE_API_KEY is not configured and NLLB-200 model is unavailable" |
-| Gemini quota exceeded | `_generate_translation_gemini()` | 429 | "API quota exceeded. Try again later." |
-| Gemini key rejected | `_generate_translation_gemini()` | 403 | "API key was rejected. Verify configuration." |
+| No NLLB model present | `TranslateView.post()` | 503 | "Local NLLB model is unavailable..." |
 | Model inference failure | `nllb_translate()` | 500 | "Translation failed: {details}" |
 | Backend unreachable | Frontend axios | — | "Connection failed. Is the backend running?" |
 
@@ -508,7 +485,6 @@ VitePWA({
 
 | Aspect | Implementation |
 |---|---|
-| API Key Storage | `GOOGLE_API_KEY` in `backend/.env`, loaded via `django-environ` |
 | Input Sanitization | DRF serializer enforces max_length=250, mode choices |
 | CORS | `CORS_ALLOW_ALL_ORIGINS=True` (LAN-only deployment) |
 | SQL Injection | Django ORM (parameterized queries) |
@@ -523,7 +499,7 @@ VitePWA({
 |---|---|---|
 | All 5 languages natively supported | Hiligaynon (`hil_Latn`) has direct NLLB-200 support | No proxy needed — all translations are direct or via English pivot |
 | LoRA adapters not yet trained | Falls back to base NLLB-200 weights | Training pipeline documented in notebooks/ |
-| ml_models/ empty by default | Graceful fallback to Gemini Cloud API | Model download script provided; one-time setup |
+| ml_models/ empty by default | Translation returns 503 until model install | Model download script provided; one-time setup |
 | `CORS_ALLOW_ALL_ORIGINS=True` | LAN-only deployment (no internet exposure) | Appropriate for controlled campus network |
 | No rate limiting | 250-char limit + TranslationLog enables post-hoc monitoring | Can add Django throttling if needed |
 | Google Fonts CDN removed | System font fallback | Self-host WOFF2 files for exact Inter rendering |

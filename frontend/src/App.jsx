@@ -36,7 +36,6 @@ function App() {
     backendUp: false,
     nllbLoaded: false,
     loraAdapters: [],
-    apiKeyConfigured: false,
     ttsAvailable: false,
     ttsEngine: 'unavailable',
     engine: 'unknown',
@@ -54,7 +53,6 @@ function App() {
         backendUp: true,
         nllbLoaded: Boolean(data.nllb_loaded),
         loraAdapters: data.lora_adapters || [],
-        apiKeyConfigured: Boolean(data.api_key_configured),
         ttsAvailable: Boolean(data.tts_available),
         ttsEngine: data.tts_engine || 'unavailable',
         engine: data.engine || 'unknown',
@@ -66,7 +64,6 @@ function App() {
         backendUp: false,
         nllbLoaded: false,
         loraAdapters: [],
-        apiKeyConfigured: false,
         ttsAvailable: false,
         ttsEngine: 'offline',
         engine: 'offline',
@@ -120,7 +117,7 @@ function App() {
       setWikiData(response.data.wiki_voz ?? null)
 
       // Refresh health on successful call to keep badge current.
-      if (!health.backendUp || (!health.nllbLoaded && !health.apiKeyConfigured)) {
+      if (!health.backendUp || !health.nllbLoaded) {
         refreshHealth()
       }
     } catch (err) {
@@ -149,7 +146,7 @@ function App() {
         setLoading(false)
       }
     }
-  }, [health.apiKeyConfigured, health.backendUp, refreshHealth])
+  }, [health.backendUp, health.nllbLoaded, refreshHealth])
 
   // Navigation handler — settings toggles an overlay panel
   const handleNavigate = (screen) => {
@@ -182,7 +179,7 @@ function App() {
         translatedText={translatedText}
         loading={loading}
         error={error}
-        apiReady={health.backendUp && (health.nllbLoaded || health.apiKeyConfigured)}
+        apiReady={health.backendUp && health.nllbLoaded}
         wikiData={wikiData}
         apiUrl={API_URL}
         backendUp={health.backendUp}

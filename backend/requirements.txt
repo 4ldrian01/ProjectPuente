@@ -24,8 +24,5 @@ peft>=0.11.0
 bitsandbytes>=0.43.0       # 8-bit quantization
 protobuf>=4.25.0
 
-# ── Gemini Fallback (optional — remove once NLLB is stable) ──
-google-genai>=1.0,<2.0
-
 # ── Speech Synthesis (optional — requires outbound internet to Microsoft TTS) ──
 edge-tts>=7.2.0,<8.0

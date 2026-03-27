@@ -208,10 +208,9 @@ export default function TranslateScreen({
     }
 
     if (!nllbLoaded) {
-      const engineLabel = translationEngine === 'gemini' ? 'Gemini fallback' : 'the available fallback engine'
       return {
         className: 'border-amber-700/70 bg-amber-900/20 text-amber-200',
-        message: `${activeModeLabel} mode is running best-effort through ${engineLabel}; local LoRA adapters are not loaded yet.`,
+        message: `${activeModeLabel} mode cannot run yet because the local NLLB model is not loaded.`,
       }
     }
 
@@ -226,7 +225,7 @@ export default function TranslateScreen({
       className: 'border-emerald-700/60 bg-emerald-900/20 text-emerald-200',
       message: `${activeModeLabel} register is ready via the ${activeMode} LoRA adapter.`,
     }
-  }, [activeMode, activeModeLabel, backendUp, loraAdapters, nllbLoaded, translationEngine])
+  }, [activeMode, activeModeLabel, backendUp, loraAdapters, nllbLoaded])
 
   const effectiveError = useMemo(() => {
     if (!error) return ''
