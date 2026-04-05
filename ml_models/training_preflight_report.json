@@ -1,0 +1,88 @@
+{
+  "generated_at_utc": "2026-04-04T20:54:19.824807+00:00",
+  "project_root": "C:\\Users\\User's\\ALL FILES - MACHINE LEARNING\\ProjectPuente",
+  "python_executable": "C:\\Users\\User's\\ALL FILES - MACHINE LEARNING\\ProjectPuente\\.venv\\Scripts\\python.exe",
+  "overall_status": "BLOCKED",
+  "summary": {
+    "PASS": 12,
+    "WARN": 2,
+    "BLOCKER": 1
+  },
+  "results": [
+    {
+      "name": "Directory structure",
+      "status": "PASS",
+      "details": "All required architecture directories are present."
+    },
+    {
+      "name": "Critical files",
+      "status": "PASS",
+      "details": "All required backend/frontend/ML files are present."
+    },
+    {
+      "name": "Language contract (source)",
+      "status": "PASS",
+      "details": "Synchronized source languages: ['auto', 'cbk', 'ceb', 'en', 'es', 'hil', 'tl']"
+    },
+    {
+      "name": "Language contract (target)",
+      "status": "PASS",
+      "details": "Synchronized target languages: ['cbk', 'ceb', 'en', 'es', 'hil', 'tl']"
+    },
+    {
+      "name": "TranslateScreen source roster",
+      "status": "PASS",
+      "details": "TranslateScreen source languages align with settings.js."
+    },
+    {
+      "name": "TranslateScreen target roster",
+      "status": "PASS",
+      "details": "TranslateScreen target languages align with settings.js."
+    },
+    {
+      "name": "Active pipeline scripts",
+      "status": "PASS",
+      "details": "All active pipeline scripts are present."
+    },
+    {
+      "name": "Canonical datasets path casing",
+      "status": "PASS",
+      "details": "No legacy uppercase datasets path references in active scripts."
+    },
+    {
+      "name": "Hard-coded absolute paths",
+      "status": "PASS",
+      "details": "No hard-coded absolute Windows paths in active scripts."
+    },
+    {
+      "name": "NLLB-ready processed files",
+      "status": "PASS",
+      "details": "Required processed dataset files are present."
+    },
+    {
+      "name": "Base model directory",
+      "status": "BLOCKER",
+      "details": "Model directory missing: C:\\Users\\User's\\ALL FILES - MACHINE LEARNING\\ProjectPuente\\ml_models\\nllb-200-distilled-600M (run download_model.py before training/inference)."
+    },
+    {
+      "name": "Environment templates",
+      "status": "PASS",
+      "details": "Backend and frontend env templates are present."
+    },
+    {
+      "name": "Virtual environment duplication",
+      "status": "WARN",
+      "details": "Both venv/ and .venv/ exist. Keep one canonical environment to reduce confusion."
+    },
+    {
+      "name": "Python dependency availability",
+      "status": "WARN",
+      "details": "Missing modules in current interpreter: torch, transformers, peft, sacrebleu"
+    },
+    {
+      "name": "Legacy script redundancy",
+      "status": "PASS",
+      "details": "No known legacy duplicate scripts found."
+    }
+  ]
+}

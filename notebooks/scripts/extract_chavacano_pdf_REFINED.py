@@ -15,17 +15,20 @@ from pathlib import Path
 from datetime import datetime
 from typing import List, Dict, Set
 
+from _path_utils import resolve_datasets_dir
+
 # ============================================================================
 # CONFIGURATION
 # ============================================================================
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent.parent
+DATASETS_DIR = resolve_datasets_dir(PROJECT_ROOT)
 
 # Input/Output paths
-RAW_DIR = PROJECT_ROOT / "Datasets" / "raw" / "monolingual"
+RAW_DIR = DATASETS_DIR / "raw" / "monolingual"
 PDF_FILE = RAW_DIR / "ChavacanoIdiomsandDictionary.pdf"
 
-PROCESSED_DIR = PROJECT_ROOT / "Datasets" / "processed" / "001_chavacano"
+PROCESSED_DIR = DATASETS_DIR / "processed" / "001_chavacano"
 OUTPUT_JSON = PROCESSED_DIR / "chavacano_lexicon_nllb.json"
 LOG_FILE = PROCESSED_DIR / "pdf_extraction.log"
 

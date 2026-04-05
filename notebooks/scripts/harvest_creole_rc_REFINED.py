@@ -15,17 +15,20 @@ from pathlib import Path
 from datetime import datetime
 from typing import List, Set
 
+from _path_utils import resolve_datasets_dir
+
 # ============================================================================
 # CONFIGURATION
 # ============================================================================
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent.parent
+DATASETS_DIR = resolve_datasets_dir(PROJECT_ROOT)
 
 # Remote source URL
 SOURCE_URL = "https://raw.githubusercontent.com/hclent/CreoleVal/main/nlu/relation_classification/data/relation_extraction/cbk-zam.csv"
 
 # Output paths
-PROCESSED_DIR = PROJECT_ROOT / "Datasets" / "processed" / "001_chavacano"
+PROCESSED_DIR = DATASETS_DIR / "processed" / "001_chavacano"
 OUTPUT_JSON = PROCESSED_DIR / "creole_rc_chavacano_nllb.json"
 OUTPUT_TXT = PROCESSED_DIR / "creole_rc_sentences.txt"
 LOG_FILE = PROCESSED_DIR / "creole_rc_harvest.log"

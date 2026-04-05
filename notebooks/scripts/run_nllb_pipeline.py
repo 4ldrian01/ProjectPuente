@@ -8,16 +8,20 @@ Author: NLP Data Engineering Team
 import subprocess
 import json
 import logging
+import sys
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, List
+
+from _path_utils import resolve_datasets_dir
 
 # ============================================================================
 # CONFIGURATION
 # ============================================================================
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent.parent
-PROCESSED_DIR = PROJECT_ROOT / "Datasets" / "processed" / "001_chavacano"
+DATASETS_DIR = resolve_datasets_dir(PROJECT_ROOT)
+PROCESSED_DIR = DATASETS_DIR / "processed" / "001_chavacano"
 
 # Create output directory
 PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
@@ -90,7 +94,7 @@ def run_pipeline(pipeline: Dict) -> Dict:
     try:
         # Run the script
         result = subprocess.run(
-            ["python", str(script_path)],
+            [sys.executable, str(script_path)],
             capture_output=True,
             text=True,
             encoding='utf-8',

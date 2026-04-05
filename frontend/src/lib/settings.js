@@ -1,20 +1,25 @@
 export const SETTINGS_STORAGE_KEY = 'puente_settings'
 export const SETTINGS_UPDATED_EVENT = 'puente-settings-updated'
 
-export const SOURCE_LANGUAGE_CODES = ['auto', 'en', 'tl', 'cbk', 'hil', 'ceb']
-export const TARGET_LANGUAGE_CODES = ['cbk', 'hil', 'ceb', 'en', 'tl']
+export const SOURCE_LANGUAGE_CODES = ['auto', 'en', 'tl', 'cbk', 'ceb', 'hil', 'es']
+export const TARGET_LANGUAGE_CODES = ['cbk', 'ceb', 'hil', 'es', 'en', 'tl']
+export const THEME_OPTIONS = ['dark', 'light']
+export const DEFAULT_THEME = 'dark'
 
 export const DEFAULT_SETTINGS = {
   defaultSourceLang: 'auto',
   defaultTargetLang: 'cbk',
+  theme: DEFAULT_THEME,
 }
 
 export function sanitizeSettings(raw = {}) {
   const requestedSource = raw?.defaultSourceLang
   const requestedTarget = raw?.defaultTargetLang
+  const requestedTheme = raw?.theme
 
   let defaultSourceLang = DEFAULT_SETTINGS.defaultSourceLang
   let defaultTargetLang = DEFAULT_SETTINGS.defaultTargetLang
+  let theme = DEFAULT_SETTINGS.theme
 
   if (SOURCE_LANGUAGE_CODES.includes(requestedSource)) {
     defaultSourceLang = requestedSource
@@ -29,7 +34,11 @@ export function sanitizeSettings(raw = {}) {
       || DEFAULT_SETTINGS.defaultTargetLang
   }
 
-  return { defaultSourceLang, defaultTargetLang }
+  if (THEME_OPTIONS.includes(requestedTheme)) {
+    theme = requestedTheme
+  }
+
+  return { defaultSourceLang, defaultTargetLang, theme }
 }
 
 export function loadSettings() {
@@ -53,4 +62,26 @@ export function saveSettings(nextSettings) {
   }
 
   return sanitized
+}
+
+export function applyThemeToDocument(theme) {
+  const resolvedTheme = THEME_OPTIONS.includes(theme) ? theme : DEFAULT_THEME
+
+  if (typeof document !== 'undefined') {
+    document.documentElement.setAttribute('data-theme', resolvedTheme)
+
+    if (document.body) {
+      document.body.setAttribute('data-theme', resolvedTheme)
+    }
+
+    document.documentElement.classList.toggle('dark', resolvedTheme === 'dark')
+    document.documentElement.classList.toggle('light', resolvedTheme === 'light')
+
+    const themeMeta = document.querySelector('meta[name="theme-color"]')
+    if (themeMeta) {
+      themeMeta.setAttribute('content', resolvedTheme === 'dark' ? '#121212' : '#f4f6fb')
+    }
+  }
+
+  return resolvedTheme
 }

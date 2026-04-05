@@ -12,6 +12,7 @@ import sys
 import logging
 
 from django.apps import AppConfig
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ class CoreApiConfig(AppConfig):
     # ── Singleton Class Variables (shared across all requests) ──
     nllb_tokenizer = None
     nllb_model = None
-    lora_adapters = {}          # {'formal': merged_model, 'street': merged_model}
+    lora_adapters = {}          # {'formal': 'formal', 'street': 'street'}
     model_loaded = False
     engine_name = 'nllb-200-distilled-600M'
 
@@ -57,8 +58,18 @@ class CoreApiConfig(AppConfig):
 
         BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         PROJECT_ROOT = os.path.dirname(BASE_DIR)
-        MODEL_DIR = os.path.join(PROJECT_ROOT, 'ml_models', 'nllb-200-distilled-600M')
-        LORA_DIR = os.path.join(PROJECT_ROOT, 'ml_models')
+
+        configured_model_path = (
+            getattr(settings, 'ML_MODEL_PATH', 'ml_models/nllb-200-distilled-600M')
+            or 'ml_models/nllb-200-distilled-600M'
+        )
+
+        if os.path.isabs(configured_model_path):
+            MODEL_DIR = os.path.normpath(configured_model_path)
+        else:
+            MODEL_DIR = os.path.normpath(os.path.join(PROJECT_ROOT, configured_model_path))
+
+        LORA_DIR = os.path.dirname(MODEL_DIR)
 
         if not os.path.isdir(MODEL_DIR):
             logger.warning(

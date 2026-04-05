@@ -26,3 +26,9 @@ protobuf>=4.25.0
 
 # ── Speech Synthesis (optional — requires outbound internet to Microsoft TTS) ──
 edge-tts>=7.2.0,<8.0
+
+# ── Evaluation metrics (optional, used by baseline ML evaluation scripts) ──
+sacrebleu>=2.4.0
+
+# ── Telemetry / hardware metrics ──
+psutil>=5.9.8

@@ -4,7 +4,7 @@
  * Desktop  → side-by-side input / output (2-col grid).
  * Mobile   → stacked, scrollable (1-col).
  *
- * Features: 5-language limit, mutual exclusion, swap, backend edge-tts,
+ * Features: controlled language roster, mutual exclusion, swap, backend edge-tts,
  *           character counter (hidden when empty),
  *           formal/street toggle, cultural-term highlighting.
  */
@@ -15,12 +15,13 @@ import LanguageSelector from '../LanguageSelector'
 import CulturalTermPopup from '../CulturalTermPopup'
 import { CULTURAL_TERMS_MAP, getCulturalEntry } from '../../data/wikiVozData'
 import { loadSettings, SETTINGS_STORAGE_KEY, SETTINGS_UPDATED_EVENT } from '../../lib/settings'
+import { withApiKeyHeaders } from '../../lib/apiAuth'
 import { speakWithEdgeTts, stopEdgeTtsPlayback } from '../../lib/ttsClient'
 
-/* ── Strict 5-language config ────────────────────────────────── */
+/* ── Language config (with Spanish baseline control variable) ── */
 const SOURCE_VISIBLE  = ['auto', 'en', 'tl']
-const SOURCE_DROPDOWN = ['cbk', 'hil', 'ceb']
-const TARGET_VISIBLE  = ['cbk', 'hil', 'ceb']
+const SOURCE_DROPDOWN = ['cbk', 'ceb', 'hil', 'es']
+const TARGET_VISIBLE  = ['cbk', 'ceb', 'hil', 'es']
 const TARGET_DROPDOWN = ['en', 'tl']
 
 const LANGUAGE_LABELS = {
@@ -28,9 +29,12 @@ const LANGUAGE_LABELS = {
   en: 'English',
   tl: 'Tagalog',
   cbk: 'Chavacano',
-  hil: 'Hiligaynon',
   ceb: 'Cebuano/Bisaya',
+  hil: 'Hiligaynon',
+  es: 'Spanish',
 }
+
+const CHAR_LIMIT = 250
 
 /* ── Component ───────────────────────────────────────────────── */
 export default function TranslateScreen({
@@ -45,6 +49,8 @@ export default function TranslateScreen({
   ttsAvailable,
   loraAdapters = [],
   nllbLoaded = false,
+  apiKeyRequired = false,
+  clientApiKeyConfigured = true,
 }) {
   const initialSettings = useMemo(() => loadSettings(), [])
 
@@ -57,6 +63,11 @@ export default function TranslateScreen({
   const [settingsNotice, setSettingsNotice] = useState('')
   const [ttsError, setTtsError]         = useState('')
   const [ttsLoadingKey, setTtsLoadingKey] = useState(null)
+  const [hoveredWikiTerm, setHoveredWikiTerm] = useState(null)
+  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
+  const [btvlLoading, setBtvlLoading] = useState(false)
+  const [btvlError, setBtvlError] = useState('')
+  const [btvlResult, setBtvlResult] = useState(null)
 
   const debounceMs      = 800
   const lastSentKeyRef  = useRef('')
@@ -65,7 +76,10 @@ export default function TranslateScreen({
   const copyResetTimerRef = useRef(null)
 
   const normalizedText = sourceText.trim()
-  const canTranslate   = normalizedText.length > 0
+  const sourceCharCount = sourceText.length
+  const hasSourceChars = sourceCharCount > 0
+  const isCharLimitExceeded = sourceCharCount > CHAR_LIMIT
+  const canTranslate   = normalizedText.length > 0 && !isCharLimitExceeded
   const hasTranslatedText = Boolean(translatedText?.trim())
   const activeMode = isStreetMode ? 'street' : 'formal'
   const activeModeLabel = isStreetMode ? 'Street' : 'Formal'
@@ -131,6 +145,9 @@ export default function TranslateScreen({
 
   useEffect(() => {
     setCopied(false)
+    setBtvlError('')
+    setBtvlResult(null)
+    setBtvlLoading(false)
   }, [translatedText])
 
   /* payload for the backend */
@@ -197,34 +214,54 @@ export default function TranslateScreen({
   const sourceExclude = targetLang
   const effectiveSourceLang = sourceLang === 'auto' ? 'en' : sourceLang
   const canUseTts = backendUp && ttsAvailable
+  const canVerifyBtvl = apiReady && hasTranslatedText && !btvlLoading
 
   const modeStatus = useMemo(() => {
+    const usagePercent = Math.max(8, Math.min(100, Math.round((sourceCharCount / CHAR_LIMIT) * 100)))
+
     if (!backendUp) {
       return {
-        className: 'border-amber-700/70 bg-amber-900/20 text-amber-200',
+        className: 'border-status-warning-border/80 bg-status-warning-bg/95 text-status-warning-text',
+        icon: '⚠️',
         message: `${activeModeLabel} mode is selected. It will apply automatically once the backend is reachable again.`,
+        fillPercent: 0,
+      }
+    }
+
+    if (apiKeyRequired && !clientApiKeyConfigured) {
+      return {
+        className: 'border-status-warning-border/80 bg-status-warning-bg/95 text-status-warning-text',
+        icon: '🔐',
+        message: 'Backend write endpoints are API-key protected. Set VITE_PUENTE_API_KEY in frontend/.env before translating.',
+        fillPercent: 0,
       }
     }
 
     if (!nllbLoaded) {
       return {
-        className: 'border-amber-700/70 bg-amber-900/20 text-amber-200',
+        className: 'border-status-warning-border/80 bg-status-warning-bg/95 text-status-warning-text',
+        icon: '⚠️',
         message: `${activeModeLabel} mode cannot run yet because the local NLLB model is not loaded.`,
+        fillPercent: usagePercent,
       }
     }
 
     if (!loraAdapters.includes(activeMode)) {
       return {
-        className: 'border-amber-700/70 bg-amber-900/20 text-amber-200',
+        className: 'border-status-warning-border/80 bg-status-warning-bg/95 text-status-warning-text',
+        icon: '🧩',
         message: `${activeModeLabel} mode is available, but its LoRA adapter is not loaded yet. Using the base NLLB model, so the tone may sound more neutral than requested.`,
+        fillPercent: 0,
       }
     }
 
     return {
-      className: 'border-emerald-700/60 bg-emerald-900/20 text-emerald-200',
+      className: 'border-status-success-border/80 bg-status-success-bg/95 text-status-success-text',
+      icon: '✅',
       message: `${activeModeLabel} register is ready via the ${activeMode} LoRA adapter.`,
+      fillPercent: 0,
     }
-  }, [activeMode, activeModeLabel, backendUp, loraAdapters, nllbLoaded])
+  }, [activeMode, activeModeLabel, apiKeyRequired, backendUp, clientApiKeyConfigured, loraAdapters, nllbLoaded, sourceCharCount])
 
   const effectiveError = useMemo(() => {
     if (!error) return ''
@@ -266,6 +303,75 @@ export default function TranslateScreen({
     }
   }, [translatedText])
 
+  const handleVerifyBackTranslation = useCallback(async () => {
+    if (!translatedText?.trim() || !apiReady) return
+
+    setBtvlLoading(true)
+    setBtvlError('')
+
+    try {
+      const response = await fetch(`${apiUrl}/btvl/`, {
+        method: 'POST',
+        headers: {
+          ...withApiKeyHeaders(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: translatedText.trim(),
+          source_lang: targetLang,
+          target_lang: 'en',
+        }),
+      })
+
+      const payload = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        const validationMessage = payload?.errors
+          ? Object.values(payload.errors).flat().join(' ')
+          : ''
+        throw new Error(
+          payload?.error
+          || validationMessage
+          || 'Back-translation verification failed.',
+        )
+      }
+
+      setBtvlResult({
+        verifiedText: payload?.verified_text || '',
+        latencyMs: payload?.latency_ms ?? null,
+        model: payload?.model || 'unknown',
+        tokensIn: payload?.tokens_in ?? null,
+        tokensOut: payload?.tokens_out ?? null,
+        pivotUsed: Boolean(payload?.pivot_used),
+      })
+    } catch (err) {
+      setBtvlResult(null)
+      setBtvlError(err?.message || 'Back-translation verification failed.')
+    } finally {
+      setBtvlLoading(false)
+    }
+  }, [apiReady, apiUrl, targetLang, translatedText])
+
+  const updateTooltipPosition = useCallback((event) => {
+    setTooltipPos({
+      x: event.clientX + 16,
+      y: event.clientY + 16,
+    })
+  }, [])
+
+  const handleTermMouseEnter = useCallback((termId, event) => {
+    setHoveredWikiTerm(getCulturalEntry(termId))
+    updateTooltipPosition(event)
+  }, [updateTooltipPosition])
+
+  const handleTermMouseMove = useCallback((event) => {
+    updateTooltipPosition(event)
+  }, [updateTooltipPosition])
+
+  const handleTermMouseLeave = useCallback(() => {
+    setHoveredWikiTerm(null)
+  }, [])
+
   /* ── Cultural-term highlighting ── */
   const renderHighlightedText = () => {
     if (!translatedText) return null
@@ -277,6 +383,9 @@ export default function TranslateScreen({
           <span
             key={i}
             className="cultural-term cursor-pointer text-accent-gold underline decoration-accent-gold decoration-2 underline-offset-2 hover:text-accent-gold/80 transition-colors"
+            onMouseEnter={(event) => handleTermMouseEnter(termId, event)}
+            onMouseMove={handleTermMouseMove}
+            onMouseLeave={handleTermMouseLeave}
             onClick={() => setSelectedTerm(getCulturalEntry(termId))}
           >{word}</span>
         )
@@ -323,7 +432,7 @@ export default function TranslateScreen({
   )
 
   const toggleSection = (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3 rounded-full border border-border-subtle bg-bg-card px-4 py-2 shadow-sm">
       <span className={`text-sm font-semibold transition-colors ${!isStreetMode ? 'text-accent-gold' : 'text-text-secondary'}`}>
         Formal
       </span>
@@ -342,15 +451,19 @@ export default function TranslateScreen({
 
   /* ── Input box (compact, Google Translate-style) ── */
   const renderInputBox = () => (
-    <div className="bg-bg-card border border-zinc-600/90 rounded-xl flex flex-col min-h-16 md:min-h-22 focus-within:border-accent-magenta/90 transition-colors">
+    <div className={`bg-bg-card border rounded-xl flex flex-col min-h-16 md:min-h-22 transition-colors ${
+      isCharLimitExceeded
+        ? 'border-status-danger-border/90 focus-within:border-status-danger-border'
+        : 'border-border-subtle/90 focus-within:border-accent-magenta/90'
+    }`}>
       <textarea
         ref={sourceTextareaRef}
         value={sourceText}
-        onChange={(e) => setSourceText(e.target.value.slice(0, 250))}
+        onChange={(e) => setSourceText(e.target.value)}
         placeholder="Enter text to translate…"
         className="w-full bg-transparent text-text-primary text-base leading-relaxed placeholder-text-secondary/40 resize-none overflow-hidden focus:outline-none px-4 pt-3 pb-1 transition-[height] duration-150 ease-out"
         style={{ minHeight: '48px' }}
-        maxLength={250}
+        maxLength={CHAR_LIMIT}
       />
       <div className={`flex items-center px-4 py-1.5 border-t border-border-subtle/40 ${normalizedText ? 'justify-between' : 'justify-end'}`}>
         {normalizedText && (
@@ -364,11 +477,17 @@ export default function TranslateScreen({
             <SpeakerIcon className={`w-4.5 h-4.5 ${ttsLoadingKey === 'source' ? 'animate-pulse' : ''}`} />
           </button>
         )}
-        {/* Counter hidden when empty, visible on typing */}
-        <span className={`text-xs tabular-nums transition-opacity duration-200 ${sourceText.length > 0 ? 'text-text-secondary opacity-100' : 'opacity-0'}`}>
-          {sourceText.length}/250
-        </span>
+        {hasSourceChars && (
+          <span className={`text-xs tabular-nums ${isCharLimitExceeded ? 'text-status-danger-text' : 'text-text-secondary'}`}>
+            {sourceCharCount}/{CHAR_LIMIT} characters
+          </span>
+        )}
       </div>
+      {isCharLimitExceeded && (
+        <div className="px-4 pb-2 text-xs text-status-danger-text">
+          Character limit exceeded. Reduce input below 250 characters.
+        </div>
+      )}
     </div>
   )
 
@@ -385,15 +504,17 @@ export default function TranslateScreen({
             <span className="text-sm">Translating…</span>
           </div>
         ) : translatedText ? (
-          <p className="text-text-primary text-base leading-relaxed wrap-break-word">{renderHighlightedText()}</p>
+          <div className="text-text-primary text-base leading-relaxed wrap-break-word" aria-readonly="true">
+            {renderHighlightedText()}
+          </div>
         ) : (
           <p className="text-text-secondary/40 italic text-base">Translation will appear here…</p>
         )}
         {effectiveError && (
-          <div className="mt-2 bg-red-900/30 border border-red-800 text-red-300 rounded-lg px-3 py-1.5 text-sm">{effectiveError}</div>
+          <div className="mt-2 rounded-lg border border-status-danger-border/80 bg-status-danger-bg/95 px-3 py-1.5 text-sm text-status-danger-text">{effectiveError}</div>
         )}
         {ttsError && (
-          <div className="mt-2 bg-amber-900/20 border border-amber-700/70 text-amber-200 rounded-lg px-3 py-1.5 text-sm">{ttsError}</div>
+          <div className="mt-2 rounded-lg border border-status-warning-border/80 bg-status-warning-bg/95 px-3 py-1.5 text-sm text-status-warning-text">{ttsError}</div>
         )}
       </div>
       <div className={`flex items-center px-4 py-1.5 border-t border-border-subtle/25 ${hasTranslatedText ? 'justify-between' : 'justify-end'}`}>
@@ -410,6 +531,18 @@ export default function TranslateScreen({
         )}
 
         <div className="flex items-center gap-1.5">
+          {hasTranslatedText && (
+            <button
+              onClick={handleVerifyBackTranslation}
+              disabled={!canVerifyBtvl}
+              title={apiReady ? 'Verify via Back-Translation' : 'Backend/model is not ready'}
+              className="rounded-lg border border-border-subtle px-2 py-1 text-[11px] font-medium text-text-secondary transition-colors hover:text-accent-gold hover:border-accent-gold/60 disabled:opacity-40 disabled:cursor-not-allowed"
+              aria-label="Verify via Back-Translation"
+            >
+              {btvlLoading ? 'Verifying…' : 'Verify via Back-Translation'}
+            </button>
+          )}
+
           {hasTranslatedText && (
             <button
               onClick={handleCopyTranslation}
@@ -431,6 +564,49 @@ export default function TranslateScreen({
           </span>
         </div>
       </div>
+
+      <div className="border-t border-border-subtle/25 px-4 py-2.5 text-xs sm:text-sm" aria-live="polite">
+        {!hasTranslatedText && (
+          <span className="text-text-secondary/70">
+            BTVL diagnostics appear here after translation.
+          </span>
+        )}
+
+        {hasTranslatedText && !btvlLoading && !btvlResult && !btvlError && (
+          <span className="text-text-secondary/80">
+            Click <span className="text-accent-gold">Verify via Back-Translation</span> to run an English semantic check.
+          </span>
+        )}
+
+        {btvlLoading && (
+          <div className="flex items-center gap-2 text-accent-magenta">
+            <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            <span>Running Back-Translation Verification Loop…</span>
+          </div>
+        )}
+
+        {btvlError && !btvlLoading && (
+          <div className="rounded-lg border border-status-danger-border/80 bg-status-danger-bg/95 px-2.5 py-1.5 text-status-danger-text">
+            BTVL error: {btvlError}
+          </div>
+        )}
+
+        {btvlResult?.verifiedText && !btvlLoading && (
+          <div className="space-y-1.5">
+            <p className="text-accent-gold font-semibold">Back-Translation (English)</p>
+            <p className="text-text-primary leading-relaxed">{btvlResult.verifiedText}</p>
+            <p className="text-text-secondary text-[11px]">
+              Model: <span className="text-text-primary">{btvlResult.model}</span>
+              {' '}| Latency: <span className="text-text-primary">{btvlResult.latencyMs ?? 0}ms</span>
+              {' '}| Tokens: <span className="text-text-primary">{btvlResult.tokensIn ?? 0} → {btvlResult.tokensOut ?? 0}</span>
+              {' '}| Pivot: <span className="text-text-primary">{btvlResult.pivotUsed ? 'Yes' : 'No'}</span>
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   )
 
@@ -442,6 +618,9 @@ export default function TranslateScreen({
 
       {/* ══ DESKTOP ══ (md+) */}
       <div className="hidden md:flex md:flex-col flex-1">
+        {/* Top-center sociolinguistic toggle */}
+        <div className="mb-3 flex justify-center">{toggleSection}</div>
+
         {/* Language header row — both sides LEFT-aligned */}
         <div className="flex items-center mb-2">
           <div className="flex-1">{sourceLangBar}</div>
@@ -454,9 +633,6 @@ export default function TranslateScreen({
           {renderInputBox()}
           {renderOutputBox()}
         </div>
-
-        {/* Toggle centred below */}
-        <div className="flex justify-center mt-3">{toggleSection}</div>
       </div>
 
       {/* ══ MOBILE ══ (<md) */}
@@ -475,11 +651,25 @@ export default function TranslateScreen({
       </div>
 
       <div className="mt-3 flex flex-col items-center gap-2">
-        <div className={`w-full max-w-3xl rounded-xl border px-3 py-2 text-xs ${modeStatus.className}`}>
-          {modeStatus.message}
+        <div
+          className={`w-full max-w-3xl rounded-xl border px-3 py-2.5 text-xs spring-nav-transition ${modeStatus.className}`}
+        >
+          <div className="flex items-start gap-2">
+            <span className="text-[13px] leading-none" aria-hidden="true">{modeStatus.icon}</span>
+            <span className="leading-relaxed">{modeStatus.message}</span>
+          </div>
+
+          {modeStatus.fillPercent > 0 && (
+            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-border-subtle/30" aria-hidden="true">
+              <span
+                className="block h-full rounded-full bg-status-warning-border/80 spring-indicator-transition"
+                style={{ width: `${modeStatus.fillPercent}%` }}
+              />
+            </div>
+          )}
         </div>
         {settingsNotice && (
-          <div className="w-full max-w-3xl rounded-xl border border-accent-magenta/40 bg-accent-magenta/10 px-3 py-2 text-xs text-accent-magenta">
+          <div className="w-full max-w-3xl rounded-xl border border-status-info-border/55 bg-status-info-bg/95 px-3 py-2 text-xs text-status-info-text">
             {settingsNotice}
           </div>
         )}
@@ -519,6 +709,17 @@ export default function TranslateScreen({
           backendUp={backendUp}
           ttsAvailable={ttsAvailable}
         />
+      )}
+
+      {hoveredWikiTerm && (
+        <div
+          className="pointer-events-none fixed z-50 max-w-xs rounded-lg border border-accent-gold/40 bg-bg-card/95 px-3 py-2 shadow-xl backdrop-blur-sm"
+          style={{ left: tooltipPos.x, top: tooltipPos.y }}
+        >
+          <p className="text-xs font-semibold uppercase tracking-wide text-accent-gold">Wiki-Voz</p>
+          <p className="mt-1 text-sm font-semibold text-text-primary">{hoveredWikiTerm.term}</p>
+          <p className="mt-1 text-xs leading-relaxed text-text-secondary">{hoveredWikiTerm.definition}</p>
+        </div>
       )}
     </div>
   )

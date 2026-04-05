@@ -6,7 +6,7 @@
 
 | | |
 |---|---|
-| **Languages** | English, Tagalog, Chavacano de Zamboanga, Hiligaynon, Cebuano/Bisaya |
+| **Languages** | English, Spanish (control baseline), Tagalog, Chavacano de Zamboanga, Hiligaynon, Cebuano/Bisaya |
 | **ML Model** | NLLB-200-distilled-600M (INT8 quantized) + LoRA adapters |
 | **Stack** | Django 5 + DRF, React 19 + Vite 7, SQLite, PyTorch 2, edge-tts |
 | **Deployment** | LAN-only edge device (8 GB RAM, RTX 3050 Ti 4 GB VRAM) |
@@ -40,8 +40,9 @@ python -m venv .venv && source .venv/bin/activate   # Linux/macOS
 # 2. Install backend dependencies
 cd backend
 pip install -r requirements.txt
-cp .env.example .env   # Edit .env with your DB credentials and SECRET_KEY
+cp .env.example .env   # Edit .env with SECRET_KEY and deployment/security options
 # Optional: keep STRICT_OFFLINE_MODE=True in backend/.env for Chapter 1-3 offline simulation
+# Optional: set PUENTE_API_KEY in backend/.env to protect write endpoints
 
 # 3. Database setup (SQLite file is created automatically)
 python manage.py migrate
@@ -51,9 +52,13 @@ python manage.py createsuperuser
 cd ../ml_models
 python download_model.py
 
+# 4.1 Run architecture/training preflight (read-only, no installs)
+python training_preflight.py
+
 # 5. Install frontend dependencies
 cd ../frontend
 npm install
+# Optional: cp .env.example .env and set VITE_PUENTE_API_KEY to match backend PUENTE_API_KEY
 
 # 6. Launch both servers
 cd ..
@@ -109,15 +114,17 @@ chmod +x run_project.sh
 │               DJANGO DRF BACKEND (0.0.0.0:8000)                         │
 │  ┌────────────────────────┴───────────────────────────────────────────┐  │
 │  │  Routing Agent — urls.py → views.py                               │  │
-│  │  POST /api/translate/  →  TranslateView (NLLB local inference)     │  │
+│  │  POST /api/translate/  →  TranslateView (TM cache → NLLB fallback) │  │
+│  │  POST /api/btvl/       →  BackTranslationVerifyView               │  │
 │  │  GET  /api/wiki/?q=    →  WikiVozView (SQLite CulturalTerm)       │  │
+│  │  GET  /api/telemetry/  →  TelemetryView (RAM/VRAM metrics)        │  │
 │  │  GET  /api/health/     →  HealthCheckView (NLLB + LoRA status)    │  │
 │  └──────────┬─────────────────────────────────┬──────────────────────┘  │
 │             │                                 │                          │
 │  ┌──────────▼──────────────┐  ┌───────────────▼──────────────────────┐  │
 │  │  Interceptor Agent      │  │  Neural Agent (apps.py Singleton)    │  │
-│  │  CulturalTerm.filter()  │  │  NLLB-200-distilled-600M (8-bit)    │  │
-│  │  SQLite lookup          │  │  + LoRA formal/street adapters       │  │
+│  │  Greedy phrase scan     │  │  NLLB-200-distilled-600M (8-bit)    │  │
+│  │  (length-desc n-grams)  │  │  + LoRA formal/street adapters       │  │
 │  │  → Wiki-Voz injection   │  │  + English pivot for non-EN pairs    │  │
 │  └─────────────────────────┘  │  Local-only translation runtime      │  │
 │                               └──────────────────────────────────────┘  │
@@ -160,6 +167,7 @@ To keep installation sane, each layer now has its own dependency guide:
 ```
 ProjectPuente/
 ├── README.md                          # This file
+├── TRAINING_PREFLIGHT_CHECKLIST.md    # Training readiness checklist and workflow
 ├── .vscode/tasks.json                 # Searchable VS Code launcher tasks
 ├── agents.md                          # 5-Agent system documentation
 ├── package.json                       # Root workspace
@@ -178,11 +186,12 @@ ProjectPuente/
 │   │   └── wsgi.py / asgi.py
 │   ├── core_api/
 │   │   ├── apps.py                    # Singleton NLLB-200 + LoRA loader
+│   │   ├── languages.py               # Canonical language scope + FLORES map
 │   │   ├── models.py                  # CulturalTerm + TranslationLog
-│   │   ├── views.py                   # Translate, Wiki-Voz, health, and TTS views
+│   │   ├── views.py                   # Translate (TM cache), Wiki-Voz, health, and TTS views
 │   │   ├── serializers.py             # Request validation (max 250 chars)
 │   │   ├── admin.py                   # Django admin panels
-│   │   ├── tests.py                   # 28 automated backend tests
+│   │   ├── tests.py                   # 46 automated backend tests
 │   │   └── migrations/
 │   └── scripts/                       # Admin helper scripts
 │
@@ -209,6 +218,7 @@ ProjectPuente/
 │   ├── README.md                      # ML/runtime dependency guide
 │   ├── download_model.py              # One-time HuggingFace download
 │   ├── train_lora.py                  # LoRA fine-tuning script
+│   ├── training_preflight.py          # Cross-layer training readiness verifier
 │   └── validate_model.py              # Inference smoke tests
 │
 ├── datasets/                          # Training corpora (not used at runtime)
@@ -217,6 +227,16 @@ ProjectPuente/
 │
 └── notebooks/                         # Jupyter notebooks + data scripts
     ├── README.md                      # Notebook dependency guide
+    ├── lora_training.ipynb
+    ├── model_validation.ipynb
+    ├── sample.ipynb
+    └── scripts/
+        ├── _path_utils.py             # Canonical datasets path resolver
+        ├── extract_chavacano_pdf_REFINED.py
+        ├── process_chavacano_csv_REFINED.py
+        ├── process_tatoeba_REFINED.py
+        ├── harvest_creole_rc_REFINED.py
+        └── run_nllb_pipeline.py
 ```
 
 
@@ -273,6 +293,7 @@ ProjectPuente/
 | App Code | NLLB FLORES Code | Language | Notes |
 |---|---|---|---|
 | `en` | `eng_Latn` | English | Pivot language for non-EN pairs |
+| `es` | `spa_Latn` | Spanish | Control-variable baseline language |
 | `tl` | `tgl_Latn` | Tagalog (Filipino) | National language |
 | `cbk` | `cbk_Latn` | Chavacano de Zamboanga | Primary target — Spanish Creole |
 | `hil` | `hil_Latn` | Hiligaynon | Native NLLB-200 support |
@@ -294,15 +315,20 @@ This is implemented in `nllb_translate()` in `views.py`.
 ```
 TranslateView.post(request)
 │
+├── Translation Memory lookup (SQLite TranslationLog)
+│   ├── Normalize input (strip + lowercase)
+│   ├── Match latest successful source/target pair
+│   └── Cache hit → return saved output (`is_cached: true`)
+│
 ├── CoreApiConfig.model_loaded == True?
 │   │
-│   ├── YES → PRIMARY: nllb_translate()
+│   ├── YES → PRIMARY (cache miss): nllb_translate()
 │   │   ├── Select LoRA adapter based on mode (formal/street)
 │   │   ├── Map source/target to FLORES codes
 │   │   ├── If neither is eng_Latn → two-hop pivot
 │   │   ├── _infer_once() with torch.no_grad()
 │   │   ├── num_beams=4, max_new_tokens=128
-│   │   └── Return (text, latency_ms, tokens_in, tokens_out, pivot_used)
+│   │   └── Return (text, latency_ms, tokens_in, tokens_out, pivot_used, is_cached=false)
 │   │
 │   └── NO → Return 503 (local model missing)
 │
@@ -320,6 +346,16 @@ The NLLB-200 model is loaded **exactly once** during Django's startup via `CoreA
 5. Set `CoreApiConfig.model_loaded = True`
 
 If `ml_models/` is empty, translation requests return a clear 503 until the local model is installed.
+
+### Language Contract Source of Truth
+
+Backend language scope and FLORES mapping are centralized in `backend/core_api/languages.py`.
+
+- `SUPPORTED_LANGUAGES` is reused by views and health payloads
+- `SOURCE_LANGUAGE_CODES` / `TARGET_LANGUAGE_CODES` are reused by serializers
+- `LANGUAGE_CHOICES` / `TARGET_LANGUAGE_CHOICES` are reused by models
+
+This prevents drift between validation, persistence, and API contract declarations.
 
 ### LoRA Adapter Strategy
 
@@ -390,7 +426,7 @@ CREATE TABLE core_api_translationlog (
 }
 ```
 
-**Validation:** `text` max 250 chars, `mode` ∈ {formal, street}, langs ∈ {auto, en, tl, cbk, hil, ceb}
+**Validation:** `text` max 250 chars, `mode` ∈ {formal, street}, langs ∈ {auto, en, es, tl, cbk, hil, ceb}
 
 **Response (Success):**
 ```json
@@ -404,7 +440,43 @@ CREATE TABLE core_api_translationlog (
   "tokens_in": 12,
   "tokens_out": 8,
   "pivot_used": true,
+  "is_cached": false,
   "wiki_voz": null
+}
+```
+
+On Translation Memory hit, the same response includes:
+
+```json
+{
+  "translated_text": "Of course",
+  "model": "tm-cache",
+  "is_cached": true
+}
+```
+
+### POST /api/btvl/
+
+**Request:**
+```json
+{
+  "text": "Ta ama yo contigo",
+  "source_lang": "cbk",
+  "target_lang": "en"
+}
+```
+
+**Response (Success):**
+```json
+{
+  "verified_text": "I love you",
+  "source_lang": "cbk",
+  "target_lang": "en",
+  "model": "nllb-200-distilled-600M+lora-cbk-formal",
+  "latency_ms": 842.7,
+  "tokens_in": 6,
+  "tokens_out": 4,
+  "pivot_used": false
 }
 ```
 
@@ -436,10 +508,35 @@ Without `?q=`, returns all terms (used by frontend to build dynamic cultural ter
   "engine": "nllb-200-distilled-600M",
   "nllb_loaded": true,
   "lora_adapters": ["formal", "street"],
-  "api_key_configured": true,
+  "api_key_required": false,
+  "api_key_header": "",
+  "api_key_configured": false,
   "tts_available": true,
   "tts_engine": "edge-tts",
-  "supported_languages": ["auto", "en", "tl", "cbk", "hil", "ceb"]
+  "supported_languages": ["auto", "en", "es", "tl", "cbk", "hil", "ceb"]
+}
+```
+
+### GET /api/telemetry/
+
+Returns live hardware usage from backend host:
+
+```json
+{
+  "status": "ok",
+  "timestamp_utc": "2026-04-05T10:10:33.123456+00:00",
+  "ram": {
+    "used_gb": 5.1,
+    "total_gb": 7.8,
+    "percent": 65.3
+  },
+  "gpu": {
+    "available": true,
+    "name": "NVIDIA GeForce RTX 3050 Ti Laptop GPU",
+    "used_gb": 2.6,
+    "total_gb": 4.0,
+    "percent": 65.0
+  }
 }
 ```
 
@@ -472,7 +569,7 @@ Headers include:
 | Static assets (JS, CSS, HTML, fonts, SVG) | **Cache-First** | Workbox default |
 | `GET /api/health/` | **Network-First** | `health-cache` |
 | `GET /api/wiki/` | **Network-First** | `wiki-cache` (24h TTL, max 50 entries) |
-| `POST /api/translate/` | **No caching** | — (dynamic, user-specific) |
+| `POST /api/translate/` | **No browser caching** | Server-side TM cache is applied in Django before model inference |
 
 ### Offline Fonts
 
@@ -492,8 +589,8 @@ The translation pipeline can run fully offline when the NLLB model is available 
 |---|---|---|
 | Django bind address | `run_project.bat` | `0.0.0.0:8000` |
 | Vite bind address | `run_project.bat` | `--host 0.0.0.0` |
-| `ALLOWED_HOSTS` | `backend/settings.py` | `['*']` |
-| `CORS_ALLOW_ALL_ORIGINS` | `backend/settings.py` | `True` |
+| `ALLOWED_HOSTS` | `backend/settings.py` | Parsed from `.env` (`localhost,127.0.0.1,0.0.0.0` default) |
+| `CORS_ALLOW_ALL_ORIGINS` | `backend/settings.py` | Env-driven (`DEBUG`-aware default) |
 | Frontend API URL | `App.jsx` | `http://${window.location.hostname}:8000/api` |
 
 Any LAN client can access the system at `http://<server-ip>:5173` (frontend) with API calls routed to `http://<server-ip>:8000/api`.
@@ -540,18 +637,22 @@ TranslationLog.objects.filter(pivot_used=True).count()
 
 ## Test Suite
 
-Located in `core_api/tests.py` — 28 automated tests across serializer, view, health, and TTS coverage:
+Located in `core_api/tests.py` — 46 automated tests across serializer, view, health, TTS, BTVL, API-key protection, TM cache routing, and greedy phrase interception:
 
 | Test Class | Coverage |
 |---|---|
 | `TranslateSerializerTests` | Valid payload, max 250 enforced, mode default/invalid, empty text |
-| `SupportedLanguagesTests` | Exactly 6 entries, excludes zh/ar/ja/ko/ru/vi etc. |
+| `SupportedLanguagesTests` | Expected language scope (includes Spanish control variable) |
 | `FloresMapTests` | All lang codes mapped, hil→hil_Latn, cbk→cbk_Latn |
 | `CulturalTermModelTests` | iexact match, icontains search |
 | `TranslationLogTests` | Success/error log creation |
 | `WikiVozViewTests` | Search results, empty-query-returns-all, no-match |
 | `HealthCheckViewTests` | OK status, language list present |
 | `TranslateViewValidationTests` | Missing text, unsupported lang, over 250 chars |
+| `TranslationMemoryCacheTests` | Normalized cache hit bypass and miss-to-inference routing |
+| `WikiVozPhraseInterceptorTests` | Longest-phrase match over overlapping cultural terms |
+| `BackTranslationViewTests` | BTVL success/failure paths |
+| `ApiKeyProtectionTests` | Optional X-API-Key enforcement on write endpoints |
 
 Run: `cd backend && python manage.py test core_api`
 
@@ -562,12 +663,13 @@ Run: `cd backend && python manage.py test core_api`
 | File | Change Summary |
 |---|---|
 | `core_api/apps.py` | Singleton NLLB-200 loader with 8-bit quantization + LoRA |
-| `core_api/models.py` | +TranslationLog model, +language/category on CulturalTerm |
-| `core_api/views.py` | NLLB local engine + English pivot + logging |
+| `core_api/languages.py` | Canonical language scope + FLORES mapping shared across models/serializers/views |
+| `core_api/models.py` | TranslationLog model; CulturalTerm language kept as free text for real origin labels |
+| `core_api/views.py` | TM cache + greedy phrase interceptor + NLLB local engine + telemetry + optional API-key enforcement |
 | `core_api/serializers.py` | text max_length 2000→250 |
 | `core_api/admin.py` | +TranslationLog admin panel |
-| `core_api/tests.py` | 28 tests covering validation, Wiki-Voz, health, and TTS |
-| `backend/settings.py` | ALLOWED_HOSTS=['*'], CORS_ALLOW_ALL_ORIGINS=True |
+| `core_api/tests.py` | 46 tests covering validation, TM cache, phrase interception, Wiki-Voz, health, TTS, BTVL, and auth guards |
+| `backend/settings.py` | Env-driven hosts/CORS, DRF throttling, optional PUENTE_API_KEY |
 | `backend/requirements.txt` | +torch, transformers, peft, bitsandbytes |
 | `run_project.bat` | 0.0.0.0 binding for LAN |
 | `frontend/src/App.jsx` | LAN-aware API_URL, NLLB health fields |
@@ -577,6 +679,8 @@ Run: `cd backend && python manage.py test core_api`
 | `frontend/index.html` | CDN fonts removed, manifest link added |
 | `frontend/vite.config.js` | vite-plugin-pwa + Workbox strategies |
 | `frontend/public/manifest.json` | Created — PWA manifest |
+| `ml_models/training_preflight.py` | Read-only architecture/training readiness checks with JSON report output |
+| `notebooks/scripts/_path_utils.py` | Canonical `datasets/` resolver with compatibility fallback |
 
 ---
 

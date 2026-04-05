@@ -6,23 +6,34 @@ via apps.py) with LoRA adapters for formal/street Chavacano.
 
 Features:
   - English Pivot routing for non-English language pairs
-  - Wiki-Voz cultural term interception
+    - Translation Memory (TM) cache before inference
+    - Greedy Wiki-Voz multi-word phrase interception
   - ISO 25010 TranslationLog for every request
   - Formal/Street sociolinguistic mode switching
+    - Pure Spanish (es) control-variable support for thesis baselines
 """
 
 import logging
+import re
+import secrets
 import time
+import unicodedata
+from datetime import datetime, timezone
 
 from django.conf import settings
+from django.db.models import Q
+from django.db.models.functions import Lower, Trim
 from django.http import HttpResponse
+from rest_framework.decorators import api_view
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .apps import CoreApiConfig
+from .languages import FLORES_MAP, PIVOT_LANG, SUPPORTED_LANGUAGES
 from .models import CulturalTerm, TranslationLog
 from .serializers import (
+    BackTranslationRequestSerializer,
     CulturalTermSerializer,
     TextToSpeechRequestSerializer,
     TranslateRequestSerializer,
@@ -30,36 +41,22 @@ from .serializers import (
 
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# NLLB-200 FLORES language code mapping (strict 5-language scope)
-# ---------------------------------------------------------------------------
-FLORES_MAP = {
-    'en':   'eng_Latn',
-    'tl':   'tgl_Latn',
-    'cbk':  'cbk_Latn',
-    'ceb':  'ceb_Latn',
-    'hil':  'hil_Latn',    # Hiligaynon (native NLLB-200 support)
-    'auto': 'eng_Latn',    # Auto-detect fallback to English
-}
-
-PIVOT_LANG = 'eng_Latn'
-
-# Supported languages — STRICTLY 5 languages only
-SUPPORTED_LANGUAGES = {
-    'auto': 'Auto-Detect',
-    'en':   'English',
-    'tl':   'Tagalog',
-    'cbk':  'Chavacano (Zamboanga)',
-    'hil':  'Hiligaynon',
-    'ceb':  'Cebuano/Bisaya',
-}
-
 EDGE_TTS_DEFAULT_VOICES = {
     'en': 'en-US-EmmaMultilingualNeural',
+    'es': 'es-ES-AlvaroNeural',
     'tl': 'fil-PH-BlessicaNeural',
     'cbk': 'es-ES-ElviraNeural',
     'hil': 'fil-PH-BlessicaNeural',
     'ceb': 'fil-PH-AngeloNeural',
+}
+
+INTERCEPTOR_LANGUAGE_ALIASES = {
+    'en': ('en', 'english'),
+    'es': ('es', 'spanish', 'español', 'espanol'),
+    'tl': ('tl', 'tagalog', 'filipino'),
+    'cbk': ('cbk', 'chavacano', 'chavacano (zamboanga)', 'zamboanga'),
+    'hil': ('hil', 'hiligaynon', 'ilonggo'),
+    'ceb': ('ceb', 'cebuano', 'bisaya', 'cebuano/bisaya'),
 }
 
 
@@ -77,9 +74,133 @@ def is_edge_tts_available():
     return True
 
 
+def is_api_key_required():
+    """Return True when write-endpoint API key protection is enabled."""
+    return bool((getattr(settings, 'PUENTE_API_KEY', '') or '').strip())
+
+
+def _has_valid_api_key(request):
+    """Validate X-API-Key header against configured backend API key."""
+    configured_key = (getattr(settings, 'PUENTE_API_KEY', '') or '').strip()
+    if not configured_key:
+        return True
+
+    provided_key = (request.headers.get('X-API-Key') or '').strip()
+    if not provided_key:
+        return False
+
+    return secrets.compare_digest(provided_key, configured_key)
+
+
+def _require_api_key_or_401(request):
+    """Return 401 response when API key is required and invalid/missing."""
+    if _has_valid_api_key(request):
+        return None
+
+    return Response(
+        {
+            'error': (
+                'Unauthorized: missing or invalid API key. '
+                'Provide X-API-Key header.'
+            ),
+        },
+        status=status.HTTP_401_UNAUTHORIZED,
+    )
+
+
 def _estimate_token_count(text):
     """Fast fallback token estimate for pass-through or non-NLLB paths."""
     return len((text or '').split())
+
+
+def _normalize_text_for_cache_lookup(text):
+    """Normalize text for Translation Memory lookup (strip + lowercase)."""
+    normalized = unicodedata.normalize('NFKC', text or '')
+    return normalized.strip().casefold()
+
+
+def _normalize_text_for_phrase_scan(text):
+    """Normalize text for robust phrase scanning (lowercase + punctuation folding)."""
+    normalized = unicodedata.normalize('NFKC', text or '')
+    normalized = normalized.casefold()
+    normalized = re.sub(r'[^\w]+', ' ', normalized, flags=re.UNICODE)
+    normalized = re.sub(r'\s+', ' ', normalized).strip()
+    return normalized
+
+
+def _find_translation_memory_hit(text, source_lang, target_lang):
+    """Find latest successful translation by normalized input + language pair."""
+    normalized_input = _normalize_text_for_cache_lookup(text)
+    if not normalized_input:
+        return None
+
+    return (
+        TranslationLog.objects
+        .filter(
+            status='success',
+            source_lang=source_lang,
+            target_lang=target_lang,
+        )
+        .exclude(output_text='')
+        .annotate(normalized_input=Lower(Trim('input_text')))
+        .filter(normalized_input=normalized_input)
+        .order_by('-created_at')
+        .first()
+    )
+
+
+def _get_cultural_term_candidates(source_lang, target_lang):
+    """Fetch language-scoped CulturalTerm candidates for phrase interception."""
+    scan_lang = source_lang if source_lang != 'auto' else target_lang
+    scan_lang = (scan_lang or '').strip().casefold()
+
+    base_qs = CulturalTerm.objects.only(
+        'id', 'term', 'definition', 'image_url', 'language', 'category',
+    )
+
+    if scan_lang in {'', 'auto'}:
+        return list(base_qs)
+
+    aliases = INTERCEPTOR_LANGUAGE_ALIASES.get(scan_lang, (scan_lang,))
+    language_filter = Q()
+    for alias in aliases:
+        language_filter |= Q(language__iexact=alias)
+
+    scoped_terms = list(base_qs.filter(language_filter))
+    return scoped_terms
+
+
+def _find_wiki_voz_phrase_match(text, source_lang, target_lang):
+    """
+    Greedy n-gram style interception:
+    - normalize input phrase
+    - sort candidate terms by descending normalized length
+    - match longest phrase contained in input
+    """
+    normalized_haystack = _normalize_text_for_phrase_scan(text)
+    if not normalized_haystack:
+        return None
+
+    haystack = f' {normalized_haystack} '
+    candidates = _get_cultural_term_candidates(source_lang, target_lang)
+
+    normalized_terms = []
+    for entry in candidates:
+        normalized_term = _normalize_text_for_phrase_scan(entry.term)
+        if normalized_term:
+            normalized_terms.append((len(normalized_term), normalized_term, entry))
+
+    normalized_terms.sort(key=lambda item: (-item[0], item[1]))
+
+    for _, normalized_term, entry in normalized_terms:
+        if f' {normalized_term} ' in haystack:
+            return entry
+
+    return None
+
+
+def _bytes_to_gb(value):
+    return round(float(value) / (1024 ** 3), 4)
 
 
 def _get_edge_tts_voice(lang_code, voice_override=None):
@@ -204,6 +325,83 @@ def nllb_translate(text, src_code, tgt_code, mode='formal'):
     return result, elapsed_ms, tokens_in, tokens_out, pivot_used, model_name
 
 
+@api_view(['GET'])
+def telemetry_view(request):
+    """GET /api/telemetry/ — real RAM and GPU VRAM metrics for edge-hardware validation."""
+    try:
+        import psutil
+    except ImportError:
+        return Response(
+            {
+                'status': 'error',
+                'error': 'psutil is not installed. Install with: pip install psutil',
+            },
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
+    ram = psutil.virtual_memory()
+    ram_payload = {
+        'used_bytes': int(ram.used),
+        'total_bytes': int(ram.total),
+        'used_gb': _bytes_to_gb(ram.used),
+        'total_gb': _bytes_to_gb(ram.total),
+        'percent': round(float(ram.percent), 2),
+    }
+
+    gpu_payload = {
+        'available': False,
+        'name': '',
+        'used_bytes': 0,
+        'reserved_bytes': 0,
+        'total_bytes': 0,
+        'used_gb': 0.0,
+        'reserved_gb': 0.0,
+        'total_gb': 0.0,
+        'percent': 0.0,
+        'reason': 'cuda-unavailable',
+    }
+
+    try:
+        import torch
+
+        if torch.cuda.is_available():
+            device_index = torch.cuda.current_device()
+            device_props = torch.cuda.get_device_properties(device_index)
+
+            used_bytes = int(torch.cuda.memory_allocated(device_index))
+            reserved_bytes = int(torch.cuda.memory_reserved(device_index))
+            total_bytes = int(device_props.total_memory)
+            usage_percent = round((used_bytes / total_bytes) * 100, 2) if total_bytes else 0.0
+
+            gpu_payload = {
+                'available': True,
+                'name': str(device_props.name),
+                'used_bytes': used_bytes,
+                'reserved_bytes': reserved_bytes,
+                'total_bytes': total_bytes,
+                'used_gb': _bytes_to_gb(used_bytes),
+                'reserved_gb': _bytes_to_gb(reserved_bytes),
+                'total_gb': _bytes_to_gb(total_bytes),
+                'percent': usage_percent,
+                'reason': '',
+            }
+        else:
+            gpu_payload['reason'] = 'cuda-not-detected'
+    except ImportError:
+        gpu_payload['reason'] = 'torch-not-installed'
+    except Exception as exc:
+        gpu_payload['reason'] = f'gpu-telemetry-error: {exc}'
+
+    return Response(
+        {
+            'status': 'ok',
+            'timestamp_utc': datetime.now(timezone.utc).isoformat(),
+            'ram': ram_payload,
+            'gpu': gpu_payload,
+        }
+    )
+
+
 # ═══════════════════════════════════════════════════════════════
 # API Root View
 # ═══════════════════════════════════════════════════════════════
@@ -218,6 +416,8 @@ class APIRootView(APIView):
             'endpoints': {
                 'admin': '/admin/',
                 'translate': '/api/translate/',
+                'btvl': '/api/btvl/',
+                'telemetry': '/api/telemetry/',
                 'tts': '/api/tts/',
                 'wiki_voz': '/api/wiki/?q=<term>',
                 'health': '/api/health/',
@@ -235,6 +435,10 @@ class TranslateView(APIView):
     """
 
     def post(self, request):
+        auth_error = _require_api_key_or_401(request)
+        if auth_error:
+            return auth_error
+
         # 1. Validate -------------------------------------------------------
         serializer = TranslateRequestSerializer(data=request.data)
         if not serializer.is_valid():
@@ -247,14 +451,64 @@ class TranslateView(APIView):
         source_lang = serializer.validated_data['source_lang']
         target_lang = serializer.validated_data['target_lang']
         mode = serializer.validated_data.get('mode', 'formal')
+        request_started = time.perf_counter()
 
-        # 2. Wiki-Voz interception ------------------------------------------
-        wiki_match = CulturalTerm.objects.filter(term__iexact=text.strip()).first()
+        # 2. Wiki-Voz interception (greedy phrase / n-gram style) -----------
+        wiki_match = _find_wiki_voz_phrase_match(
+            text=text,
+            source_lang=source_lang,
+            target_lang=target_lang,
+        )
         wiki_data = None
         if wiki_match:
             wiki_data = CulturalTermSerializer(wiki_match).data
 
-        # 2b. Short-circuit: same source and target language -----------------
+        # 3. Translation Memory (TM) cache lookup ---------------------------
+        cached_log = _find_translation_memory_hit(
+            text=text,
+            source_lang=source_lang,
+            target_lang=target_lang,
+        )
+        if cached_log:
+            translated_text = cached_log.output_text
+            tokens_in = cached_log.input_tokens or _estimate_token_count(text)
+            tokens_out = cached_log.output_tokens or _estimate_token_count(translated_text)
+            cache_latency_ms = (time.perf_counter() - request_started) * 1000
+
+            TranslationLog.objects.create(
+                source_lang=source_lang,
+                target_lang=target_lang,
+                mode=mode,
+                input_text=text,
+                input_chars=len(text),
+                input_tokens=tokens_in,
+                output_text=translated_text,
+                output_tokens=tokens_out,
+                model_name='tm-cache',
+                pivot_used=cached_log.pivot_used,
+                latency_ms=cache_latency_ms,
+                status='success',
+                wiki_voz_triggered=wiki_match is not None,
+                wiki_voz_term=wiki_match.term if wiki_match else '',
+            )
+
+            payload = {
+                'translated_text': translated_text,
+                'source_lang': source_lang,
+                'target_lang': target_lang,
+                'mode': mode,
+                'model': 'tm-cache',
+                'latency_ms': round(cache_latency_ms, 1),
+                'tokens_in': tokens_in,
+                'tokens_out': tokens_out,
+                'pivot_used': cached_log.pivot_used,
+                'is_cached': True,
+            }
+            if wiki_data:
+                payload['wiki_voz'] = wiki_data
+            return Response(payload)
+
+        # 4. Short-circuit: same source and target language -----------------
         if source_lang == target_lang or (
             source_lang != 'auto'
             and FLORES_MAP.get(source_lang) == FLORES_MAP.get(target_lang)
@@ -278,12 +532,13 @@ class TranslateView(APIView):
                 'tokens_in': passthrough_tokens,
                 'tokens_out': passthrough_tokens,
                 'pivot_used': False,
+                'is_cached': False,
             }
             if wiki_data:
                 payload['wiki_voz'] = wiki_data
             return Response(payload)
 
-        # 3. Prepare logging entry ------------------------------------------
+        # 5. Prepare logging entry ------------------------------------------
         start_time = time.perf_counter()
         log_entry = TranslationLog(
             source_lang=source_lang,
@@ -293,7 +548,7 @@ class TranslateView(APIView):
             input_chars=len(text),
         )
 
-        # 4. Translate — NLLB-200 local engine only -------------------------
+        # 6. Translate — NLLB-200 local engine only -------------------------
         try:
             if not CoreApiConfig.model_loaded:
                 raise ValueError(
@@ -335,12 +590,12 @@ class TranslateView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        # 5. Save log entry -------------------------------------------------
+        # 7. Save log entry -------------------------------------------------
         log_entry.wiki_voz_triggered = wiki_match is not None
         log_entry.wiki_voz_term = wiki_match.term if wiki_match else ''
         log_entry.save()
 
-        # 6. Response -------------------------------------------------------
+        # 8. Response -------------------------------------------------------
         payload = {
             'translated_text': translated_text,
             'source_lang': source_lang,
@@ -351,11 +606,78 @@ class TranslateView(APIView):
             'tokens_in': log_entry.input_tokens,
             'tokens_out': log_entry.output_tokens,
             'pivot_used': log_entry.pivot_used,
+            'is_cached': False,
         }
         if wiki_data:
             payload['wiki_voz'] = wiki_data
 
         return Response(payload)
+
+
+# ═══════════════════════════════════════════════════════════════
+# Back-Translation Verification Loop (BTVL)
+# ═══════════════════════════════════════════════════════════════
+class BackTranslationVerifyView(APIView):
+    """
+    POST /api/btvl/
+    Body: { "text": "...", "source_lang": "cbk", "target_lang": "en" }
+
+    Translates the provided text back into English for semantic verification.
+    """
+
+    def post(self, request):
+        auth_error = _require_api_key_or_401(request)
+        if auth_error:
+            return auth_error
+
+        serializer = BackTranslationRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                {'errors': serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        text = serializer.validated_data['text']
+        source_lang = serializer.validated_data['source_lang']
+        target_lang = serializer.validated_data.get('target_lang', 'en')
+
+        if not CoreApiConfig.model_loaded:
+            return Response(
+                {
+                    'error': (
+                        'Local NLLB model is unavailable. '
+                        'Install it in ml_models/nllb-200-distilled-600M and restart backend.'
+                    ),
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        try:
+            verified_text, latency_ms, tokens_in, tokens_out, pivot_used, model_used = (
+                nllb_translate(
+                    text=text,
+                    src_code=source_lang,
+                    tgt_code=target_lang,
+                    mode='formal',
+                )
+            )
+        except Exception as e:
+            logger.exception('Back-translation verification failed')
+            return Response(
+                {'error': f'Back-translation failed: {e}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        return Response({
+            'verified_text': verified_text,
+            'source_lang': source_lang,
+            'target_lang': target_lang,
+            'model': model_used,
+            'latency_ms': round(latency_ms, 1),
+            'tokens_in': tokens_in,
+            'tokens_out': tokens_out,
+            'pivot_used': pivot_used,
+        })
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -393,6 +715,10 @@ class TextToSpeechView(APIView):
     """
 
     def post(self, request):
+        auth_error = _require_api_key_or_401(request)
+        if auth_error:
+            return auth_error
+
         if is_strict_offline_mode():
             return Response(
                 {
@@ -457,6 +783,7 @@ class HealthCheckView(APIView):
         lora_modes = list(CoreApiConfig.lora_adapters.keys())
         strict_offline = is_strict_offline_mode()
         tts_available = is_edge_tts_available() and not strict_offline
+        api_key_required = is_api_key_required()
 
         return Response({
             'status': 'ok',
@@ -467,7 +794,9 @@ class HealthCheckView(APIView):
             ),
             'nllb_loaded': nllb_loaded,
             'lora_adapters': lora_modes,
-            'api_key_configured': nllb_loaded,
+            'api_key_required': api_key_required,
+            'api_key_header': 'X-API-Key' if api_key_required else '',
+            'api_key_configured': api_key_required,
             'tts_available': tts_available,
             'tts_engine': 'edge-tts' if tts_available else 'unavailable',
             'strict_offline_mode': strict_offline,

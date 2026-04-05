@@ -3,13 +3,125 @@
 @source "../index.html";
 @source "./**/*.{js,jsx,ts,tsx}";
 
+:root,
+:root[data-theme='dark'],
+body[data-theme='dark'] {
+  --puente-bg-dark: #121212;
+  --puente-bg-card: #1e1e1e;
+  --puente-bg-elevated: #2a2a2a;
+  --puente-accent-magenta: #d946ef;
+  --puente-accent-gold: #facc15;
+  --puente-text-primary: #f5f5f5;
+  --puente-text-secondary: #a3a3a3;
+  --puente-border-subtle: #333333;
+  --puente-overlay-scrim: #020617;
+
+  --puente-state-good: #34d399;
+  --puente-state-warn: #fbbf24;
+  --puente-state-bad: #f87171;
+
+  --puente-status-warning-bg: #3f2a06;
+  --puente-status-warning-border: #a16207;
+  --puente-status-warning-text: #fde68a;
+
+  --puente-status-success-bg: #052e24;
+  --puente-status-success-border: #047857;
+  --puente-status-success-text: #a7f3d0;
+
+  --puente-status-danger-bg: #3a1014;
+  --puente-status-danger-border: #b91c1c;
+  --puente-status-danger-text: #fecaca;
+
+  --puente-status-info-bg: #1f1d33;
+  --puente-status-info-border: #7e22ce;
+  --puente-status-info-text: #f5d0fe;
+
+  --puente-scrollbar-track: #1e1e1e;
+  --puente-scrollbar-thumb: #333333;
+  --puente-scrollbar-thumb-hover: #444444;
+  --puente-backdrop-fallback: rgba(18, 18, 18, 0.98);
+  --puente-card-hover-shadow: 0 10px 26px rgba(0, 0, 0, 0.34);
+}
+
+:root[data-theme='light'],
+body[data-theme='light'] {
+  --puente-bg-dark: #f4f6fb;
+  --puente-bg-card: #ffffff;
+  --puente-bg-elevated: #ecf0f8;
+  --puente-accent-magenta: #bf2fd8;
+  --puente-accent-gold: #c88a00;
+  --puente-text-primary: #141824;
+  --puente-text-secondary: #5f687a;
+  --puente-border-subtle: #d1d7e5;
+  --puente-overlay-scrim: #0f172a;
+
+  --puente-state-good: #0f8f61;
+  --puente-state-warn: #a86500;
+  --puente-state-bad: #c53030;
+
+  --puente-status-warning-bg: #fff7df;
+  --puente-status-warning-border: #d89a10;
+  --puente-status-warning-text: #7a4b00;
+
+  --puente-status-success-bg: #e8faf3;
+  --puente-status-success-border: #2b956c;
+  --puente-status-success-text: #0f5b3f;
+
+  --puente-status-danger-bg: #ffeff1;
+  --puente-status-danger-border: #dd4f5f;
+  --puente-status-danger-text: #8a2230;
+
+  --puente-status-info-bg: #f8efff;
+  --puente-status-info-border: #a855f7;
+  --puente-status-info-text: #6923a2;
+
+  --puente-scrollbar-track: #edf1f8;
+  --puente-scrollbar-thumb: #b8c0d2;
+  --puente-scrollbar-thumb-hover: #9ca8bf;
+  --puente-backdrop-fallback: rgba(244, 246, 251, 0.95);
+  --puente-card-hover-shadow: 0 10px 20px rgba(27, 37, 64, 0.12);
+}
+
 @theme {
-  --color-bg-dark: #121212;
-  --color-bg-card: #1E1E1E;
-  --color-bg-elevated: #2A2A2A;
-  --color-accent-magenta: #D946EF;
-  --color-accent-gold: #FACC15;
-  --color-text-primary: #F5F5F5;
-  --color-text-secondary: #A3A3A3;
-  --color-border-subtle: #333333;
+  --color-bg-dark: var(--puente-bg-dark);
+  --color-bg-card: var(--puente-bg-card);
+  --color-bg-elevated: var(--puente-bg-elevated);
+  --color-accent-magenta: var(--puente-accent-magenta);
+  --color-accent-gold: var(--puente-accent-gold);
+  --color-text-primary: var(--puente-text-primary);
+  --color-text-secondary: var(--puente-text-secondary);
+  --color-border-subtle: var(--puente-border-subtle);
+  --color-overlay-scrim: var(--puente-overlay-scrim);
+
+  --color-state-good: var(--puente-state-good);
+  --color-state-warn: var(--puente-state-warn);
+  --color-state-bad: var(--puente-state-bad);
+
+  --color-status-warning-bg: var(--puente-status-warning-bg);
+  --color-status-warning-border: var(--puente-status-warning-border);
+  --color-status-warning-text: var(--puente-status-warning-text);
+
+  --color-status-success-bg: var(--puente-status-success-bg);
+  --color-status-success-border: var(--puente-status-success-border);
+  --color-status-success-text: var(--puente-status-success-text);
+
+  --color-status-danger-bg: var(--puente-status-danger-bg);
+  --color-status-danger-border: var(--puente-status-danger-border);
+  --color-status-danger-text: var(--puente-status-danger-text);
+
+  --color-status-info-bg: var(--puente-status-info-bg);
+  --color-status-info-border: var(--puente-status-info-border);
+  --color-status-info-text: var(--puente-status-info-text);
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  background-color: var(--puente-bg-dark);
+  color: var(--puente-text-primary);
+  transition: background-color 220ms ease, color 220ms ease;
 }

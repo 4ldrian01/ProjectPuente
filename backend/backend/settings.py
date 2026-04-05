@@ -134,6 +134,12 @@ REST_FRAMEWORK = {
     'DEFAULT_PARSER_CLASSES': [
         'rest_framework.parsers.JSONParser',
     ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': os.getenv('DRF_THROTTLE_ANON_RATE', '240/min'),
+    },
 }
 
 # ---------------------------------------------------------------------------
@@ -170,10 +176,18 @@ STRICT_OFFLINE_MODE = os.getenv('STRICT_OFFLINE_MODE', 'False').lower() in (
     'true', '1', 'yes',
 )
 
+# Optional request protection for write endpoints.
+# When non-empty, clients must send this value in the X-API-Key header.
+PUENTE_API_KEY = os.getenv('PUENTE_API_KEY', '').strip()
+
+# Local model path (relative to project root unless absolute path is provided).
+ML_MODEL_PATH = os.getenv('ML_MODEL_PATH', 'ml_models/nllb-200-distilled-600M').strip()
+
 # ---------------------------------------------------------------------------
 # Edge TTS (optional speech synthesis)
 # ---------------------------------------------------------------------------
 EDGE_TTS_VOICE_EN = os.getenv('EDGE_TTS_VOICE_EN', '')
+EDGE_TTS_VOICE_ES = os.getenv('EDGE_TTS_VOICE_ES', '')
 EDGE_TTS_VOICE_TL = os.getenv('EDGE_TTS_VOICE_TL', '')
 EDGE_TTS_VOICE_CBK = os.getenv('EDGE_TTS_VOICE_CBK', '')
 EDGE_TTS_VOICE_HIL = os.getenv('EDGE_TTS_VOICE_HIL', '')

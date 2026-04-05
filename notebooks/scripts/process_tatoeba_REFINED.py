@@ -15,18 +15,21 @@ from pathlib import Path
 from datetime import datetime
 from typing import List, Dict, Set, Tuple
 
+from _path_utils import resolve_datasets_dir
+
 # ============================================================================
 # CONFIGURATION
 # ============================================================================
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent.parent
+DATASETS_DIR = resolve_datasets_dir(PROJECT_ROOT)
 
 # Input/Output paths
-RAW_DIR = PROJECT_ROOT / "Datasets" / "raw" / "02_Chavacano"
+RAW_DIR = DATASETS_DIR / "raw" / "02_Chavacano"
 ZIP_FILE = RAW_DIR / "cbk-en.txt.zip"
 EXTRACT_DIR = RAW_DIR / "tatoeba_extracted"
 
-PROCESSED_DIR = PROJECT_ROOT / "Datasets" / "processed" / "001_chavacano"
+PROCESSED_DIR = DATASETS_DIR / "processed" / "001_chavacano"
 OUTPUT_JSON = PROCESSED_DIR / "tatoeba_parallel_nllb.json"
 LOG_FILE = PROCESSED_DIR / "tatoeba_extraction.log"
 

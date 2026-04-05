@@ -6,6 +6,7 @@ TranslationLog: ISO 25010 metrics log for every translation request.
 """
 
 from django.db import models
+from .languages import LANGUAGE_CHOICES, TARGET_LANGUAGE_CHOICES
 
 
 class CulturalTerm(models.Model):
@@ -59,8 +60,8 @@ class TranslationLog(models.Model):
     """
 
     # Request metadata
-    source_lang = models.CharField(max_length=10)
-    target_lang = models.CharField(max_length=10)
+    source_lang = models.CharField(max_length=10, choices=LANGUAGE_CHOICES)
+    target_lang = models.CharField(max_length=10, choices=TARGET_LANGUAGE_CHOICES)
     mode = models.CharField(
         max_length=10,
         choices=[('formal', 'Formal'), ('street', 'Street')],

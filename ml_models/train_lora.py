@@ -3,11 +3,11 @@ train_lora.py — LoRA fine-tuning script for Chavacano formal/street adapters.
 
 Usage:
     cd ml_models
-    python train_lora.py --mode formal --dataset ../Datasets/processed/001_chavacano/
-    python train_lora.py --mode street --dataset ../Datasets/processed/001_chavacano/
+    python train_lora.py --mode formal --dataset ../datasets/processed/001_chavacano/
+    python train_lora.py --mode street --dataset ../datasets/processed/001_chavacano/
 
 This trains a LoRA adapter on top of the NLLB-200-distilled-600M base model
-using parallel sentence data from the Datasets/processed/ directory.
+using parallel sentence data from the datasets/processed/ directory.
 
 Output:
     ml_models/lora-cbk-formal/   (or lora-cbk-street/)
@@ -32,7 +32,7 @@ def parse_args():
     parser.add_argument(
         "--dataset",
         type=str,
-        default="../Datasets/processed/001_chavacano/",
+        default="../datasets/processed/001_chavacano/",
         help="Path to processed dataset directory containing NLLB-ready JSON files",
     )
     parser.add_argument(
@@ -48,6 +48,29 @@ def parse_args():
     parser.add_argument("--lora-alpha", type=int, default=32, help="LoRA alpha scaling")
     parser.add_argument("--lora-dropout", type=float, default=0.05, help="LoRA dropout")
     return parser.parse_args()
+
+
+def resolve_dataset_dir(dataset_arg):
+    """Resolve dataset directory with compatibility fallback for old path casing."""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(script_dir)
+
+    candidates = []
+
+    if dataset_arg:
+        candidates.append(os.path.abspath(os.path.join(script_dir, dataset_arg)))
+        candidates.append(os.path.abspath(dataset_arg))
+
+    candidates.extend([
+        os.path.join(project_root, 'datasets', 'processed', '001_chavacano'),
+        os.path.join(project_root, 'Datasets', 'processed', '001_chavacano'),
+    ])
+
+    for candidate in candidates:
+        if os.path.isdir(candidate):
+            return candidate
+
+    return os.path.abspath(os.path.join(script_dir, dataset_arg))
 
 
 def load_parallel_data(dataset_dir):
@@ -71,6 +94,7 @@ def load_parallel_data(dataset_dir):
 
 def main():
     args = parse_args()
+    dataset_dir = resolve_dataset_dir(args.dataset)
 
     # ── Validate prerequisites ──
     if not os.path.isdir(args.base_model):
@@ -78,8 +102,8 @@ def main():
         print("Run: python download_model.py")
         sys.exit(1)
 
-    if not os.path.isdir(args.dataset):
-        print(f"ERROR: Dataset directory not found at {args.dataset}")
+    if not os.path.isdir(dataset_dir):
+        print(f"ERROR: Dataset directory not found at {dataset_dir}")
         sys.exit(1)
 
     try:
@@ -97,8 +121,8 @@ def main():
     )
 
     # ── Load data ──
-    print(f"\nLoading {args.mode} training data from {args.dataset} ...")
-    pairs = load_parallel_data(args.dataset)
+    print(f"\nLoading {args.mode} training data from {dataset_dir} ...")
+    pairs = load_parallel_data(dataset_dir)
     print(f"  Loaded {len(pairs)} parallel sentence pairs")
 
     if len(pairs) < 10:

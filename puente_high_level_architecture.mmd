@@ -1,0 +1,56 @@
+flowchart TB
+    %% PUENTE Modular Agent-Based Architecture
+    %% Optimized strictly for vertical Long Bond Paper layout (Enterprise Formatting)
+
+    A(["<b>User Input</b>"]) --> B["<b>Presentation Agent</b><br>React/Vite PWA & XAI UI"]
+    
+    subgraph RUNTIME ["1. Offline Orchestration & Inference"]
+        direction TB
+        C["<b>Django API</b><br>Validation & Routing"]
+        D["<b>Interceptor Agent</b><br>250-Word Limit"]
+        E["<b>Context Lookup</b><br>Wiki-Voz & Toggle"]
+        F["<b>Neural Agent</b><br>8-bit NLLB-200 + LoRA"]
+        G["<b>BTVL Module</b><br>Back-Translation"]
+        H["<b>Observer Agent</b><br>Telemetry & XAI Mapping"]
+
+        B --> C --> D
+        D <--> E
+        D --> F --> G --> H
+        H -->|"Returns Validated Payload"| B
+    end
+
+    subgraph DB ["2. Local Data & Lexicon Storage"]
+        direction TB
+        K[("<b>SQLite Wiki-Voz</b><br>Dictionary & Telemetry")]
+        N[("<b>8-bit Quantized</b><br>Model Artifacts")]
+    end
+
+    E <-->|"Queries Terms"| K
+    H -.->|"Logs to"| K
+    N == "Loads Offline Weights" ==> F
+
+    subgraph PIPE ["3. Offline ML Pipeline"]
+        direction TB
+        P1["<b>Corpus Collection</b><br>Incl. Spanish Control"] --> M[("<b>Raw Corpora</b>")]
+        M --> P2["<b>Sanitization & Tokenization</b>"]
+        P2 --> L[("<b>Processed Datasets</b>")]
+        L --> P3["<b>Dataset Split</b><br>Strict 80-10-10"]
+        P3 --> P4["<b>LoRA Fine-Tuning</b><br>Seq. Grad Accumulation"]
+        P4 --> P5["<b>Neural Eval</b><br>COMET, chrF++, BLEU"]
+        P5 --> P6["<b>Deployment Packaging</b>"]
+    end
+
+    P6 --> N
+
+    subgraph OPS ["4. Testing & Quality Assurance"]
+        direction TB
+        Q1["<b>Offline Hardware Sim</b>"]
+        Q2["<b>System Tests & UAT</b>"]
+        Q3["<b>Sociolinguistic A/B Tests</b>"]
+        Q4(["<b>ISO 25010 Compliance</b>"])
+
+        C -.->|"Verifies API"| Q2
+        G -.->|"Verifies Pragmatics"| Q3
+        F -.->|"Verifies VRAM Limits"| Q1
+        Q1 & Q2 & Q3 --> Q4
+    end

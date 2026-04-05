@@ -1,0 +1,17 @@
+{
+  "status": "error",
+  "generated_at_utc": "2026-04-01T13:33:54.514809+00:00",
+  "error": "Missing dependencies: torch, transformers, sacrebleu",
+  "missing_dependencies": [
+    "torch",
+    "transformers",
+    "sacrebleu"
+  ],
+  "install_command": "\"C:\\Users\\User's\\ALL FILES - MACHINE LEARNING\\ProjectPuente\\.venv\\Scripts\\python.exe\" -m pip install torch transformers peft sacrebleu psutil",
+  "base_model_path": "C:\\Users\\User's\\ALL FILES - MACHINE LEARNING\\ProjectPuente\\ml_models\\nllb-200-distilled-600M",
+  "input_path": "C:\\Users\\User's\\ALL FILES - MACHINE LEARNING\\ProjectPuente\\ml_models\\spanish_baseline_input.json",
+  "source_lang": "es",
+  "target_lang": "en",
+  "source_flores": "spa_Latn",
+  "target_flores": "eng_Latn"
+}

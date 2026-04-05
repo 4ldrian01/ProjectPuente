@@ -6,6 +6,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import axios from 'axios'
 import './App.css'
+import {
+  applyThemeToDocument,
+  loadSettings,
+  SETTINGS_STORAGE_KEY,
+  SETTINGS_UPDATED_EVENT,
+} from './lib/settings'
+import { isClientApiKeyConfigured, withApiKeyHeaders } from './lib/apiAuth'
 
 // Layout components
 import Header from './components/layout/Header'
@@ -20,9 +27,13 @@ import SettingsScreen from './components/screens/SettingsScreen'
 const API_URL = `http://${window.location.hostname}:8000/api`
 
 function App() {
+  const initialSettings = loadSettings()
+  const clientApiKeyConfigured = isClientApiKeyConfigured()
+
   // Navigation state — settings is an overlay, not a screen replacement
   const [activeScreen, setActiveScreen] = useState('translate')   // 'translate' | 'wiki-voz'
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [theme, setTheme] = useState(initialSettings.theme)
 
   // Translation state
   const [translatedText, setTranslatedText] = useState('')
@@ -36,7 +47,7 @@ function App() {
     backendUp: false,
     nllbLoaded: false,
     loraAdapters: [],
-    apiKeyConfigured: false,
+    apiKeyRequired: false,
     ttsAvailable: false,
     ttsEngine: 'unavailable',
     engine: 'unknown',
@@ -54,7 +65,7 @@ function App() {
         backendUp: true,
         nllbLoaded: Boolean(data.nllb_loaded),
         loraAdapters: data.lora_adapters || [],
-        apiKeyConfigured: Boolean(data.api_key_configured),
+        apiKeyRequired: Boolean(data.api_key_required),
         ttsAvailable: Boolean(data.tts_available),
         ttsEngine: data.tts_engine || 'unavailable',
         engine: data.engine || 'unknown',
@@ -66,7 +77,7 @@ function App() {
         backendUp: false,
         nllbLoaded: false,
         loraAdapters: [],
-        apiKeyConfigured: false,
+        apiKeyRequired: false,
         ttsAvailable: false,
         ttsEngine: 'offline',
         engine: 'offline',
@@ -89,8 +100,44 @@ function App() {
     }
   }, [])
 
+  useEffect(() => {
+    applyThemeToDocument(theme)
+  }, [theme])
+
+  useEffect(() => {
+    const syncTheme = (nextSettings) => {
+      if (!nextSettings?.theme) return
+      if (nextSettings.theme !== theme) {
+        setTheme(nextSettings.theme)
+      }
+    }
+
+    const handleSettingsUpdated = (event) => {
+      syncTheme(event?.detail ?? loadSettings())
+    }
+
+    const handleStorage = (event) => {
+      if (event.key && event.key !== SETTINGS_STORAGE_KEY) return
+      syncTheme(loadSettings())
+    }
+
+    window.addEventListener(SETTINGS_UPDATED_EVENT, handleSettingsUpdated)
+    window.addEventListener('storage', handleStorage)
+
+    return () => {
+      window.removeEventListener(SETTINGS_UPDATED_EVENT, handleSettingsUpdated)
+      window.removeEventListener('storage', handleStorage)
+    }
+  }, [theme])
+
   const handleTranslate = useCallback(async (payload, options = { trigger: 'manual' }) => {
     if (!payload?.text?.trim()) {
+      return
+    }
+
+    if (health.apiKeyRequired && !clientApiKeyConfigured) {
+      setError('Backend requires an API key. Set VITE_PUENTE_API_KEY in frontend/.env.')
+      setLoading(false)
       return
     }
 
@@ -108,6 +155,7 @@ function App() {
 
     try {
       const response = await axios.post(`${API_URL}/translate/`, payload, {
+        headers: withApiKeyHeaders(),
         signal: controller.signal,
         timeout: 35000,
       })
@@ -120,7 +168,7 @@ function App() {
       setWikiData(response.data.wiki_voz ?? null)
 
       // Refresh health on successful call to keep badge current.
-      if (!health.backendUp || (!health.nllbLoaded && !health.apiKeyConfigured)) {
+      if (!health.backendUp || !health.nllbLoaded) {
         refreshHealth()
       }
     } catch (err) {
@@ -149,7 +197,7 @@ function App() {
         setLoading(false)
       }
     }
-  }, [health.apiKeyConfigured, health.backendUp, health.nllbLoaded, refreshHealth])
+  }, [clientApiKeyConfigured, health.apiKeyRequired, health.backendUp, health.nllbLoaded, refreshHealth])
 
   // Navigation handler — settings toggles an overlay panel
   const handleNavigate = (screen) => {
@@ -182,20 +230,22 @@ function App() {
         translatedText={translatedText}
         loading={loading}
         error={error}
-        apiReady={health.backendUp && (health.nllbLoaded || health.apiKeyConfigured)}
+        apiReady={health.backendUp && health.nllbLoaded && (!health.apiKeyRequired || clientApiKeyConfigured)}
         wikiData={wikiData}
         apiUrl={API_URL}
         backendUp={health.backendUp}
         ttsAvailable={health.ttsAvailable}
         loraAdapters={health.loraAdapters}
         nllbLoaded={health.nllbLoaded}
+        apiKeyRequired={health.apiKeyRequired}
+        clientApiKeyConfigured={clientApiKeyConfigured}
         translationEngine={health.engine}
       />
     )
   }
 
   return (
-    <div className="min-h-screen bg-bg-dark text-text-primary flex flex-col">
+    <div className="min-h-screen bg-bg-dark text-text-primary flex flex-col transition-colors duration-300">
       {/* Header */}
       <Header activeScreen={visibleScreen} onNavigate={handleNavigate} />
 
@@ -203,17 +253,21 @@ function App() {
       <main className="flex-1 flex flex-col pb-20 md:pb-0 relative">
         {/* Main screen — hidden on mobile when settings open, always visible on desktop */}
         <div className={`flex-1 flex flex-col ${settingsOpen ? 'hidden md:flex' : ''}`}>
-          {renderMainScreen()}
+          <div key={activeScreen} className="screen-transition-in flex-1 flex flex-col">
+            {renderMainScreen()}
+          </div>
         </div>
 
         {/* Mobile: Settings replaces content */}
         {settingsOpen && (
           <div className="flex-1 flex flex-col md:hidden">
-            <SettingsScreen
-              health={health}
-              onRefreshHealth={refreshHealth}
-              onClose={() => setSettingsOpen(false)}
-            />
+            <div className="screen-transition-in flex-1 flex flex-col">
+              <SettingsScreen
+                health={health}
+                onRefreshHealth={refreshHealth}
+                onClose={() => setSettingsOpen(false)}
+              />
+            </div>
           </div>
         )}
 
@@ -222,7 +276,7 @@ function App() {
           <div className="hidden md:block">
             {/* Dimmed backdrop */}
             <div
-              className="fixed inset-0 top-16 bg-black/20 z-30"
+              className="fixed inset-0 top-16 bg-overlay-scrim/25 z-30"
               onClick={() => setSettingsOpen(false)}
             />
             {/* Slide-in panel */}
@@ -234,6 +288,7 @@ function App() {
                   health={health}
                   onRefreshHealth={refreshHealth}
                   onClose={() => setSettingsOpen(false)}
+                  activeTheme={theme}
                 />
               </div>
             </div>

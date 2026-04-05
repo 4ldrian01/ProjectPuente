@@ -1,4 +1,9 @@
 import axios from 'axios'
+import { withApiKeyHeaders } from './apiAuth'
+
+const DEFAULT_TTS_VOICE_BY_LANG = {
+  es: 'es-ES-AlvaroNeural',
+}
 
 let activeController = null
 let activeAudio = null
@@ -51,15 +56,19 @@ export async function speakWithEdgeTts({ apiUrl, text, langCode = 'en', voice = 
   activeController = controller
 
   try {
+    const normalizedLang = String(langCode || 'en').toLowerCase()
+    const resolvedVoice = voice || DEFAULT_TTS_VOICE_BY_LANG[normalizedLang] || ''
+
     const response = await axios.post(
       `${apiUrl}/tts/`,
       {
         text: trimmedText,
-        lang_code: langCode,
-        voice,
+        lang_code: normalizedLang,
+        voice: resolvedVoice,
       },
       {
         responseType: 'blob',
+        headers: withApiKeyHeaders(),
         signal: controller.signal,
         timeout: 45000,
       },

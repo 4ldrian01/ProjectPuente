@@ -42,12 +42,23 @@ The frontend is a React 19 + Vite 7 progressive web app that talks to the Django
 | Feature | Backend dependency |
 |---|---|
 | Translation | `/api/translate/` |
+| Back-translation verification | `/api/btvl/` |
 | Wiki-Voz API mode | `/api/wiki/` |
 | TTS buttons | `/api/tts/` with backend `edge-tts` installed |
 | Health badge / settings | `/api/health/` |
+| Hardware telemetry panel | `/api/telemetry/` |
+
+## Optional frontend environment variables
+
+Copy `frontend/.env.example` to `frontend/.env` only when needed:
+
+| Variable | Required | Purpose |
+|---|---:|---|
+| `VITE_PUENTE_API_KEY` | Optional | Sends `X-API-Key` header for `/api/translate/`, `/api/btvl/`, and `/api/tts/` when backend protection is enabled |
 
 ## Notes
 
 - The frontend still works with offline seed data for Wiki-Voz when the backend wiki API is unavailable.
 - The TTS buttons now use the backend `edge-tts` endpoint instead of the browser Web Speech API.
 - The frontend automatically derives the API host from `window.location.hostname`, so it stays LAN-friendly without hardcoded IP addresses.
+- If backend API-key protection is enabled, you must set `VITE_PUENTE_API_KEY` or write actions will be rejected with HTTP 401.

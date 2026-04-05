@@ -1,5 +1,49 @@
 /* App.css — Vinta Dark Mode custom styles for PUENTE */
 
+:root {
+  /* Frame-aligned timings for consistent 60Hz / 120Hz feel */
+  --spring-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --spring-duration-nav: 250ms;
+  --spring-duration-icon: 200ms;
+  --spring-duration-indicator: 300ms;
+  --spring-duration-screen: 300ms;
+  --spring-screen-distance: 10px;
+}
+
+@media (max-width: 767px) {
+  :root {
+    --spring-duration-nav: 220ms;
+    --spring-duration-icon: 180ms;
+    --spring-duration-indicator: 260ms;
+    --spring-duration-screen: 260ms;
+    --spring-screen-distance: 8px;
+  }
+}
+
+.spring-nav-transition {
+  transition-property: transform, color, background-color, opacity, border-color;
+  transition-duration: var(--spring-duration-nav);
+  transition-timing-function: var(--spring-ease);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.spring-icon-transition {
+  transition-property: transform, opacity;
+  transition-duration: var(--spring-duration-icon);
+  transition-timing-function: var(--spring-ease);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.spring-indicator-transition {
+  transition-property: transform, left, width, opacity, background-color;
+  transition-duration: var(--spring-duration-indicator);
+  transition-timing-function: var(--spring-ease);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
 /* ============================================
    TOGGLE SWITCH COMPONENT
    ============================================ */
@@ -95,7 +139,7 @@
 }
 
 .settings-panel {
-  animation: slideInRight 0.25s ease-out;
+  animation: slideInRight var(--spring-duration-screen) var(--spring-ease);
 }
 
 /* ============================================
@@ -121,17 +165,17 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #1E1E1E;
+  background: var(--puente-scrollbar-track);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #333333;
+  background: var(--puente-scrollbar-thumb);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #444444;
+  background: var(--puente-scrollbar-thumb-hover);
 }
 
 /* ============================================
@@ -146,6 +190,7 @@
    ============================================ */
 .line-clamp-2 {
   display: -webkit-box;
+  line-clamp: 2;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -153,6 +198,7 @@
 
 .line-clamp-3 {
   display: -webkit-box;
+  line-clamp: 3;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -160,6 +206,7 @@
 
 .line-clamp-4 {
   display: -webkit-box;
+  line-clamp: 4;
   -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -172,7 +219,7 @@ button:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: 2px solid #D946EF;
+  outline: 2px solid var(--puente-accent-magenta);
   outline-offset: 2px;
 }
 
@@ -196,7 +243,7 @@ select:focus-visible {
    ============================================ */
 @supports not (backdrop-filter: blur(12px)) {
   .backdrop-blur-md {
-    background-color: rgba(18, 18, 18, 0.98);
+    background-color: var(--puente-backdrop-fallback);
   }
 }
 
@@ -217,7 +264,7 @@ select:focus-visible {
 
 .card-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--puente-card-hover-shadow);
 }
 
 /* ============================================
@@ -228,4 +275,35 @@ select:focus-visible {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* ============================================
+   TAB / SCREEN MOTION (PWA-FRIENDLY)
+   ============================================ */
+@keyframes screenFadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(var(--spring-screen-distance));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.screen-transition-in {
+  animation: screenFadeSlide var(--spring-duration-screen) var(--spring-ease);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen-transition-in,
+  .animate-slide-up,
+  .animate-fade-in,
+  .settings-panel,
+  .animate-pulse {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
 }

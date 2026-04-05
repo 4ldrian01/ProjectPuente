@@ -17,8 +17,9 @@ const ALL_LANGUAGES = [
   { code: 'en',   label: 'English' },
   { code: 'tl',   label: 'Tagalog' },
   { code: 'cbk',  label: 'Chavacano' },
-  { code: 'hil',  label: 'Hiligaynon' },
   { code: 'ceb',  label: 'Cebuano/Bisaya' },
+  { code: 'hil',  label: 'Hiligaynon' },
+  { code: 'es',   label: 'Spanish' },
 ]
 
 const getLang = (code) => ALL_LANGUAGES.find((l) => l.code === code)
@@ -105,7 +106,7 @@ export default function LanguageSelector({
       <div className="md:hidden relative">
         <button
           onClick={() => setOpen(!open)}
-          className="flex items-center gap-2 px-1 py-2 text-sm font-medium text-text-primary bg-transparent transition-colors"
+          className="spring-nav-transition flex items-center gap-2 px-1 py-2 text-sm font-medium text-text-primary bg-transparent active:scale-[0.98]"
         >
           <span>{selectedLabel}</span>
           <ChevronDownIcon
@@ -114,15 +115,15 @@ export default function LanguageSelector({
         </button>
 
         {open && (
-          <div className="absolute top-full left-0 mt-1 rounded-lg shadow-xl z-40 min-w-45 border border-border-subtle bg-bg-dark/95 backdrop-blur-sm py-1">
+          <div className="animate-fade-in absolute top-full left-0 mt-1 rounded-lg shadow-xl z-40 min-w-45 border border-border-subtle bg-bg-card/95 backdrop-blur-sm py-1">
             {allAvailable.map((lang) => (
               <button
                 key={lang.code}
                 onClick={() => { onSelect(lang.code); setOpen(false) }}
-                className={`w-full px-4 py-2.5 text-left text-sm transition-colors ${
+                className={`spring-nav-transition w-full px-4 py-2.5 text-left text-sm ${
                   selected === lang.code
                     ? 'text-accent-magenta font-medium'
-                    : 'text-text-primary hover:bg-bg-elevated/50'
+                    : 'text-text-primary hover:bg-bg-elevated/50 hover:pl-5'
                 }`}
               >
                 {lang.label}
@@ -142,10 +143,10 @@ export default function LanguageSelector({
             key={lang.code}
             onClick={() => onSelect(lang.code)}
             data-tab-key={lang.code}
-            className={`px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors relative ${
+            className={`spring-nav-transition px-3 py-2 text-sm font-medium whitespace-nowrap relative will-change-transform ${
               selected === lang.code
-                ? 'text-accent-magenta'
-                : 'text-text-secondary hover:text-text-primary'
+                ? 'text-accent-magenta -translate-y-px'
+                : 'text-text-secondary hover:text-text-primary hover:-translate-y-px'
             }`}
           >
             {lang.label}
@@ -158,10 +159,10 @@ export default function LanguageSelector({
             <button
               onClick={() => setOpen(!open)}
               data-tab-key="__dropdown__"
-              className={`px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-1 relative ${
+              className={`spring-nav-transition px-3 py-2 text-sm font-medium whitespace-nowrap flex items-center gap-1 relative will-change-transform ${
                 selectedInDropdown
-                  ? 'text-accent-magenta'
-                  : 'text-text-secondary hover:text-text-primary'
+                  ? 'text-accent-magenta -translate-y-px'
+                  : 'text-text-secondary hover:text-text-primary hover:-translate-y-px'
               }`}
             >
               {selectedInDropdown && <span>{getLang(selected)?.label}</span>}
@@ -171,15 +172,15 @@ export default function LanguageSelector({
             </button>
 
             {open && (
-              <div className="absolute top-full left-0 mt-1 rounded-lg shadow-xl z-40 min-w-40 border border-border-subtle bg-bg-dark/95 backdrop-blur-sm py-1">
+              <div className="animate-fade-in absolute top-full left-0 mt-1 rounded-lg shadow-xl z-40 min-w-40 border border-border-subtle bg-bg-card/95 backdrop-blur-sm py-1">
                 {dropdown.map((lang) => (
                   <button
                     key={lang.code}
                     onClick={() => { onSelect(lang.code); setOpen(false) }}
-                    className={`w-full px-4 py-2.5 text-left text-sm transition-colors ${
+                    className={`spring-nav-transition w-full px-4 py-2.5 text-left text-sm ${
                       selected === lang.code
                         ? 'text-accent-magenta font-medium'
-                        : 'text-text-primary hover:bg-bg-elevated/50'
+                        : 'text-text-primary hover:bg-bg-elevated/50 hover:pl-5'
                     }`}
                   >
                     {lang.label}
@@ -191,7 +192,7 @@ export default function LanguageSelector({
         )}
 
         <span
-          className={`pointer-events-none absolute bottom-0 h-0.5 rounded-full bg-accent-magenta transition-all duration-300 ease-out ${
+          className={`spring-indicator-transition pointer-events-none absolute bottom-0 h-0.5 rounded-full bg-accent-magenta ${
             indicator.visible ? 'opacity-100' : 'opacity-0'
           }`}
           style={{ left: `${indicator.left}px`, width: `${indicator.width}px` }}

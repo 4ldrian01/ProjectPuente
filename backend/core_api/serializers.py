@@ -3,6 +3,7 @@ core_api/serializers.py — DRF Serializers for Project Puente.
 """
 
 from rest_framework import serializers
+from .languages import SOURCE_LANGUAGE_CODES, TARGET_LANGUAGE_CODES
 from .models import CulturalTerm
 
 
@@ -13,11 +14,11 @@ class TranslateRequestSerializer(serializers.Serializer):
     """
     text = serializers.CharField(max_length=250, required=True)
     source_lang = serializers.ChoiceField(
-        choices=['auto', 'en', 'tl', 'cbk', 'hil', 'ceb'],
+        choices=SOURCE_LANGUAGE_CODES,
         required=True,
     )
     target_lang = serializers.ChoiceField(
-        choices=['en', 'tl', 'cbk', 'hil', 'ceb'],
+        choices=TARGET_LANGUAGE_CODES,
         required=True,
     )
     mode = serializers.ChoiceField(
@@ -27,12 +28,27 @@ class TranslateRequestSerializer(serializers.Serializer):
     )
 
 
+class BackTranslationRequestSerializer(serializers.Serializer):
+    """Validates Back-Translation Verification Loop (BTVL) requests."""
+
+    text = serializers.CharField(max_length=250, required=True)
+    source_lang = serializers.ChoiceField(
+        choices=TARGET_LANGUAGE_CODES,
+        required=True,
+    )
+    target_lang = serializers.ChoiceField(
+        choices=['en'],
+        default='en',
+        required=False,
+    )
+
+
 class TextToSpeechRequestSerializer(serializers.Serializer):
     """Validates Edge TTS synthesis requests."""
 
     text = serializers.CharField(max_length=1000, required=True, trim_whitespace=True)
     lang_code = serializers.ChoiceField(
-        choices=['auto', 'en', 'tl', 'cbk', 'hil', 'ceb'],
+        choices=SOURCE_LANGUAGE_CODES,
         default='en',
         required=False,
     )
