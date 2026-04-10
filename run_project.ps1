@@ -5,6 +5,8 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+$preferredLocalHost = 'projectpuente.local'
+$localHostFallback = 'localhost'
 
 function Test-PortListening {
     param([Parameter(Mandatory = $true)][int]$Port)
@@ -32,6 +34,18 @@ function Wait-PortListening {
     }
 
     return $false
+}
+
+function Test-HostsAlias {
+    param([Parameter(Mandatory = $true)][string]$HostName)
+
+    $hostsPath = Join-Path $env:SystemRoot 'System32\drivers\etc\hosts'
+    if (-not (Test-Path $hostsPath)) {
+        return $false
+    }
+
+    $escaped = [Regex]::Escape($HostName)
+    return [bool](Select-String -Path $hostsPath -Pattern "(^|\s)$escaped(\s|$)" -Quiet)
 }
 
 $rootDir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -65,7 +79,16 @@ if (-not $npmCommand) {
     throw 'npm command not found. Install Node.js 20+.'
 }
 
+$localHostAliasConfigured = Test-HostsAlias -HostName $preferredLocalHost
+$localAppHost = if ($localHostAliasConfigured) { $preferredLocalHost } else { $localHostFallback }
+
 function Start-Backend {
+    Write-Host "[INFO] Preferred local backend URL: http://$localAppHost:8000"
+    if (-not $localHostAliasConfigured) {
+        Write-Warning 'projectpuente.local is not mapped in hosts file.'
+        Write-Host "       Add this line to hosts: 127.0.0.1 $preferredLocalHost"
+    }
+
     Push-Location $backendDir
     try {
         $env:PUENTE_LOAD_MODEL_ON_STARTUP = 'true'
@@ -78,9 +101,15 @@ function Start-Backend {
 }
 
 function Start-Frontend {
+    Write-Host "[INFO] Preferred local frontend URL: http://$localAppHost:5173"
+    if (-not $localHostAliasConfigured) {
+        Write-Warning 'projectpuente.local is not mapped in hosts file.'
+        Write-Host "       Add this line to hosts: 127.0.0.1 $preferredLocalHost"
+    }
+
     Push-Location $frontendDir
     try {
-        & $npmCommand run dev -- --host 0.0.0.0
+        & $npmCommand run dev -- --host 0.0.0.0 --strictPort
         exit $LASTEXITCODE
     }
     finally {
@@ -147,7 +176,7 @@ $frontendProc = $null
 try {
     $backendProc = Start-Process -FilePath $pythonExe -ArgumentList @('manage.py', 'runserver', '0.0.0.0:8000') -WorkingDirectory $backendDir -NoNewWindow -PassThru
     Start-Sleep -Seconds 3
-    $frontendProc = Start-Process -FilePath 'cmd.exe' -ArgumentList @('/d', '/c', 'npm run dev -- --host 0.0.0.0') -WorkingDirectory $frontendDir -NoNewWindow -PassThru
+    $frontendProc = Start-Process -FilePath 'cmd.exe' -ArgumentList @('/d', '/c', 'npm run dev -- --host 0.0.0.0 --strictPort') -WorkingDirectory $frontendDir -NoNewWindow -PassThru
 
     $backendReady = Wait-PortListening -Port 8000 -TimeoutSeconds 45
     $frontendReady = Wait-PortListening -Port 5173 -TimeoutSeconds 60
@@ -192,8 +221,11 @@ try {
     Write-Host '  ========================================'
     Write-Host ''
     Write-Host "  [OK] Python   -> $pythonExe"
-    Write-Host ("  [{0}] Backend  -> http://0.0.0.0:8000  (LAN: http://{1}:8000)" -f ($(if ($backendReady) { 'OK' } else { 'WARN' }), $lanHost))
-    Write-Host ("  [{0}] Frontend -> http://0.0.0.0:5173  (LAN: http://{1}:5173)" -f ($(if ($frontendReady) { 'OK' } else { 'WARN' }), $lanHost))
+    Write-Host ("  [{0}] Backend  -> http://{1}:8000  (LAN: http://{2}:8000)" -f ($(if ($backendReady) { 'OK' } else { 'WARN' }), $localAppHost, $lanHost))
+    Write-Host ("  [{0}] Frontend -> http://{1}:5173  (LAN: http://{2}:5173)" -f ($(if ($frontendReady) { 'OK' } else { 'WARN' }), $localAppHost, $lanHost))
+    if (-not $localHostAliasConfigured) {
+        Write-Warning 'projectpuente.local mapping not found in hosts file. Using localhost fallback.'
+    }
     Write-Host ''
     Write-Host '  Running in current terminal (no extra windows). Press Ctrl+C to stop both servers.'
 

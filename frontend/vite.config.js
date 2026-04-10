@@ -5,9 +5,21 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 /* global process */
 const disablePwaForCurrentPath = process.cwd().includes("'")
+const preferredLocalHost = 'projectpuente.local'
 
 // https://vite.dev/config/
 export default defineConfig({
+  server: {
+    host: '0.0.0.0',
+    port: 5173,
+    strictPort: true,
+    allowedHosts: [preferredLocalHost, 'localhost', '127.0.0.1'],
+  },
+  preview: {
+    host: '0.0.0.0',
+    port: 5173,
+    strictPort: true,
+  },
   plugins: [
     tailwindcss(),
     react(),

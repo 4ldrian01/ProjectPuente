@@ -32,4 +32,52 @@ FLORES_MAP = {
     'auto': 'eng_Latn',
 }
 
-PIVOT_LANG = 'eng_Latn'
+# Direct inference is always attempted first. If confidence is critically low,
+# a proximate pivot can be used for selected pairs.
+DIRECT_INFERENCE_CONFIDENCE_THRESHOLD = 0.28
+
+# Local language scope for Austronesian proximate pivot routing.
+LOCAL_LANGUAGE_CODES = frozenset({'tl', 'cbk', 'ceb', 'hil'})
+
+
+def _normalize_lang_code(code):
+    return str(code or '').strip().casefold()
+
+
+def is_local_language(code):
+    return _normalize_lang_code(code) in LOCAL_LANGUAGE_CODES
+
+
+def is_local_to_local_pair(source_lang, target_lang):
+    src = _normalize_lang_code(source_lang)
+    tgt = _normalize_lang_code(target_lang)
+    return src in LOCAL_LANGUAGE_CODES and tgt in LOCAL_LANGUAGE_CODES and src != tgt
+
+
+def select_proximate_pivot(source_lang, target_lang):
+    """
+    Proximate-pivot routing matrix (English is never selected as pivot):
+
+    - cbk-involved pairs prefer Spanish pivot (`es`) when usable
+    - local<->local pairs prefer Tagalog (`tl`)
+    - if Tagalog is already part of the pair, use Cebuano (`ceb`)
+    """
+    src = _normalize_lang_code(source_lang)
+    tgt = _normalize_lang_code(target_lang)
+
+    if not src or not tgt or src == tgt:
+        return ''
+
+    candidate = ''
+
+    if 'cbk' in {src, tgt}:
+        candidate = 'es'
+    elif is_local_to_local_pair(src, tgt):
+        candidate = 'ceb' if 'tl' in {src, tgt} else 'tl'
+
+    # Candidate must be a supported non-English intermediate that is
+    # different from source/target.
+    if candidate in {'', 'en', src, tgt}:
+        return ''
+
+    return candidate

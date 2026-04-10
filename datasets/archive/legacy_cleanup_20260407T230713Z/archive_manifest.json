@@ -1,0 +1,133 @@
+{
+  "generated_at_utc": "2026-04-07T23:07:13.811836+00:00",
+  "mode": "dry_run",
+  "raw_root": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/raw",
+  "archive_root": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/archive/legacy_cleanup_20260407T230713Z",
+  "candidate_count": 12,
+  "moved_count": 0,
+  "entries": [
+    {
+      "source": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/raw/01_Tagalog/hatespeech_filipino/README (1).md",
+      "destination": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/archive/legacy_cleanup_20260407T230713Z/01_Tagalog/hatespeech_filipino/README (1).md",
+      "relative_path": "01_Tagalog/hatespeech_filipino/README (1).md",
+      "sha256": "98b45ea81164d1e1a1dd82255207053b15cd6c69d922a1c5cf3387ce604d4b74",
+      "reasons": [
+        "duplicate_name_pattern"
+      ],
+      "status": "planned"
+    },
+    {
+      "source": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/raw/01_Tagalog/hatespeech_filipino/gitattributes (1)",
+      "destination": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/archive/legacy_cleanup_20260407T230713Z/01_Tagalog/hatespeech_filipino/gitattributes (1)",
+      "relative_path": "01_Tagalog/hatespeech_filipino/gitattributes (1)",
+      "sha256": "a2bdf429c1bc3858213bb4b7a748fa36a71536a5a1ff98861281853c3c2be1f2",
+      "reasons": [
+        "duplicate_name_pattern"
+      ],
+      "status": "planned"
+    },
+    {
+      "source": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/raw/02_Chavacano/cbk-en.txt.zip",
+      "destination": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/archive/legacy_cleanup_20260407T230713Z/02_Chavacano/cbk-en.txt.zip",
+      "relative_path": "02_Chavacano/cbk-en.txt.zip",
+      "sha256": "67a5e514e1af86b190ee714659c10f66c4a611636b13e7d55df2a7e83f160c39",
+      "reasons": [
+        "already_processed:02_Chavacano/cbk-en.txt.zip"
+      ],
+      "status": "planned"
+    },
+    {
+      "source": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/raw/02_Chavacano/cbk_zamwiki-latest-pages-articles.xml.bz2",
+      "destination": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/archive/legacy_cleanup_20260407T230713Z/02_Chavacano/cbk_zamwiki-latest-pages-articles.xml.bz2",
+      "relative_path": "02_Chavacano/cbk_zamwiki-latest-pages-articles.xml.bz2",
+      "sha256": "0da011beb25197eb2935d2061db32406388ff6452db1146a3567406ac5ad386d",
+      "reasons": [
+        "already_processed:02_Chavacano/cbk_zamwiki-latest-pages-articles.xml.bz2"
+      ],
+      "status": "planned"
+    },
+    {
+      "source": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/raw/02_Chavacano/chavacano-to-english-parallel-sentences.csv",
+      "destination": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/archive/legacy_cleanup_20260407T230713Z/02_Chavacano/chavacano-to-english-parallel-sentences.csv",
+      "relative_path": "02_Chavacano/chavacano-to-english-parallel-sentences.csv",
+      "sha256": "e898f6e01e3216c915645c04817f0f1a15d664ff40b577a03587d0f93692de37",
+      "reasons": [
+        "already_processed:02_Chavacano/chavacano-to-english-parallel-sentences.csv"
+      ],
+      "status": "planned"
+    },
+    {
+      "source": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/raw/02_Chavacano/creole_rc/LICENSE (1)",
+      "destination": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/archive/legacy_cleanup_20260407T230713Z/02_Chavacano/creole_rc/LICENSE (1)",
+      "relative_path": "02_Chavacano/creole_rc/LICENSE (1)",
+      "sha256": "03212ea28dda74c2389b422c82077dbfa09831534312f08313ebbf6b044dcab5",
+      "reasons": [
+        "duplicate_name_pattern",
+        "already_processed:02_Chavacano/creole_rc"
+      ],
+      "status": "planned"
+    },
+    {
+      "source": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/raw/02_Chavacano/creole_rc/README (2).md",
+      "destination": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/archive/legacy_cleanup_20260407T230713Z/02_Chavacano/creole_rc/README (2).md",
+      "relative_path": "02_Chavacano/creole_rc/README (2).md",
+      "sha256": "63b5a82acec77bc2e55481462442a510a54f54f44601ce12d1d77bda9538a83c",
+      "reasons": [
+        "duplicate_name_pattern",
+        "already_processed:02_Chavacano/creole_rc"
+      ],
+      "status": "planned"
+    },
+    {
+      "source": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/raw/02_Chavacano/creole_rc/__init__.py",
+      "destination": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/archive/legacy_cleanup_20260407T230713Z/02_Chavacano/creole_rc/__init__.py",
+      "relative_path": "02_Chavacano/creole_rc/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "reasons": [
+        "already_processed:02_Chavacano/creole_rc"
+      ],
+      "status": "planned"
+    },
+    {
+      "source": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/raw/02_Chavacano/creole_rc/creole_rc.py",
+      "destination": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/archive/legacy_cleanup_20260407T230713Z/02_Chavacano/creole_rc/creole_rc.py",
+      "relative_path": "02_Chavacano/creole_rc/creole_rc.py",
+      "sha256": "7fbc8efd2ee06438f026f8a52bc5bb90ab0f6c34636e4be2dba6d5d0b6b9ba54",
+      "reasons": [
+        "already_processed:02_Chavacano/creole_rc"
+      ],
+      "status": "planned"
+    },
+    {
+      "source": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/raw/02_Chavacano/creole_rc/gitattributes (2)",
+      "destination": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/archive/legacy_cleanup_20260407T230713Z/02_Chavacano/creole_rc/gitattributes (2)",
+      "relative_path": "02_Chavacano/creole_rc/gitattributes (2)",
+      "sha256": "f4e703ea6e44bbebe53aceed2a89c11e40b88b7ae130c480c89860ab805ffc8f",
+      "reasons": [
+        "duplicate_name_pattern",
+        "already_processed:02_Chavacano/creole_rc"
+      ],
+      "status": "planned"
+    },
+    {
+      "source": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/raw/02_Chavacano/creole_rc/requirements.txt",
+      "destination": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/archive/legacy_cleanup_20260407T230713Z/02_Chavacano/creole_rc/requirements.txt",
+      "relative_path": "02_Chavacano/creole_rc/requirements.txt",
+      "sha256": "5d4f5c2c6634ac40cc904eb3ffbcd350774687953250241f3fd0d27fb8b87c2e",
+      "reasons": [
+        "already_processed:02_Chavacano/creole_rc"
+      ],
+      "status": "planned"
+    },
+    {
+      "source": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/raw/03_Cebuano_Bisaya/ceb-en.txt (1).zip",
+      "destination": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/archive/legacy_cleanup_20260407T230713Z/03_Cebuano_Bisaya/ceb-en.txt (1).zip",
+      "relative_path": "03_Cebuano_Bisaya/ceb-en.txt (1).zip",
+      "sha256": "d1961077237513281df997aeff87e25b40a48f957349fa2e2bc4696764a4b788",
+      "reasons": [
+        "duplicate_name_pattern"
+      ],
+      "status": "planned"
+    }
+  ]
+}

@@ -1,58 +1,81 @@
 """
-download_model.py — Download & save NLLB-200-distilled-600M for offline use.
+download_model.py - Explicit offline base-model downloader for Project PUENTE.
+
+This script implements the thesis "Cloud-to-Local" handoff for Phase B
+(offline defense mode) by downloading the base NLLB weights to the exact
+local directory used by Django startup:
+
+  /home/rauf/Desktop/Machine Learning/ProjectPuente/ml_models/nllb-200-distilled-600M
 
 Usage:
-    cd ml_models
-    python download_model.py
+  cd ml_models
+  python download_model.py
 
-This script downloads the base model (~2.4 GB) from Hugging Face Hub
-and saves it locally so the Django backend can load it without internet.
+Optional environment variable:
+  HF_TOKEN=<your_huggingface_token>
 """
 
+from pathlib import Path
 import os
 import sys
 
 
+MODEL_ID = 'facebook/nllb-200-distilled-600M'
+TARGET_DIR = Path('/home/rauf/Desktop/Machine Learning/ProjectPuente/ml_models/nllb-200-distilled-600M')
+
+
 def main():
     try:
-        from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+        from huggingface_hub import snapshot_download
     except ImportError:
-        print("ERROR: 'transformers' package not installed.")
-        print("Run: pip install transformers sentencepiece protobuf")
+        print("ERROR: 'huggingface_hub' is not installed.")
+        print("Run: pip install huggingface_hub")
         sys.exit(1)
 
-    MODEL_NAME = "facebook/nllb-200-distilled-600M"
-    SAVE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "nllb-200-distilled-600M")
+    TARGET_DIR.mkdir(parents=True, exist_ok=True)
 
-    if os.path.isdir(SAVE_DIR) and os.listdir(SAVE_DIR):
-        print(f"Model already exists at: {SAVE_DIR}")
-        resp = input("Re-download? [y/N]: ").strip().lower()
-        if resp != "y":
-            print("Skipping download.")
+    if any(TARGET_DIR.iterdir()):
+        print(f'Model directory is not empty: {TARGET_DIR}')
+        answer = input('Re-download and overwrite files? [y/N]: ').strip().lower()
+        if answer != 'y':
+            print('Skipping download.')
             return
 
-    print(f"Downloading tokenizer: {MODEL_NAME} ...")
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-    print(f"Saving tokenizer to: {SAVE_DIR}")
-    tokenizer.save_pretrained(SAVE_DIR)
+    hf_token = os.getenv('HF_TOKEN', '').strip() or None
 
-    print(f"\nDownloading model: {MODEL_NAME} (~2.4 GB) ...")
-    print("This may take several minutes depending on your internet speed.")
-    model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME)
-    print(f"Saving model to: {SAVE_DIR}")
-    model.save_pretrained(SAVE_DIR)
+    print('=' * 72)
+    print('Project PUENTE - Offline Base Model Download')
+    print(f'Model ID   : {MODEL_ID}')
+    print(f'Target Path: {TARGET_DIR}')
+    print('=' * 72)
 
-    # Verify
-    param_count = sum(p.numel() for p in model.parameters())
-    print(f"\n{'='*60}")
-    print(f"  Download complete!")
-    print(f"  Location: {SAVE_DIR}")
-    print(f"  Parameters: {param_count:,}")
-    print(f"  Files: {len(os.listdir(SAVE_DIR))}")
-    print(f"{'='*60}")
-    print("\nRestart the Django server to load the model.")
-    print("The backend will automatically detect and load it from apps.py.")
+    snapshot_download(
+        repo_id=MODEL_ID,
+        local_dir=str(TARGET_DIR),
+        local_dir_use_symlinks=False,
+        resume_download=True,
+        token=hf_token,
+    )
+
+    expected_files = [
+        'config.json',
+        'generation_config.json',
+        'tokenizer_config.json',
+        'sentencepiece.bpe.model',
+    ]
+    missing = [name for name in expected_files if not (TARGET_DIR / name).exists()]
+
+    print('\nDownload complete.')
+    if missing:
+        print('WARNING: Some expected files are missing:')
+        for item in missing:
+            print(f' - {item}')
+    else:
+        print('Verification passed: essential model/tokenizer files detected.')
+
+    print('\nNext step: place LoRA adapters under:')
+    print('  /home/rauf/Desktop/Machine Learning/ProjectPuente/ml_models/lora_adapters/')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

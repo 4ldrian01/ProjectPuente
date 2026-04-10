@@ -30,6 +30,7 @@ export default function LanguageSelector({
   visibleCodes,
   dropdownCodes,
   excludeCode,
+  tone = 'primary',
 }) {
   const [open, setOpen] = useState(false)
   const [indicator, setIndicator] = useState({ left: 0, width: 0, visible: false })
@@ -63,9 +64,18 @@ export default function LanguageSelector({
 
   const selectedInDropdown =
     dropdownCodes.includes(selected) && selected !== excludeCode
+  const hasOverflowLanguages = dropdown.length > 0
 
   const selectedLabel = getLang(selected)?.label ?? 'Select'
   const activeTabKey = selectedInDropdown ? '__dropdown__' : selected
+  const isSubtleTone = tone === 'subtle'
+  const activeTextClass = isSubtleTone ? 'text-text-primary' : 'text-accent-magenta'
+  const idleTextClass = isSubtleTone
+    ? 'text-text-secondary/85 hover:text-text-primary'
+    : 'text-text-secondary hover:text-text-primary'
+  const activeRowClass = isSubtleTone ? 'text-text-primary font-medium' : 'text-accent-magenta font-medium'
+  const indicatorColorClass = isSubtleTone ? 'bg-text-secondary/65' : 'bg-accent-magenta'
+  const borderToneClass = isSubtleTone ? 'border-border-subtle/22' : 'border-border-subtle/35'
   const layoutSignature = useMemo(
     () => `${visibleCodes.join(',')}|${dropdownCodes.join(',')}|${excludeCode ?? ''}|${selectedLabel}`,
     [visibleCodes, dropdownCodes, excludeCode, selectedLabel],
@@ -122,7 +132,7 @@ export default function LanguageSelector({
                 onClick={() => { onSelect(lang.code); setOpen(false) }}
                 className={`spring-nav-transition w-full px-4 py-2.5 text-left text-sm ${
                   selected === lang.code
-                    ? 'text-accent-magenta font-medium'
+                    ? activeRowClass
                     : 'text-text-primary hover:bg-bg-elevated/50 hover:pl-5'
                 }`}
               >
@@ -136,22 +146,38 @@ export default function LanguageSelector({
       {/* ═══ DESKTOP / LAPTOP — tabbed buttons with underline ═══ */}
       <div
         ref={tabsTrackRef}
-        className="hidden md:flex items-center gap-0.5 border-b border-border-subtle/35 relative"
+        className={`hidden md:flex items-center gap-0.5 border-b relative ${borderToneClass}`}
       >
-        {visible.map((lang) => (
-          <button
-            key={lang.code}
-            onClick={() => onSelect(lang.code)}
-            data-tab-key={lang.code}
-            className={`spring-nav-transition px-3 py-2 text-sm font-medium whitespace-nowrap relative will-change-transform ${
-              selected === lang.code
-                ? 'text-accent-magenta -translate-y-px'
-                : 'text-text-secondary hover:text-text-primary hover:-translate-y-px'
-            }`}
-          >
-            {lang.label}
-          </button>
-        ))}
+        {visible.map((lang, index) => {
+          const isLastVisible = index === visible.length - 1
+          const fadeForContinuation = isLastVisible && hasOverflowLanguages
+
+          return (
+            <button
+              key={lang.code}
+              onClick={() => onSelect(lang.code)}
+              data-tab-key={lang.code}
+              className={`spring-nav-transition px-3 py-2 text-sm font-medium whitespace-nowrap relative will-change-transform ${
+                fadeForContinuation ? 'pr-4' : ''
+              } ${
+                selected === lang.code
+                  ? `${activeTextClass} -translate-y-px`
+                  : `${idleTextClass} hover:-translate-y-px`
+              }`}
+            >
+              <span>
+                {lang.label}
+              </span>
+
+              {fadeForContinuation && (
+                <span
+                  className="pointer-events-none absolute inset-y-0 right-0 w-1/2 rounded-r-md bg-gradient-to-r from-transparent via-bg-card/70 to-bg-card/95"
+                  aria-hidden="true"
+                />
+              )}
+            </button>
+          )
+        })}
 
         {/* Dropdown chevron for overflow languages */}
         {dropdown.length > 0 && (
@@ -161,8 +187,8 @@ export default function LanguageSelector({
               data-tab-key="__dropdown__"
               className={`spring-nav-transition px-3 py-2 text-sm font-medium whitespace-nowrap flex items-center gap-1 relative will-change-transform ${
                 selectedInDropdown
-                  ? 'text-accent-magenta -translate-y-px'
-                  : 'text-text-secondary hover:text-text-primary hover:-translate-y-px'
+                  ? `${activeTextClass} -translate-y-px`
+                  : `${idleTextClass} hover:-translate-y-px`
               }`}
             >
               {selectedInDropdown && <span>{getLang(selected)?.label}</span>}
@@ -179,7 +205,7 @@ export default function LanguageSelector({
                     onClick={() => { onSelect(lang.code); setOpen(false) }}
                     className={`spring-nav-transition w-full px-4 py-2.5 text-left text-sm ${
                       selected === lang.code
-                        ? 'text-accent-magenta font-medium'
+                        ? activeRowClass
                         : 'text-text-primary hover:bg-bg-elevated/50 hover:pl-5'
                     }`}
                   >
@@ -192,7 +218,7 @@ export default function LanguageSelector({
         )}
 
         <span
-          className={`spring-indicator-transition pointer-events-none absolute bottom-0 h-0.5 rounded-full bg-accent-magenta ${
+          className={`spring-indicator-transition pointer-events-none absolute bottom-0 h-0.5 rounded-full ${indicatorColorClass} ${
             indicator.visible ? 'opacity-100' : 'opacity-0'
           }`}
           style={{ left: `${indicator.left}px`, width: `${indicator.width}px` }}

@@ -31,6 +31,53 @@ export function TranslateIcon({ className = 'w-6 h-6' }) {
   )
 }
 
+export function TranslationStudioIcon({ className = 'w-6 h-6' }) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={1.7}
+    >
+      <text
+        x="7.2"
+        y="11"
+        textAnchor="middle"
+        fontSize="7.1"
+        fontWeight="700"
+        fill="currentColor"
+        stroke="none"
+      >
+        {'\u6587'}
+      </text>
+
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M9.5 13.5c1.25 2.15 3.35 3.72 5.85 4.2"
+      />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="m13.9 18.1 2 .2-.2-2"
+      />
+
+      <text
+        x="16.9"
+        y="17.15"
+        textAnchor="middle"
+        fontSize="6.3"
+        fontWeight="700"
+        fill="currentColor"
+        stroke="none"
+      >
+        A
+      </text>
+    </svg>
+  )
+}
+
 export function WikiVozIcon({ className = 'w-6 h-6' }) {
   return (
     <svg

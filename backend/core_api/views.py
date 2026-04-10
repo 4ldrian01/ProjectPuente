@@ -5,7 +5,7 @@ Primary engine: NLLB-200-distilled-600M (8-bit quantized, Singleton loaded
 via apps.py) with LoRA adapters for formal/street Chavacano.
 
 Features:
-  - English Pivot routing for non-English language pairs
+    - Direct many-to-many routing with confidence-gated proximate pivot fallback
     - Translation Memory (TM) cache before inference
     - Greedy Wiki-Voz multi-word phrase interception
   - ISO 25010 TranslationLog for every request
@@ -30,11 +30,17 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .apps import CoreApiConfig
-from .languages import FLORES_MAP, PIVOT_LANG, SUPPORTED_LANGUAGES
+from .languages import (
+    DIRECT_INFERENCE_CONFIDENCE_THRESHOLD,
+    FLORES_MAP,
+    SUPPORTED_LANGUAGES,
+    select_proximate_pivot,
+)
 from .models import CulturalTerm, TranslationLog
 from .serializers import (
     BackTranslationRequestSerializer,
     CulturalTermSerializer,
+    TranslationLogListSerializer,
     TextToSpeechRequestSerializer,
     TranslateRequestSerializer,
 )
@@ -58,6 +64,39 @@ INTERCEPTOR_LANGUAGE_ALIASES = {
     'hil': ('hil', 'hiligaynon', 'ilonggo'),
     'ceb': ('ceb', 'cebuano', 'bisaya', 'cebuano/bisaya'),
 }
+
+
+def _flatten_serializer_errors(errors):
+    if not errors:
+        return ''
+
+    parts = []
+    for value in errors.values():
+        if isinstance(value, (list, tuple)):
+            parts.extend([str(entry).strip() for entry in value if str(entry).strip()])
+        else:
+            item = str(value).strip()
+            if item:
+                parts.append(item)
+    return ' '.join(parts).strip()
+
+
+def _build_error_response(
+    *,
+    code,
+    message,
+    http_status,
+    details=None,
+    retryable=False,
+):
+    payload = {
+        'error': message,
+        'error_code': code,
+        'retryable': bool(retryable),
+    }
+    if details:
+        payload['details'] = details
+    return Response(payload, status=http_status)
 
 
 def is_strict_offline_mode():
@@ -97,14 +136,14 @@ def _require_api_key_or_401(request):
     if _has_valid_api_key(request):
         return None
 
-    return Response(
-        {
-            'error': (
-                'Unauthorized: missing or invalid API key. '
-                'Provide X-API-Key header.'
-            ),
-        },
-        status=status.HTTP_401_UNAUTHORIZED,
+    return _build_error_response(
+        code='auth.api_key_invalid',
+        message=(
+            'Unauthorized: missing or invalid API key. '
+            'Provide X-API-Key header.'
+        ),
+        http_status=status.HTTP_401_UNAUTHORIZED,
+        retryable=False,
     )
 
 
@@ -256,7 +295,44 @@ def _synthesize_speech_bytes(text, lang_code, voice_override=None):
 # ---------------------------------------------------------------------------
 # NLLB-200 Local Inference (Primary Engine)
 # ---------------------------------------------------------------------------
-def _infer_once(model, tokenizer, text, src_flores, tgt_flores):
+def _estimate_generation_confidence(step_scores):
+    """Estimate confidence from per-step logits returned by generate()."""
+    if not step_scores:
+        return None
+
+    import torch
+
+    confidences = []
+    for score_tensor in step_scores:
+        if score_tensor is None or score_tensor.numel() == 0:
+            continue
+        step_probs = torch.nn.functional.softmax(score_tensor[0], dim=-1)
+        confidences.append(float(torch.max(step_probs).item()))
+
+    if not confidences:
+        return None
+
+    return round(sum(confidences) / len(confidences), 4)
+
+
+def _extract_pivot_lang_from_model_name(model_name):
+    """Extract pivot language code from model label suffix, if available."""
+    raw_name = str(model_name or '').casefold()
+    match = re.search(r'\+pivot-([a-z]{2,3})\b', raw_name)
+    if not match:
+        return ''
+    return match.group(1)
+
+
+def _should_fallback_to_proximate_pivot(direct_confidence, pivot_code):
+    if not pivot_code:
+        return False
+    if direct_confidence is None:
+        return False
+    return direct_confidence < DIRECT_INFERENCE_CONFIDENCE_THRESHOLD
+
+
+def _infer_once(model, tokenizer, text, src_flores, tgt_flores, *, with_confidence=False):
     """Single NLLB-200 inference pass (no gradient computation)."""
     import torch
 
@@ -269,21 +345,48 @@ def _infer_once(model, tokenizer, text, src_flores, tgt_flores):
     device = next(model.parameters()).device
     inputs = {k: v.to(device) for k, v in inputs.items()}
 
+    generation_kwargs = {
+        'forced_bos_token_id': tokenizer.convert_tokens_to_ids(tgt_flores),
+        'max_new_tokens': 128,
+        'num_beams': 4,
+    }
+    if with_confidence:
+        generation_kwargs.update({
+            'output_scores': True,
+            'return_dict_in_generate': True,
+        })
+
     with torch.no_grad():
-        translated_ids = model.generate(
+        generated = model.generate(
             **inputs,
-            forced_bos_token_id=tokenizer.convert_tokens_to_ids(tgt_flores),
-            max_new_tokens=128,
-            num_beams=4,
+            **generation_kwargs,
         )
-    return tokenizer.batch_decode(translated_ids, skip_special_tokens=True)[0]
+
+    if with_confidence:
+        translated_ids = generated.sequences
+        translated_text = tokenizer.batch_decode(translated_ids, skip_special_tokens=True)[0]
+        confidence = _estimate_generation_confidence(getattr(generated, 'scores', None))
+        return translated_text, confidence
+
+    return tokenizer.batch_decode(generated, skip_special_tokens=True)[0]
 
 
 def nllb_translate(text, src_code, tgt_code, mode='formal'):
     """
-    Translate using Singleton NLLB-200 + LoRA (English-pivot if needed).
+        Translate using Singleton NLLB-200 + LoRA (direct-first routing).
 
-    Returns: (translated_text, latency_ms, tokens_in, tokens_out, pivot_used, model_name)
+        Returns:
+            (
+                translated_text,
+                latency_ms,
+                tokens_in,
+                tokens_out,
+                pivot_used,
+                pivot_language,
+                route_strategy,
+                route_confidence,
+                model_name,
+            )
     """
     tokenizer = CoreApiConfig.nllb_tokenizer
     model = CoreApiConfig.nllb_model
@@ -297,32 +400,57 @@ def nllb_translate(text, src_code, tgt_code, mode='formal'):
     tgt_flores = FLORES_MAP.get(tgt_code, 'cbk_Latn')
 
     adapter_label = f'+lora-cbk-{mode}' if adapter_name else ''
-    model_name = f'nllb-200-distilled-600M{adapter_label}'
+    model_base = f'nllb-200-distilled-600M{adapter_label}'
 
     # Short-circuit: same source and target language
     if src_flores == tgt_flores:
         tokens = len(tokenizer.encode(text))
-        return text, 0.0, tokens, tokens, False, model_name
+        return text, 0.0, tokens, tokens, False, '', 'passthrough', 1.0, model_base
 
     start = time.perf_counter()
     pivot_used = False
+    pivot_language = ''
+    route_strategy = 'direct'
 
     # Tokenize input once for token count logging
     input_ids = tokenizer.encode(text)
     tokens_in = len(input_ids)
 
-    if src_flores != PIVOT_LANG and tgt_flores != PIVOT_LANG:
-        # Two-hop pivot via English
-        pivot_used = True
-        mid_text = _infer_once(model, tokenizer, text, src_flores, PIVOT_LANG)
-        result = _infer_once(model, tokenizer, mid_text, PIVOT_LANG, tgt_flores)
-    else:
-        result = _infer_once(model, tokenizer, text, src_flores, tgt_flores)
+    result, direct_confidence = _infer_once(
+        model,
+        tokenizer,
+        text,
+        src_flores,
+        tgt_flores,
+        with_confidence=True,
+    )
+
+    proximate_pivot = select_proximate_pivot(src_code, tgt_code)
+    if _should_fallback_to_proximate_pivot(direct_confidence, proximate_pivot):
+        pivot_flores = FLORES_MAP.get(proximate_pivot)
+        if pivot_flores:
+            pivot_used = True
+            pivot_language = proximate_pivot
+            route_strategy = 'proximate-pivot'
+            mid_text = _infer_once(model, tokenizer, text, src_flores, pivot_flores)
+            result = _infer_once(model, tokenizer, mid_text, pivot_flores, tgt_flores)
 
     elapsed_ms = (time.perf_counter() - start) * 1000
     tokens_out = len(tokenizer.encode(result))
+    route_label = f'+pivot-{pivot_language}' if pivot_language else ''
+    model_name = f'{model_base}{route_label}'
 
-    return result, elapsed_ms, tokens_in, tokens_out, pivot_used, model_name
+    return (
+        result,
+        elapsed_ms,
+        tokens_in,
+        tokens_out,
+        pivot_used,
+        pivot_language,
+        route_strategy,
+        direct_confidence,
+        model_name,
+    )
 
 
 @api_view(['GET'])
@@ -331,12 +459,11 @@ def telemetry_view(request):
     try:
         import psutil
     except ImportError:
-        return Response(
-            {
-                'status': 'error',
-                'error': 'psutil is not installed. Install with: pip install psutil',
-            },
-            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        return _build_error_response(
+            code='dependency.psutil_missing',
+            message='psutil is not installed. Install with: pip install psutil',
+            http_status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            retryable=False,
         )
 
     ram = psutil.virtual_memory()
@@ -388,7 +515,37 @@ def telemetry_view(request):
         else:
             gpu_payload['reason'] = 'cuda-not-detected'
     except ImportError:
-        gpu_payload['reason'] = 'torch-not-installed'
+        # Fallback path for machines where torch is unavailable but NV driver
+        # metrics are still queryable via GPUtil.
+        try:
+            import importlib
+
+            gputil_module = importlib.import_module('GPUtil')
+            gpus = gputil_module.getGPUs()
+            if gpus:
+                gpu = gpus[0]
+                used_bytes = int(float(gpu.memoryUsed) * 1024 * 1024)
+                total_bytes = int(float(gpu.memoryTotal) * 1024 * 1024)
+                usage_percent = round((used_bytes / total_bytes) * 100, 2) if total_bytes else 0.0
+
+                gpu_payload = {
+                    'available': True,
+                    'name': str(gpu.name),
+                    'used_bytes': used_bytes,
+                    'reserved_bytes': 0,
+                    'total_bytes': total_bytes,
+                    'used_gb': _bytes_to_gb(used_bytes),
+                    'reserved_gb': 0.0,
+                    'total_gb': _bytes_to_gb(total_bytes),
+                    'percent': usage_percent,
+                    'reason': '',
+                }
+            else:
+                gpu_payload['reason'] = 'gputil-no-gpu-detected'
+        except ImportError:
+            gpu_payload['reason'] = 'torch-and-gputil-unavailable'
+        except Exception as exc:
+            gpu_payload['reason'] = f'gputil-telemetry-error: {exc}'
     except Exception as exc:
         gpu_payload['reason'] = f'gpu-telemetry-error: {exc}'
 
@@ -412,11 +569,16 @@ class APIRootView(APIView):
         return Response({
             'project': 'Project Puente Backend',
             'status': 'online',
-            'engine': 'nllb-200' if CoreApiConfig.model_loaded else 'offline-model-missing',
+            'engine': (
+                CoreApiConfig.engine_name
+                if CoreApiConfig.model_loaded
+                else 'offline-model-missing'
+            ),
             'endpoints': {
                 'admin': '/admin/',
                 'translate': '/api/translate/',
                 'btvl': '/api/btvl/',
+                'logs': '/api/logs/?limit=50',
                 'telemetry': '/api/telemetry/',
                 'tts': '/api/tts/',
                 'wiki_voz': '/api/wiki/?q=<term>',
@@ -442,9 +604,15 @@ class TranslateView(APIView):
         # 1. Validate -------------------------------------------------------
         serializer = TranslateRequestSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response(
-                {'errors': serializer.errors},
-                status=status.HTTP_400_BAD_REQUEST,
+            return _build_error_response(
+                code='validation.translate.invalid_payload',
+                message='Translation request validation failed.',
+                http_status=status.HTTP_400_BAD_REQUEST,
+                details={
+                    'errors': serializer.errors,
+                    'summary': _flatten_serializer_errors(serializer.errors),
+                },
+                retryable=False,
             )
 
         text = serializer.validated_data['text']
@@ -473,6 +641,9 @@ class TranslateView(APIView):
             translated_text = cached_log.output_text
             tokens_in = cached_log.input_tokens or _estimate_token_count(text)
             tokens_out = cached_log.output_tokens or _estimate_token_count(translated_text)
+            cached_pivot_language = _extract_pivot_lang_from_model_name(cached_log.model_name)
+            cached_route_strategy = 'proximate-pivot' if cached_log.pivot_used else 'direct'
+            cached_route_confidence = cached_log.route_confidence
             cache_latency_ms = (time.perf_counter() - request_started) * 1000
 
             TranslationLog.objects.create(
@@ -486,6 +657,7 @@ class TranslateView(APIView):
                 output_tokens=tokens_out,
                 model_name='tm-cache',
                 pivot_used=cached_log.pivot_used,
+                route_confidence=cached_route_confidence,
                 latency_ms=cache_latency_ms,
                 status='success',
                 wiki_voz_triggered=wiki_match is not None,
@@ -502,6 +674,9 @@ class TranslateView(APIView):
                 'tokens_in': tokens_in,
                 'tokens_out': tokens_out,
                 'pivot_used': cached_log.pivot_used,
+                'pivot_language': cached_pivot_language or None,
+                'route_strategy': cached_route_strategy,
+                'route_confidence': cached_route_confidence,
                 'is_cached': True,
             }
             if wiki_data:
@@ -521,6 +696,7 @@ class TranslateView(APIView):
                 output_text=text, latency_ms=0.0, status='success',
                 output_tokens=passthrough_tokens,
                 model_name='passthrough', pivot_used=False,
+                route_confidence=1.0,
                 wiki_voz_triggered=wiki_match is not None,
                 wiki_voz_term=wiki_match.term if wiki_match else '',
             )
@@ -532,6 +708,9 @@ class TranslateView(APIView):
                 'tokens_in': passthrough_tokens,
                 'tokens_out': passthrough_tokens,
                 'pivot_used': False,
+                'pivot_language': None,
+                'route_strategy': 'passthrough',
+                'route_confidence': 1.0,
                 'is_cached': False,
             }
             if wiki_data:
@@ -548,46 +727,67 @@ class TranslateView(APIView):
             input_chars=len(text),
         )
 
-        # 6. Translate — NLLB-200 local engine only -------------------------
-        try:
-            if not CoreApiConfig.model_loaded:
-                raise ValueError(
-                    'Local NLLB model is unavailable. '
-                    'Install it in ml_models/nllb-200-distilled-600M and restart backend.'
-                )
-
-            translated_text, latency_ms, tokens_in, tokens_out, pivot_used, model_used = (
-                nllb_translate(text, source_lang, target_lang, mode)
+        # 6. Translate — strict local edge inference (no outbound API calls) --
+        if not CoreApiConfig.model_loaded:
+            err_msg = (
+                'Local NLLB model is unavailable. Place the model under '
+                'ml_models/nllb-200-distilled-600M and restart backend. '
+                'Cloud/API fallback is disabled for offline defense mode.'
             )
+            log_entry.latency_ms = (time.perf_counter() - start_time) * 1000
+            log_entry.status = 'error'
+            log_entry.error_message = err_msg
+            log_entry.model_name = 'offline-model-missing'
+            log_entry.save()
+            return _build_error_response(
+                code='model.local.unavailable',
+                message=err_msg,
+                http_status=status.HTTP_503_SERVICE_UNAVAILABLE,
+                retryable=True,
+            )
+
+        try:
+            (
+                translated_text,
+                latency_ms,
+                tokens_in,
+                tokens_out,
+                pivot_used,
+                pivot_language,
+                route_strategy,
+                route_confidence,
+                model_used,
+            ) = (
+                nllb_translate(
+                    text=text,
+                    src_code=source_lang,
+                    tgt_code=target_lang,
+                    mode=mode,
+                )
+            )
+
             log_entry.output_text = translated_text
             log_entry.input_tokens = tokens_in
             log_entry.output_tokens = tokens_out
             log_entry.latency_ms = latency_ms
             log_entry.pivot_used = pivot_used
+            log_entry.route_confidence = route_confidence
             log_entry.model_name = model_used
             log_entry.status = 'success'
-
-        except ValueError as e:
-            log_entry.latency_ms = (time.perf_counter() - start_time) * 1000
-            log_entry.status = 'error'
-            log_entry.error_message = str(e)
-            log_entry.model_name = 'none'
-            log_entry.save()
-            return Response(
-                {'error': str(e)},
-                status=status.HTTP_503_SERVICE_UNAVAILABLE,
-            )
         except Exception as e:
-            logger.exception('Translation failed')
+            err_msg = f'Local translation failed: {e}'
+            logger.exception(err_msg)
             log_entry.latency_ms = (time.perf_counter() - start_time) * 1000
             log_entry.status = 'error'
-            log_entry.error_message = str(e)
-            log_entry.model_name = getattr(log_entry, 'model_name', 'unknown') or 'unknown'
+            log_entry.error_message = err_msg
+            log_entry.model_name = CoreApiConfig.engine_name or 'nllb-200-distilled-600M'
             log_entry.save()
 
-            return Response(
-                {'error': f'Translation failed: {e}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            return _build_error_response(
+                code='translation.local.failed',
+                message=err_msg,
+                http_status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                retryable=True,
             )
 
         # 7. Save log entry -------------------------------------------------
@@ -606,6 +806,9 @@ class TranslateView(APIView):
             'tokens_in': log_entry.input_tokens,
             'tokens_out': log_entry.output_tokens,
             'pivot_used': log_entry.pivot_used,
+            'pivot_language': pivot_language or None,
+            'route_strategy': route_strategy,
+            'route_confidence': log_entry.route_confidence,
             'is_cached': False,
         }
         if wiki_data:
@@ -622,7 +825,7 @@ class BackTranslationVerifyView(APIView):
     POST /api/btvl/
     Body: { "text": "...", "source_lang": "cbk", "target_lang": "en" }
 
-    Translates the provided text back into English for semantic verification.
+    Translates text into a verification target language for semantic checks.
     """
 
     def post(self, request):
@@ -632,9 +835,15 @@ class BackTranslationVerifyView(APIView):
 
         serializer = BackTranslationRequestSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response(
-                {'errors': serializer.errors},
-                status=status.HTTP_400_BAD_REQUEST,
+            return _build_error_response(
+                code='validation.btvl.invalid_payload',
+                message='Back-translation payload validation failed.',
+                http_status=status.HTTP_400_BAD_REQUEST,
+                details={
+                    'errors': serializer.errors,
+                    'summary': _flatten_serializer_errors(serializer.errors),
+                },
+                retryable=False,
             )
 
         text = serializer.validated_data['text']
@@ -642,18 +851,28 @@ class BackTranslationVerifyView(APIView):
         target_lang = serializer.validated_data.get('target_lang', 'en')
 
         if not CoreApiConfig.model_loaded:
-            return Response(
-                {
-                    'error': (
-                        'Local NLLB model is unavailable. '
-                        'Install it in ml_models/nllb-200-distilled-600M and restart backend.'
-                    ),
-                },
-                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            return _build_error_response(
+                code='model.local.unavailable',
+                message=(
+                    'Local NLLB model is unavailable. '
+                    'Install it in ml_models/nllb-200-distilled-600M and restart backend.'
+                ),
+                http_status=status.HTTP_503_SERVICE_UNAVAILABLE,
+                retryable=True,
             )
 
         try:
-            verified_text, latency_ms, tokens_in, tokens_out, pivot_used, model_used = (
+            (
+                verified_text,
+                latency_ms,
+                tokens_in,
+                tokens_out,
+                pivot_used,
+                pivot_language,
+                route_strategy,
+                route_confidence,
+                model_used,
+            ) = (
                 nllb_translate(
                     text=text,
                     src_code=source_lang,
@@ -663,9 +882,11 @@ class BackTranslationVerifyView(APIView):
             )
         except Exception as e:
             logger.exception('Back-translation verification failed')
-            return Response(
-                {'error': f'Back-translation failed: {e}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            return _build_error_response(
+                code='translation.btvl.failed',
+                message=f'Back-translation failed: {e}',
+                http_status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                retryable=True,
             )
 
         return Response({
@@ -677,6 +898,9 @@ class BackTranslationVerifyView(APIView):
             'tokens_in': tokens_in,
             'tokens_out': tokens_out,
             'pivot_used': pivot_used,
+            'pivot_language': pivot_language or None,
+            'route_strategy': route_strategy,
+            'route_confidence': route_confidence,
         })
 
 
@@ -702,6 +926,82 @@ class WikiVozView(APIView):
 
 
 # ═══════════════════════════════════════════════════════════════
+# Translation Activity Log View
+# ═══════════════════════════════════════════════════════════════
+class TranslationLogListView(APIView):
+    """
+    GET /api/logs/?limit=50&status=success&source_lang=cbk&target_lang=en&q=term
+
+    Returns recent TranslationLog records for observer dashboards.
+    """
+
+    def get(self, request):
+        raw_limit = (request.query_params.get('limit') or '50').strip()
+        try:
+            limit = int(raw_limit)
+        except (TypeError, ValueError):
+            limit = 50
+        limit = max(1, min(limit, 200))
+
+        status_filter = (request.query_params.get('status') or '').strip().casefold()
+        source_lang = (request.query_params.get('source_lang') or '').strip().casefold()
+        target_lang = (request.query_params.get('target_lang') or '').strip().casefold()
+        query = (request.query_params.get('q') or '').strip()
+
+        queryset = TranslationLog.objects.all().order_by('-created_at')
+
+        if status_filter in {'success', 'error', 'timeout'}:
+            queryset = queryset.filter(status=status_filter)
+
+        if source_lang in SUPPORTED_LANGUAGES:
+            queryset = queryset.filter(source_lang=source_lang)
+
+        valid_target_langs = {code for code in SUPPORTED_LANGUAGES if code != 'auto'}
+        if target_lang in valid_target_langs:
+            queryset = queryset.filter(target_lang=target_lang)
+
+        if query:
+            queryset = queryset.filter(
+                Q(input_text__icontains=query)
+                | Q(output_text__icontains=query)
+                | Q(error_message__icontains=query)
+                | Q(wiki_voz_term__icontains=query)
+            )
+
+        total = queryset.count()
+        rows = queryset[:limit]
+        serializer = TranslationLogListSerializer(rows, many=True)
+
+        results = []
+        for row_obj, row_data in zip(rows, serializer.data):
+            pivot_language = _extract_pivot_lang_from_model_name(row_obj.model_name)
+            route_strategy = 'proximate-pivot' if row_obj.pivot_used else 'direct'
+            if row_obj.model_name == 'tm-cache':
+                route_strategy = 'tm-cache'
+            elif row_obj.model_name == 'passthrough':
+                route_strategy = 'passthrough'
+
+            result_row = dict(row_data)
+            result_row['pivot_language'] = pivot_language or None
+            result_row['route_strategy'] = route_strategy
+            results.append(result_row)
+
+        return Response(
+            {
+                'count': total,
+                'limit': limit,
+                'results': results,
+                'filters': {
+                    'status': status_filter,
+                    'source_lang': source_lang,
+                    'target_lang': target_lang,
+                    'q': query,
+                },
+            }
+        )
+
+
+# ═══════════════════════════════════════════════════════════════
 # Text-to-Speech View
 # ═══════════════════════════════════════════════════════════════
 class TextToSpeechView(APIView):
@@ -720,21 +1020,27 @@ class TextToSpeechView(APIView):
             return auth_error
 
         if is_strict_offline_mode():
-            return Response(
-                {
-                    'error': (
-                        'Text-to-speech is disabled in strict offline mode '
-                        'because edge-tts requires internet access.'
-                    ),
-                },
-                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            return _build_error_response(
+                code='tts.strict_offline.disabled',
+                message=(
+                    'Text-to-speech is disabled in strict offline mode '
+                    'because edge-tts requires internet access.'
+                ),
+                http_status=status.HTTP_503_SERVICE_UNAVAILABLE,
+                retryable=False,
             )
 
         serializer = TextToSpeechRequestSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response(
-                {'errors': serializer.errors},
-                status=status.HTTP_400_BAD_REQUEST,
+            return _build_error_response(
+                code='validation.tts.invalid_payload',
+                message='Text-to-speech payload validation failed.',
+                http_status=status.HTTP_400_BAD_REQUEST,
+                details={
+                    'errors': serializer.errors,
+                    'summary': _flatten_serializer_errors(serializer.errors),
+                },
+                retryable=False,
             )
 
         text = serializer.validated_data['text']
@@ -752,17 +1058,22 @@ class TextToSpeechView(APIView):
             status_code = status.HTTP_503_SERVICE_UNAVAILABLE
             if 'requires non-empty' in message.lower():
                 status_code = status.HTTP_400_BAD_REQUEST
-            return Response({'error': message}, status=status_code)
+            return _build_error_response(
+                code='tts.validation.failed',
+                message=message,
+                http_status=status_code,
+                retryable=False,
+            )
         except Exception:
             logger.exception('Text-to-speech generation failed')
-            return Response(
-                {
-                    'error': (
-                        'Text-to-speech failed. edge-tts may need internet access '
-                        'or a valid voice name.'
-                    ),
-                },
-                status=status.HTTP_502_BAD_GATEWAY,
+            return _build_error_response(
+                code='tts.generation.failed',
+                message=(
+                    'Text-to-speech failed. edge-tts may need internet access '
+                    'or a valid voice name.'
+                ),
+                http_status=status.HTTP_502_BAD_GATEWAY,
+                retryable=True,
             )
 
         response = HttpResponse(audio_bytes, content_type='audio/mpeg')
@@ -788,7 +1099,7 @@ class HealthCheckView(APIView):
         return Response({
             'status': 'ok',
             'engine': (
-                'nllb-200-distilled-600M'
+                CoreApiConfig.engine_name
                 if nllb_loaded
                 else 'offline-model-missing'
             ),
@@ -801,5 +1112,6 @@ class HealthCheckView(APIView):
             'tts_engine': 'edge-tts' if tts_available else 'unavailable',
             'strict_offline_mode': strict_offline,
             'cloud_fallback_allowed': False,
+            'inference_mode': 'offline-local-only',
             'supported_languages': list(SUPPORTED_LANGUAGES.keys()),
         })

@@ -1,15 +1,18 @@
 """
-core_api/apps.py — Singleton NLLB-200 model loader for Project Puente.
+core_api/apps.py - Singleton offline model loader for Project Puente.
 
-Loads the 8-bit quantized NLLB-200-distilled-600M base model and LoRA
-(PEFT) adapters exactly ONCE at Django server startup via the ready() hook.
-All views access the model through CoreApiConfig class variables — zero
-per-request reloading.
+Cloud-to-local architecture note:
+- LoRA training can happen in cloud RDE sessions (Colab GPU).
+- Thesis defense inference must run fully offline from local disk.
+
+This module enforces the edge phase by loading only local artifacts
+from ml_models with local_files_only=True and never pulling from network.
 """
 
+import logging
 import os
 import sys
-import logging
+from pathlib import Path
 
 from django.apps import AppConfig
 from django.conf import settings
@@ -17,156 +20,147 @@ from django.conf import settings
 logger = logging.getLogger(__name__)
 
 
+def _env_flag(name, default=False):
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {'1', 'true', 'yes', 'on'}
+
+
 class CoreApiConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'core_api'
 
-    # ── Singleton Class Variables (shared across all requests) ──
+    # Singleton class variables (shared by all requests in this process).
     nllb_tokenizer = None
     nllb_model = None
-    lora_adapters = {}          # {'formal': 'formal', 'street': 'street'}
+    lora_adapters = {}
     model_loaded = False
-    engine_name = 'nllb-200-distilled-600M'
+    engine_name = 'offline-model-missing'
+    _ready_ran = False
 
     def ready(self):
-        """Load NLLB-200 + LoRA once at server startup (Singleton)."""
-        # Allow explicit opt-out for lightweight management tasks.
-        if os.environ.get('PUENTE_LOAD_MODEL_ON_STARTUP', 'true').lower() in ('0', 'false', 'no', 'off'):
-            logger.info('Skipping NLLB-200 load (PUENTE_LOAD_MODEL_ON_STARTUP is disabled).')
+        """
+        Load base NLLB + local LoRA adapters into RAM exactly once.
+
+        Startup loading is intentionally guarded by PUENTE_LOAD_MODEL_ON_STARTUP
+        so migrations/tests can run fast without huge model initialization.
+        """
+        if CoreApiConfig._ready_ran:
+            return
+        CoreApiConfig._ready_ran = True
+
+        if not _env_flag('PUENTE_LOAD_MODEL_ON_STARTUP', False):
+            logger.info('Model preload skipped (PUENTE_LOAD_MODEL_ON_STARTUP is false).')
             return
 
-        # Skip heavy model init for common one-off management commands.
-        skip_commands = {
-            'test',
-            'migrate',
-            'makemigrations',
-            'collectstatic',
-            'createsuperuser',
-            'shell',
-            'dbshell',
+        if any(cmd in sys.argv for cmd in {'makemigrations', 'migrate', 'collectstatic', 'test'}):
+            logger.info('Model preload skipped for management command: %s', ' '.join(sys.argv))
+            return
+
+        project_root = Path(getattr(settings, 'PROJECT_ROOT', Path(__file__).resolve().parents[2]))
+        configured_model_path = getattr(settings, 'ML_MODEL_PATH', 'ml_models/nllb-200-distilled-600M')
+        model_path = Path(configured_model_path)
+        if not model_path.is_absolute():
+            model_path = project_root / model_path
+        model_path = model_path.resolve()
+
+        adapter_root = project_root / 'ml_models' / 'lora_adapters'
+        adapter_candidates = {
+            'formal': adapter_root / 'lora-cbk-formal',
+            'street': adapter_root / 'lora-cbk-street',
         }
-        active_args = set(sys.argv[1:])
-        if active_args.intersection(skip_commands):
-            logger.info('Skipping NLLB-200 load for management command: %s', ' '.join(sys.argv[1:]))
-            return
 
-        # Prevent double-load from Django auto-reloader during runserver.
-        if 'runserver' in sys.argv and os.environ.get('RUN_MAIN') != 'true':
-            return
-        if CoreApiConfig.model_loaded:
-            return
-
-        BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        PROJECT_ROOT = os.path.dirname(BASE_DIR)
-
-        configured_model_path = (
-            getattr(settings, 'ML_MODEL_PATH', 'ml_models/nllb-200-distilled-600M')
-            or 'ml_models/nllb-200-distilled-600M'
-        )
-
-        if os.path.isabs(configured_model_path):
-            MODEL_DIR = os.path.normpath(configured_model_path)
-        else:
-            MODEL_DIR = os.path.normpath(os.path.join(PROJECT_ROOT, configured_model_path))
-
-        LORA_DIR = os.path.dirname(MODEL_DIR)
-
-        if not os.path.isdir(MODEL_DIR):
-            logger.warning(
-                'NLLB-200 model directory not found at %s. '
-                'Translation requests will be unavailable until the model is installed. '
-                'Run the model download script first.',
-                MODEL_DIR,
-            )
-            CoreApiConfig.model_loaded = False
+        if not model_path.exists():
+            logger.error('Local model path does not exist: %s', model_path)
             return
 
         try:
             import torch
+            from peft import PeftModel
             from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
-            # ── Load Tokenizer ──
-            logger.info('Loading NLLB-200 tokenizer from %s …', MODEL_DIR)
-            CoreApiConfig.nllb_tokenizer = AutoTokenizer.from_pretrained(
-                MODEL_DIR, local_files_only=True,
+            logger.info('Loading local tokenizer from %s (offline enforced).', model_path)
+            tokenizer = AutoTokenizer.from_pretrained(
+                str(model_path),
+                local_files_only=True,
+                use_fast=True,
             )
 
-            # ── Detect optimal device and quantization ──
-            use_cuda = torch.cuda.is_available()
-            quantize_8bit = False
+            load_kwargs = {'local_files_only': True}
+            using_int8 = False
 
-            if use_cuda:
+            if torch.cuda.is_available():
                 try:
                     import bitsandbytes  # noqa: F401
-                    quantize_8bit = True
-                    logger.info('CUDA + bitsandbytes available — using INT8 on GPU.')
+
+                    load_kwargs.update({
+                        'load_in_8bit': True,
+                        'device_map': 'auto',
+                    })
+                    using_int8 = True
+                    logger.info('CUDA + bitsandbytes detected: using 8-bit model loading.')
                 except ImportError:
-                    logger.info('CUDA available but bitsandbytes missing — using FP16 on GPU.')
+                    load_kwargs['torch_dtype'] = torch.float16
+                    logger.info('CUDA detected without bitsandbytes: using float16 model loading.')
             else:
-                logger.info('No CUDA — loading model in FP32 on CPU.')
+                load_kwargs['torch_dtype'] = torch.float32
+                logger.info('CUDA unavailable: using CPU float32 model loading.')
 
-            # ── Load Base Model ──
-            if quantize_8bit:
-                base_model = AutoModelForSeq2SeqLM.from_pretrained(
-                    MODEL_DIR, local_files_only=True,
-                    load_in_8bit=True, device_map='auto',
-                )
-            elif use_cuda:
-                base_model = AutoModelForSeq2SeqLM.from_pretrained(
-                    MODEL_DIR, local_files_only=True,
-                    torch_dtype=torch.float16, device_map='auto',
-                )
-            else:
-                base_model = AutoModelForSeq2SeqLM.from_pretrained(
-                    MODEL_DIR, local_files_only=True,
-                    torch_dtype=torch.float32, device_map='cpu',
-                )
+            logger.info('Loading local NLLB base model from %s (offline enforced).', model_path)
+            model = AutoModelForSeq2SeqLM.from_pretrained(str(model_path), **load_kwargs)
+            if not using_int8:
+                model = model.to('cuda' if torch.cuda.is_available() else 'cpu')
+            model.eval()
 
-            base_model.eval()
-            CoreApiConfig.nllb_model = base_model
+            loaded_adapters = {}
+            peft_wrapped = False
 
-            # ── Load LoRA Adapters (dynamic switching, NOT merge) ──
-            try:
-                from peft import PeftModel
+            # Academic note: adapters are loaded into RAM at boot to avoid
+            # first-request latency spikes during live panel demonstrations.
+            for mode, adapter_path in adapter_candidates.items():
+                if not adapter_path.exists():
+                    continue
 
-                first_adapter_loaded = False
-                for mode in ['formal', 'street']:
-                    adapter_path = os.path.join(LORA_DIR, f'lora-cbk-{mode}')
-                    if os.path.isdir(adapter_path):
-                        if not first_adapter_loaded:
-                            logger.info('Loading LoRA adapter: %s', mode)
-                            peft_model = PeftModel.from_pretrained(
-                                base_model, adapter_path,
-                                adapter_name=mode, local_files_only=True,
-                            )
-                            first_adapter_loaded = True
-                        else:
-                            logger.info('Loading additional LoRA adapter: %s', mode)
-                            peft_model.load_adapter(adapter_path, adapter_name=mode)
-                        CoreApiConfig.lora_adapters[mode] = mode
-                    else:
-                        logger.warning('LoRA adapter missing: %s', adapter_path)
+                logger.info('Loading local LoRA adapter %s from %s', mode, adapter_path)
+                if not peft_wrapped:
+                    model = PeftModel.from_pretrained(
+                        model,
+                        str(adapter_path),
+                        adapter_name=mode,
+                        is_trainable=False,
+                        local_files_only=True,
+                    )
+                    peft_wrapped = True
+                else:
+                    model.load_adapter(
+                        str(adapter_path),
+                        adapter_name=mode,
+                        is_trainable=False,
+                        local_files_only=True,
+                    )
+                loaded_adapters[mode] = mode
 
-                if first_adapter_loaded:
-                    peft_model.eval()
-                    CoreApiConfig.nllb_model = peft_model
+            if loaded_adapters and hasattr(model, 'set_adapter'):
+                default_mode = 'formal' if 'formal' in loaded_adapters else next(iter(loaded_adapters))
+                model.set_adapter(default_mode)
 
-            except ImportError:
-                logger.warning(
-                    'peft not installed — LoRA adapters will NOT be loaded. '
-                    'Translations will use base NLLB-200 weights only.'
-                )
-
+            CoreApiConfig.nllb_tokenizer = tokenizer
+            CoreApiConfig.nllb_model = model
+            CoreApiConfig.lora_adapters = loaded_adapters
             CoreApiConfig.model_loaded = True
-            params = sum(p.numel() for p in base_model.parameters())
-            logger.info(
-                'NLLB-200 loaded: %s params, device: %s, LoRA adapters: %s',
-                f'{params:,}',
-                next(base_model.parameters()).device,
-                list(CoreApiConfig.lora_adapters.keys()) or 'NONE',
-            )
+            CoreApiConfig.engine_name = 'nllb-200-distilled-600M+local-lora' if loaded_adapters else 'nllb-200-distilled-600M'
 
+            logger.info(
+                'Offline inference stack ready. model_loaded=%s adapters=%s',
+                CoreApiConfig.model_loaded,
+                sorted(loaded_adapters.keys()),
+            )
         except Exception:
-            logger.exception('Failed to load NLLB-200 model.')
+            logger.exception('Failed to initialize local offline model stack.')
+            CoreApiConfig.nllb_tokenizer = None
+            CoreApiConfig.nllb_model = None
+            CoreApiConfig.lora_adapters = {}
             CoreApiConfig.model_loaded = False
+            CoreApiConfig.engine_name = 'offline-model-missing'
 

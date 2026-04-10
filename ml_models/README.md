@@ -67,8 +67,16 @@ ml_models/
 
 ## Canonical training paths
 
-- Preferred processed corpus directory: `../datasets/processed/001_chavacano/`
-- `train_lora.py` now resolves this canonical path first and keeps a fallback for older `Datasets/` naming.
+- Preferred strict parallel corpus directory: `../datasets/processed/pillars/parallel/`
+- Preferred evaluator file: `../datasets/processed/pillars/parallel/master_parallel_corpus_nmt.json`
+- Memory-safe streaming alternative: `../datasets/processed/jsonl/pillars/parallel/master_parallel_corpus_nmt.jsonl` (use `--dataset-file` in `train_lora.py`).
+- Legacy `../datasets/processed/001_chavacano/` remains supported as a compatibility fallback.
+
+## 3-Pillar contract reminder
+
+- `Parallel` pillar is the only corpus used for seq2seq loss tensors.
+- `Monolingual` pillar is reserved for fluency / back-translation flows.
+- `Lexicon` pillar must be ingested to SQL via `python backend/manage.py ingest_lexicon` and excluded from LoRA training tensors.
 
 ## Notes
 

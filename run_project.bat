@@ -13,6 +13,9 @@ echo  ========================================
 echo   Project Puente - Starting Servers
 echo  ========================================
 echo.
+echo [INFO] Preferred local URL: http://projectpuente.local:5173
+echo [INFO] Fallback URL if hosts mapping is missing: http://localhost:5173
+echo.
 
 set "ROOT_DIR=%~dp0"
 set "PS_SCRIPT=%ROOT_DIR%run_project.ps1"

@@ -183,6 +183,11 @@ PUENTE_API_KEY = os.getenv('PUENTE_API_KEY', '').strip()
 # Local model path (relative to project root unless absolute path is provided).
 ML_MODEL_PATH = os.getenv('ML_MODEL_PATH', 'ml_models/nllb-200-distilled-600M').strip()
 
+# Hugging Face serverless inference configuration.
+HF_TOKEN = os.getenv('HF_TOKEN', '').strip()
+HF_MODEL_ID = os.getenv('HF_MODEL_ID', 'facebook/nllb-200-distilled-600M').strip()
+HF_INFERENCE_TIMEOUT_SECONDS = int(os.getenv('HF_INFERENCE_TIMEOUT_SECONDS', '90'))
+
 # ---------------------------------------------------------------------------
 # Edge TTS (optional speech synthesis)
 # ---------------------------------------------------------------------------

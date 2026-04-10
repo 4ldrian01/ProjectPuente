@@ -8,6 +8,27 @@
   --spring-duration-indicator: 300ms;
   --spring-duration-screen: 300ms;
   --spring-screen-distance: 10px;
+
+  /* Aesthetic 2026 shared design primitives */
+  --a26-surface-radius: 1.25rem;
+  --a26-surface-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+  --a26-surface-shadow-hover: 0 16px 34px rgba(0, 0, 0, 0.12);
+  --a26-shell-shadow: 0 14px 36px rgba(0, 0, 0, 0.28);
+  --a26-shell-shadow-soft: 0 8px 22px rgba(0, 0, 0, 0.2);
+  --a26-ambient-magenta: rgba(217, 70, 239, 0.2);
+  --a26-ambient-gold: rgba(250, 204, 21, 0.12);
+  --a26-grid-stroke: rgba(163, 163, 163, 0.09);
+}
+
+:root[data-theme='light'],
+body[data-theme='light'] {
+  --a26-surface-shadow: 0 8px 30px rgba(27, 37, 64, 0.09);
+  --a26-surface-shadow-hover: 0 18px 38px rgba(27, 37, 64, 0.16);
+  --a26-shell-shadow: 0 12px 30px rgba(27, 37, 64, 0.14);
+  --a26-shell-shadow-soft: 0 7px 18px rgba(27, 37, 64, 0.11);
+  --a26-ambient-magenta: rgba(191, 47, 216, 0.16);
+  --a26-ambient-gold: rgba(200, 138, 0, 0.13);
+  --a26-grid-stroke: rgba(95, 104, 122, 0.15);
 }
 
 @media (max-width: 767px) {
@@ -42,6 +63,96 @@
   transition-timing-function: var(--spring-ease);
   transform: translateZ(0);
   backface-visibility: hidden;
+}
+
+/* ============================================
+   AESTHETIC 2026 FOUNDATION LAYER
+   ============================================ */
+.a26-ambient-canvas {
+  background-image:
+    linear-gradient(to right, var(--a26-grid-stroke) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--a26-grid-stroke) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: radial-gradient(circle at center, black 46%, transparent 100%);
+  opacity: 0.35;
+}
+
+.a26-surface {
+  border: 1px solid color-mix(in srgb, var(--puente-border-subtle) 72%, transparent);
+  background: color-mix(in srgb, var(--puente-bg-card) 83%, transparent);
+  border-radius: var(--a26-surface-radius);
+  box-shadow: var(--a26-surface-shadow);
+  backdrop-filter: blur(16px);
+  transition: transform 240ms var(--spring-ease), box-shadow 240ms var(--spring-ease), border-color 240ms var(--spring-ease), background-color 240ms var(--spring-ease);
+}
+
+.a26-surface:hover {
+  border-color: color-mix(in srgb, var(--puente-accent-magenta) 28%, var(--puente-border-subtle));
+  box-shadow: var(--a26-surface-shadow-hover);
+  transform: translateY(-1px);
+}
+
+.a26-subtitle {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--puente-text-secondary) 90%, transparent);
+}
+
+.a26-hero-title {
+  font-size: clamp(1.35rem, 1.02rem + 1.6vw, 2.35rem);
+  line-height: 1.14;
+  letter-spacing: -0.02em;
+}
+
+.a26-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--puente-border-subtle) 74%, transparent);
+  background: color-mix(in srgb, var(--puente-bg-elevated) 88%, transparent);
+  padding: 0.32rem 0.72rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--puente-text-secondary);
+}
+
+.a26-button-ghost {
+  border-radius: 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--puente-border-subtle) 78%, transparent);
+  background: color-mix(in srgb, var(--puente-bg-card) 88%, transparent);
+  color: var(--puente-text-secondary);
+  transition: background-color 220ms var(--spring-ease), color 220ms var(--spring-ease), border-color 220ms var(--spring-ease), transform 220ms var(--spring-ease);
+}
+
+.a26-button-ghost:hover {
+  background: color-mix(in srgb, var(--puente-bg-elevated) 92%, transparent);
+  border-color: color-mix(in srgb, var(--puente-accent-magenta) 35%, var(--puente-border-subtle));
+  color: var(--puente-text-primary);
+}
+
+.a26-button-ghost:active {
+  transform: scale(0.98);
+}
+
+.a26-button-primary {
+  border-radius: 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--puente-accent-magenta) 60%, transparent);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--puente-accent-magenta) 92%, transparent), color-mix(in srgb, var(--puente-accent-gold) 34%, transparent));
+  color: white;
+  box-shadow: 0 8px 24px rgba(217, 70, 239, 0.25);
+  transition: filter 220ms var(--spring-ease), transform 220ms var(--spring-ease), box-shadow 220ms var(--spring-ease);
+}
+
+.a26-button-primary:hover {
+  filter: brightness(1.04);
+  box-shadow: 0 12px 30px rgba(217, 70, 239, 0.32);
+}
+
+.a26-button-primary:active {
+  transform: scale(0.98);
 }
 
 /* ============================================
@@ -126,6 +237,17 @@
 
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes toastProgress {
+  from {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+  to {
+    transform: scaleX(0);
+    transform-origin: left;
+  }
 }
 
 /* ── Settings side-panel slide-in ── */
@@ -243,6 +365,11 @@ select:focus-visible {
    ============================================ */
 @supports not (backdrop-filter: blur(12px)) {
   .backdrop-blur-md {
+    background-color: var(--puente-backdrop-fallback);
+  }
+
+  .backdrop-blur-xl,
+  .a26-surface {
     background-color: var(--puente-backdrop-fallback);
   }
 }

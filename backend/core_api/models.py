@@ -75,6 +75,12 @@ class TranslationLog(models.Model):
     output_tokens = models.PositiveIntegerField(default=0)
     model_name = models.CharField(max_length=100)
     pivot_used = models.BooleanField(default=False)
+    route_confidence = models.FloatField(
+        null=True,
+        blank=True,
+        default=None,
+        help_text='Mean token-level confidence from direct inference pass (0-1).',
+    )
 
     # ISO 25010: Performance Efficiency
     latency_ms = models.FloatField(

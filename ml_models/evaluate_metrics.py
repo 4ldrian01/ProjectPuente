@@ -14,6 +14,7 @@ Notes:
 - Expects a local NLLB model at ./nllb-200-distilled-600M.
 - If mode is formal/street and a matching LoRA adapter exists,
   the script loads it from ./lora-cbk-<mode>.
+- Supports both JSON and JSONL parallel payloads.
 """
 
 # pyright: reportMissingImports=false
@@ -86,6 +87,21 @@ LANGUAGE_KEYS = {
     'hil': ['hiligaynon', 'hil'],
 }
 
+FLORES_TO_APP = {
+    'eng_Latn': 'en',
+    'spa_Latn': 'es',
+    'tgl_Latn': 'tl',
+    'cbk_Latn': 'cbk',
+    'ceb_Latn': 'ceb',
+    'hil_Latn': 'hil',
+    'eng': 'en',
+    'spa': 'es',
+    'tgl': 'tl',
+    'cbk': 'cbk',
+    'ceb': 'ceb',
+    'hil': 'hil',
+}
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -94,8 +110,8 @@ def parse_args():
     parser.add_argument(
         '--dataset',
         type=str,
-        default='../datasets/processed/001_chavacano/chavacano_parallel_sentences_nllb.json',
-        help='Path to dataset JSON containing parallel pairs.',
+        default='../datasets/processed/pillars/parallel/master_parallel_corpus_nmt.json',
+        help='Path to dataset JSON/JSONL containing parallel pairs.',
     )
     parser.add_argument(
         '--base-model',
@@ -168,24 +184,96 @@ def resolve_path(script_dir, raw_path):
 
 def pick_value(entry, candidate_keys):
     for key in candidate_keys:
-        value = entry.get(key)
-        if isinstance(value, str) and value.strip():
-            return value.strip()
+        value = str(entry.get(key) or '').strip()
+        if value:
+            return value
     return ''
 
 
-def extract_parallel_pairs(payload, src_lang, tgt_lang):
-    entries = payload.get('entries', []) if isinstance(payload, dict) else payload
-    if not isinstance(entries, list):
-        raise ValueError('Dataset JSON must be a list or a dict with an "entries" list.')
+def app_code_from_lang_code(lang_code):
+    raw = str(lang_code or '').strip()
+    if not raw:
+        return ''
 
-    src_candidates = LANGUAGE_KEYS.get(src_lang, []) + ['source', 'src']
-    tgt_candidates = LANGUAGE_KEYS.get(tgt_lang, []) + ['target', 'tgt']
+    if raw in FLORES_TO_APP:
+        return FLORES_TO_APP[raw]
+
+    if '_' in raw:
+        raw = raw.split('_', 1)[0]
+    raw = raw.casefold()
+    return FLORES_TO_APP.get(raw, raw)
+
+
+def iter_dataset_entries(dataset_path):
+    lowered = dataset_path.casefold()
+
+    if lowered.endswith('.jsonl'):
+        with open(dataset_path, 'r', encoding='utf-8') as handle:
+            for line in handle:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    payload = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if isinstance(payload, dict):
+                    yield payload
+        return
+
+    with open(dataset_path, 'r', encoding='utf-8') as handle:
+        payload = json.load(handle)
+
+    if isinstance(payload, dict):
+        entries = payload.get('entries', [])
+        if not isinstance(entries, list):
+            raise ValueError('Dataset JSON object must contain list field "entries".')
+        for entry in entries:
+            if isinstance(entry, dict):
+                yield entry
+        return
+
+    if isinstance(payload, list):
+        for entry in payload:
+            if isinstance(entry, dict):
+                yield entry
+        return
+
+    raise ValueError('Dataset must be JSON list, JSON object with entries[], or JSONL records.')
+
+
+def extract_parallel_pairs(entries, src_lang, tgt_lang):
+    src_code = app_code_from_lang_code(src_lang)
+    tgt_code = app_code_from_lang_code(tgt_lang)
+
+    src_candidates = ['source_text'] + LANGUAGE_KEYS.get(src_lang, []) + ['source', 'src']
+    tgt_candidates = ['target_text'] + LANGUAGE_KEYS.get(tgt_lang, []) + ['target', 'tgt', 'reference', 'label']
 
     pairs = []
     for entry in entries:
         if not isinstance(entry, dict):
             continue
+
+        record_type = str(entry.get('record_type') or '').strip().casefold()
+        if record_type and record_type != 'parallel':
+            continue
+
+        canonical_source = pick_value(entry, ['source_text'])
+        canonical_target = pick_value(entry, ['target_text'])
+        row_src_code = app_code_from_lang_code(entry.get('source_lang'))
+        row_tgt_code = app_code_from_lang_code(entry.get('target_lang'))
+
+        if canonical_source and canonical_target:
+            if row_src_code and row_tgt_code:
+                if row_src_code == src_code and row_tgt_code == tgt_code:
+                    pairs.append((canonical_source, canonical_target))
+                    continue
+                if row_src_code == tgt_code and row_tgt_code == src_code:
+                    pairs.append((canonical_target, canonical_source))
+                    continue
+            else:
+                pairs.append((canonical_source, canonical_target))
+                continue
 
         src_text = pick_value(entry, src_candidates)
         tgt_text = pick_value(entry, tgt_candidates)
@@ -352,13 +440,11 @@ def main():
         if not os.path.isfile(dataset_path):
             raise FileNotFoundError(
                 f'Dataset file not found at {dataset_path}. '
-                f'Provide --dataset with a valid JSON path.'
+                f'Provide --dataset with a valid JSON/JSONL path.'
             )
 
-        with open(dataset_path, 'r', encoding='utf-8') as f:
-            payload = json.load(f)
-
-        pairs = extract_parallel_pairs(payload, args.src_lang, args.tgt_lang)
+        entries = list(iter_dataset_entries(dataset_path))
+        pairs = extract_parallel_pairs(entries, args.src_lang, args.tgt_lang)
         if not pairs:
             raise ValueError(
                 f'No valid parallel pairs found for {args.src_lang}->{args.tgt_lang} '

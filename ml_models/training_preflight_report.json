@@ -1,11 +1,11 @@
 {
-  "generated_at_utc": "2026-04-04T20:54:19.824807+00:00",
-  "project_root": "C:\\Users\\User's\\ALL FILES - MACHINE LEARNING\\ProjectPuente",
-  "python_executable": "C:\\Users\\User's\\ALL FILES - MACHINE LEARNING\\ProjectPuente\\.venv\\Scripts\\python.exe",
+  "generated_at_utc": "2026-04-07T23:30:39.618095+00:00",
+  "project_root": "/home/rauf/Desktop/Machine Learning/ProjectPuente",
+  "python_executable": "/home/rauf/Desktop/Machine Learning/ProjectPuente/venv/bin/python",
   "overall_status": "BLOCKED",
   "summary": {
-    "PASS": 12,
-    "WARN": 2,
+    "PASS": 18,
+    "WARN": 0,
     "BLOCKER": 1
   },
   "results": [
@@ -55,14 +55,34 @@
       "details": "No hard-coded absolute Windows paths in active scripts."
     },
     {
-      "name": "NLLB-ready processed files",
+      "name": "Pillar 1 master parallel corpus",
       "status": "PASS",
-      "details": "Required processed dataset files are present."
+      "details": "Pillar 1 parallel corpus is present for strict seq2seq training."
     },
     {
-      "name": "Base model directory",
+      "name": "Pillar 2 monolingual corpus",
+      "status": "PASS",
+      "details": "Pillar 2 monolingual corpus is present."
+    },
+    {
+      "name": "Legacy parallel shard files",
+      "status": "PASS",
+      "details": "Legacy parallel shards are available for compatibility workflows."
+    },
+    {
+      "name": "Lexicon source files",
+      "status": "PASS",
+      "details": "Lexicon JSON sources are present for SQL ingestion."
+    },
+    {
+      "name": "Pillar JSONL streaming outputs",
+      "status": "PASS",
+      "details": "JSONL streaming outputs are present for memory-safe loaders."
+    },
+    {
+      "name": "Base model file completeness",
       "status": "BLOCKER",
-      "details": "Model directory missing: C:\\Users\\User's\\ALL FILES - MACHINE LEARNING\\ProjectPuente\\ml_models\\nllb-200-distilled-600M (run download_model.py before training/inference)."
+      "details": "Model directory exists but no weight file was found (expected one of: model.safetensors, pytorch_model.bin). Complete or resume download_model.py before training/inference."
     },
     {
       "name": "Environment templates",
@@ -71,13 +91,13 @@
     },
     {
       "name": "Virtual environment duplication",
-      "status": "WARN",
-      "details": "Both venv/ and .venv/ exist. Keep one canonical environment to reduce confusion."
+      "status": "PASS",
+      "details": "Single virtual environment layout detected."
     },
     {
       "name": "Python dependency availability",
-      "status": "WARN",
-      "details": "Missing modules in current interpreter: torch, transformers, peft, sacrebleu"
+      "status": "PASS",
+      "details": "Required training/processing modules are importable."
     },
     {
       "name": "Legacy script redundancy",

@@ -18,6 +18,7 @@ python-dotenv>=1.0,<2.0
 # ── ML Stack: NLLB-200 + LoRA (Primary Engine) ──
 torch>=2.2.0
 transformers>=4.44.0
+huggingface_hub>=0.24.0
 sentencepiece>=0.2.0
 accelerate>=0.30.0
 peft>=0.11.0
@@ -32,3 +33,4 @@ sacrebleu>=2.4.0
 
 # ── Telemetry / hardware metrics ──
 psutil>=5.9.8
+GPUtil>=1.4.0

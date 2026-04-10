@@ -1,85 +1,136 @@
-# Project Puente — Comprehensive Repository Scan (Fully Updated)
+# Project Puente - Comprehensive Repository Scan (Fully Updated)
 
-Generated: 2026-04-05
-Workspace: `c:\Users\User's\ALL FILES - MACHINE LEARNING\ProjectPuente`
+Generated: 2026-04-07T06:17:46+08:00  
+Workspace: /home/rauf/Desktop/Machine Learning/ProjectPuente  
+Branch: main
 
-This report is a full, source-backed re-scan of the repository and current workspace state.
-It updates and replaces older sections with current code behavior, including:
+This report is a full, source-backed re-scan of the repository and active runtime state.
+It supersedes prior snapshots and was rebuilt from current files, git metadata, command validation, and live endpoint checks.
 
-- Spanish control-variable support (`es`) across backend/frontend/ML tooling
-- Back-Translation Verification Loop (BTVL) endpoint and UI integration
-- Translation Memory (TM) cache routing before NLLB inference
-- Wiki-Voz greedy phrase/n-gram interception (longest match)
-- New seed/evaluation scripts and their output artifacts
-- Current operational scripts, PWA constraints, and validated test/lint status
+## Delta Updates In This Pass
 
-### Delta updates in this pass
-
-- Centralized backend language/FLORES contract in `backend/core_api/languages.py` and rewired models, serializers, views, and tests to use it.
-- Added `ml_models/training_preflight.py` for read-only architecture/training readiness checks with JSON report output.
-- Added `TRAINING_PREFLIGHT_CHECKLIST.md` for operator workflow before training/evaluation runs.
-- Hardened active notebook pipeline scripts against cross-platform path casing via `notebooks/scripts/_path_utils.py` (`datasets/` canonical, `Datasets/` fallback).
-- Updated `run_nllb_pipeline.py` to invoke child scripts via `sys.executable` (active interpreter consistency).
-- Removed verified legacy duplicate notebook scripts superseded by refined variants:
-	- `notebooks/scripts/extract_chavacano_pdf.py`
-	- `notebooks/scripts/process_chavacano_csv.py`
-	- `notebooks/scripts/process_tatoeba01.py`
-	- `notebooks/scripts/harvest_creole-rc_data.py`
+- Re-scanned backend/frontend/ML/notebook source files directly from disk.
+- Revalidated live runtime behavior for root, health, translate, BTVL, TTS, telemetry, and wiki endpoints.
+- Re-ran quality checks with current environment:
+  - backend tests
+  - frontend lint/build
+  - training preflight
+- Corrected runtime assertions to match current local-only behavior:
+  - `translate` and `btvl` currently return `503` because local model files are missing.
+  - cloud/API fallback is disabled (`cloud_fallback_allowed: false`).
+- Updated git inventory to current state (`tracked=136`, `modified tracked=21`, `untracked=7`).
+- Added a new **File Purpose Index** section to summarize purpose for files not previously covered in depth.
 
 ---
 
 ## 0) Completeness Verification (This Pass)
 
-This scan used live repository/state checks and full-file reads of core implementation files.
+### 0.1 Evidence Sources Used
 
-- **Tracked files (authoritative):** run `git ls-files` for the current exact count.
-- **Untracked files currently present:**
-	- `PROJECT_PUENTE_COMPREHENSIVE_SCAN.md`
-	- `TRAINING_PREFLIGHT_CHECKLIST.md`
-	- `backend/core_api/languages.py`
-	- `backend/core_api/migrations/0003_add_es_language_choices.py`
-	- `backend/core_api/migrations/0004_culturalterm_language_free_text.py`
-	- `backend/scripts/seed_spanish_baseline.py`
-	- `backend/scripts/seed_spanish_loanwords.py`
-	- `datasets/raw/02_Chavacano/spanish_loanwords_mapping.csv`
-	- `frontend/.env.example`
-	- `frontend/public/local-assets/README.md`
-	- `frontend/public/local-assets/placeholder.jpg`
-	- `frontend/src/lib/apiAuth.js`
-	- `ml_models/evaluate_metrics.py`
-	- `ml_models/evaluate_spanish_baseline.py`
-	- `ml_models/evaluation_results.json`
-	- `ml_models/spanish_baseline_input.json`
-	- `ml_models/spanish_baseline_metrics.json`
-	- `ml_models/training_preflight.py`
-	- `notebooks/scripts/_path_utils.py`
-	- `puente_high_level_architecture.mmd`
+- Full reads of core backend/frontend/ML/notebook files.
+- Live git commands:
+  - `git ls-files`
+  - `git status --short`
+  - `git branch --show-current`
+- Runtime probes via `curl`:
+  - `/`
+  - `/api/health/`
+  - `/api/translate/`
+  - `/api/btvl/`
+  - `/api/tts/`
+  - `/api/telemetry/`
+  - `/api/wiki/`
+- Validation commands:
+  - `backend/manage.py test`
+  - `frontend npm run lint`
+  - `frontend npm run build`
+  - `ml_models/training_preflight.py`
 
-### Validation runs observed in this session
+### 0.2 Repository Snapshot
 
-- Django tests: `46/46` passing (`backend/manage.py test core_api.tests`)
-- Frontend lint: passed (`npm run lint`)
-- Migrations applied: `core_api.0003_add_es_language_choices`, `core_api.0004_culturalterm_language_free_text`
-- Evaluation artifacts exist, but currently in `error` state due missing `torch` in runtime environment for metric execution
+- Branch: `main`
+- Tracked files: `136`
+- Git status lines: `28`
+- Modified tracked entries: `21`
+- Untracked entries: `7`
+
+Current git short status:
+
+```text
+ M PROJECT_PUENTE_COMPREHENSIVE_SCAN.md
+ M README.md
+ M backend/backend/settings.py
+ M backend/core_api/apps.py
+ M backend/core_api/views.py
+ M backend/requirements.txt
+ M frontend/index.html
+ M frontend/package-lock.json
+ M frontend/package.json
+ M frontend/src/App.jsx
+ M frontend/src/components/CulturalTermPopup.jsx
+ M frontend/src/components/layout/BottomNav.jsx
+ M frontend/src/components/layout/Header.jsx
+ M frontend/src/components/screens/TranslateScreen.jsx
+ M frontend/src/components/screens/WikiVozScreen.jsx
+ M ml_models/download_model.py
+ M ml_models/training_preflight_report.json
+ M notebooks/lora_training.ipynb
+ M notebooks/model_validation.ipynb
+ M notebooks/sample.ipynb
+ M run_project.sh
+?? .tools/
+?? CLOUD_TO_LOCAL_DEPLOYMENT_GUIDE.md
+?? frontend/src/components/screens/GapAnalysisTerminal.jsx
+?? frontend/src/components/screens/SystemEvaluationScreen.jsx
+?? ml_models/lora_adapters/
+?? notebooks/scripts/colab_lora_training_pipeline.py
+?? notebooks/scripts/colab_vscode_tunnel_setup.md
+```
+
+### 0.3 Current Structural Notes
+
+- `.tools/` exists and is untracked (`~167 MB`).
+- `frontend/node_modules` exists and is ignored (`~314 MB`).
+- `frontend/dist` exists from current build and is ignored (`~760 KB`).
+- Previous unusual untracked notebook files named like `=0.x.y` are no longer present.
+- `ml_models/lora_adapters/` currently exists but only contains `README.md` (no adapter folders yet).
+
+### 0.4 Database Snapshot (Current Runtime)
+
+From Django shell query in current environment:
+
+- `CulturalTerm` rows: `0`
+- `TranslationLog` rows: `10`
+
+This explains empty current `/api/wiki/` query results.
 
 ---
 
 ## 1) High-Level System Summary
 
-PUENTE is an offline-first LAN translation system with a modular 5-agent architecture plus new BTVL verification.
+PUENTE is an offline-first LAN translation stack with Django + DRF backend, React + Vite frontend, local NLLB translation pipeline, optional LoRA adapters, optional Edge TTS, and telemetry/verification support.
 
 Primary runtime stack:
 
-- **Backend:** Django + DRF + SQLite
-- **Frontend:** React 19 + Vite 7 + Tailwind 4
-- **Neural runtime:** NLLB-200-distilled-600M (+ optional LoRA adapters)
-- **Speech:** backend `edge-tts` endpoint (internet-dependent)
+- Backend: Django + DRF + SQLite
+- Frontend: React 19 + Vite 7 + Tailwind 4
+- Neural runtime: local `nllb-200-distilled-600M` (expected at `ml_models/nllb-200-distilled-600M`) with optional LoRA
+- Speech: `edge-tts` endpoint (internet-dependent unless strict offline mode blocks it)
 
-Current supported app language codes:
+Architecture model in repository:
+
+- `agents.md` defines the 5-agent flow:
+  - Routing
+  - Interceptor (Wiki-Voz)
+  - Neural
+  - Observer
+  - Presentation
+
+Current backend language scope:
 
 - `auto`, `en`, `es`, `tl`, `cbk`, `hil`, `ceb`
 
-Core runtime endpoints:
+Core routes currently registered:
 
 - `POST /api/translate/`
 - `POST /api/btvl/`
@@ -87,521 +138,685 @@ Core runtime endpoints:
 - `GET /api/wiki/`
 - `GET /api/telemetry/`
 - `GET /api/health/`
-- `GET /` (API root metadata)
+- `GET /`
 
 ---
 
-## 2) Backend Deep Scan (Actual File Internals)
+## 2) Live Runtime Validation (Current Session)
 
-### 2.1 `backend/backend/settings.py`
+### 2.1 Runtime Availability
 
-Key behavior inside the file:
+- Backend endpoints responded on `127.0.0.1:8000`.
+- Frontend responded on `127.0.0.1:5173` (`HTTP 200`).
 
-- Loads env values from `backend/.env` using `python-dotenv`
-- Hard-fails if `SECRET_KEY` is missing
-- `DEBUG` parsed via helper `_env_bool`
-- `ALLOWED_HOSTS` parsed via helper `_env_list`; in debug, appends `*` when absent
-- SQLite default DB at `backend/db.sqlite3`
-- Guard: if `DEBUG=False` and DB engine is non-SQLite, password must exist
-- CORS/CSRF configurable via env with LAN/dev-friendly defaults
-- DRF anonymous throttle configurable via `DRF_THROTTLE_ANON_RATE`
-- Optional production flags: SSL redirect, secure cookies, HSTS
-- `STRICT_OFFLINE_MODE` flag gates internet-dependent features
-- Optional `PUENTE_API_KEY` protects write endpoints (`X-API-Key` header)
-- Edge-TTS voice/rate/volume/pitch env fields defined per language code
+### 2.2 Live Endpoint Probe Results
 
-### 2.2 `backend/backend/urls.py`
+| Endpoint | HTTP | Observed Result |
+|---|---:|---|
+| `/` | 200 | API root online, engine reports `offline-model-missing` |
+| `/api/health/` | 200 | `nllb_loaded=false`, `tts_available=true`, `strict_offline_mode=false`, `cloud_fallback_allowed=false` |
+| `/api/translate/` | 503 | Local model unavailable error (explicitly states cloud fallback disabled) |
+| `/api/btvl/` | 503 | Local model unavailable error |
+| `/api/tts/` | 200 | Returned `audio/mpeg`, `X-TTS-Voice: en-US-EmmaMultilingualNeural` |
+| `/api/telemetry/` | 200 | RAM and GPU payload present |
+| `/api/wiki/` | 200 | `{\"results\":[]}` |
+| `/api/wiki/?q=vinta` | 200 | `{\"results\":[]}` |
+| `http://127.0.0.1:5173/` | 200 | Frontend reachable |
 
-Routes registered now include BTVL:
+### 2.3 Current Validation Runs
 
-- `/` → `APIRootView`
+| Check | Command Status | Result |
+|---|---:|---|
+| Backend tests | 0 | `46/46` passing |
+| Frontend lint | 0 | passed (`eslint .`) |
+| Frontend build | 0 | passed (`vite build`, PWA assets generated) |
+| Training preflight | 2 | `BLOCKED` (`PASS=13, WARN=1, BLOCKER=1`) |
+
+Notes:
+
+- Frontend checks were run using local Node path export (`.tools/node/bin`) because `npm` was not on default shell PATH.
+
+### 2.4 Migration State (Current)
+
+`manage.py showmigrations core_api` reports all applied:
+
+- `[X] 0001_initial`
+- `[X] 0002_culturalterm_category_culturalterm_language_and_more`
+- `[X] 0003_add_es_language_choices`
+- `[X] 0004_culturalterm_language_free_text`
+
+---
+
+## 3) Backend Deep Scan (Source-Backed)
+
+### 3.1 `backend/backend/settings.py`
+
+Confirmed behavior:
+
+- Loads env from `backend/.env` via `python-dotenv`.
+- Hard-fails startup if `SECRET_KEY` is empty.
+- Uses helper parsers `_env_bool` / `_env_list`.
+- Defaults DB to SQLite (`backend/db.sqlite3`).
+- CORS/CSRF are env-driven with local defaults.
+- DRF anonymous throttling configured (`DRF_THROTTLE_ANON_RATE`, default `240/min`).
+- Optional write-endpoint API key gate via `PUENTE_API_KEY`.
+- `STRICT_OFFLINE_MODE` supported.
+- `ML_MODEL_PATH` supported (default `ml_models/nllb-200-distilled-600M`).
+- `HF_*` settings exist in config, but runtime inference path in views is local-only.
+- Edge TTS voice/rate/volume/pitch env variables available.
+
+### 3.2 `backend/backend/urls.py`
+
+Routes currently registered:
+
+- `/` -> `APIRootView`
 - `/admin/`
-- `/api/translate/` → `TranslateView`
-- `/api/btvl/` → `BackTranslationVerifyView`
-- `/api/telemetry/` → `telemetry_view`
-- `/api/tts/` → `TextToSpeechView`
-- `/api/wiki/` → `WikiVozView`
-- `/api/health/` → `HealthCheckView`
+- `/api/translate/` -> `TranslateView`
+- `/api/btvl/` -> `BackTranslationVerifyView`
+- `/api/telemetry/` -> `telemetry_view`
+- `/api/tts/` -> `TextToSpeechView`
+- `/api/wiki/` -> `WikiVozView`
+- `/api/health/` -> `HealthCheckView`
 
-### 2.3 `backend/core_api/serializers.py`
+### 3.3 `backend/core_api/languages.py`
 
-#### `TranslateRequestSerializer`
-- `text`: `CharField(max_length=250)`
-- `source_lang`: `['auto','en','es','tl','cbk','hil','ceb']`
-- `target_lang`: `['en','es','tl','cbk','hil','ceb']`
-- `mode`: `formal|street` (default `formal`)
+Canonical language contract is centralized here:
 
-#### `BackTranslationRequestSerializer`
-- `text`: `max_length=250`
-- `source_lang`: `['en','es','tl','cbk','hil','ceb']`
-- `target_lang`: only `en` (default)
+- `SUPPORTED_LANGUAGES` includes `es`.
+- `SOURCE_LANGUAGE_CODES` includes `auto`.
+- `TARGET_LANGUAGE_CODES` excludes `auto`.
+- `FLORES_MAP` includes `es -> spa_Latn`.
+- `PIVOT_LANG = eng_Latn`.
 
-#### `TextToSpeechRequestSerializer`
-- `text`: `max_length=1000`
-- `lang_code`: includes `auto,en,es,tl,cbk,hil,ceb`
-- optional `voice`
+### 3.4 `backend/core_api/serializers.py`
 
-### 2.4 `backend/core_api/models.py` + `backend/core_api/languages.py`
+Confirmed validation constraints:
 
-Language and FLORES scope is now centralized in `core_api/languages.py` and reused by:
+- `TranslateRequestSerializer`
+  - `text`: max 250
+  - `source_lang`: source set including `auto`
+  - `target_lang`: target set (no `auto`)
+  - `mode`: `formal|street`, default `formal`
+- `BackTranslationRequestSerializer`
+  - `text`: max 250
+  - `source_lang`: target set
+  - `target_lang`: `en` (default)
+- `TextToSpeechRequestSerializer`
+  - `text`: max 1000
+  - `lang_code`: source set including `auto`
+  - optional `voice`
 
-- `models.py` (`LANGUAGE_CHOICES`, `TARGET_LANGUAGE_CHOICES`)
-- `serializers.py` (`SOURCE_LANGUAGE_CODES`, `TARGET_LANGUAGE_CODES`)
-- `views.py` (`SUPPORTED_LANGUAGES`, `FLORES_MAP`, `PIVOT_LANG`)
+### 3.5 `backend/core_api/models.py`
 
 #### `CulturalTerm`
-- Fields: `term` (unique/indexed), `definition`, `image_url`, `language`, `category`, timestamps
-- `language` is free text (supports real origin labels like `Chavacano`, `Tausug`, `Zamboanga`)
-- Ordering by `term`
+
+- `term` unique/indexed
+- `definition`, `image_url`, `language`, `category`
+- `language` is free text (not enum-restricted)
+- ordered by `term`
 
 #### `TranslationLog`
-- Captures request metadata (`source_lang`, `target_lang`, `mode`, text, chars, tokens)
-- Captures response metadata (`output_text`, output tokens, model name, pivot flag)
-- Captures reliability/perf (`latency_ms`, `status`, `error_message`)
-- Captures Wiki-Voz interception markers
-- Indexed by `created_at`, language pair, and status
 
-### 2.5 `backend/core_api/apps.py` (Singleton model loader)
+- Captures request/output metadata, model name, pivot flag
+- Captures latency/status/error fields
+- Captures Wiki-Voz interception fields
+- Indexed on `created_at`, language pair, and `status`
 
-Current loader behavior:
+### 3.6 `backend/core_api/apps.py` (Singleton Loader)
 
-- Class-level singleton state: tokenizer/model/adapter map/loaded flag
-- Skip heavy model init for commands: `test`, `migrate`, `makemigrations`, `collectstatic`, `createsuperuser`, `shell`, `dbshell`
-- Respects env switch `PUENTE_LOAD_MODEL_ON_STARTUP` (can disable startup load)
-- Avoids double-load during `runserver` autoreload (`RUN_MAIN` guard)
-- Loads model from fixed project path: `ml_models/nllb-200-distilled-600M`
+Confirmed loader behavior:
+
+- Uses class-level singleton state for tokenizer/model/adapters.
+- Startup load is gated by `PUENTE_LOAD_MODEL_ON_STARTUP` (default off).
+- Skips heavy init for management commands (`makemigrations`, `migrate`, `collectstatic`, `test`).
+- Resolves model path from `settings.ML_MODEL_PATH`.
+- Local-only loading (`local_files_only=True`) is enforced.
 - Device strategy:
-	- CUDA + bitsandbytes → INT8
-	- CUDA no bitsandbytes → FP16
-	- no CUDA → FP32 CPU
-- LoRA logic:
-	- Loads adapter directories if present (`lora-cbk-formal`, `lora-cbk-street`)
-	- Stores adapter names for dynamic `set_adapter` use
+  - CUDA + bitsandbytes -> INT8
+  - CUDA no bitsandbytes -> FP16
+  - CPU -> FP32
+- Adapter load path:
+  - `ml_models/lora_adapters/lora-cbk-formal`
+  - `ml_models/lora_adapters/lora-cbk-street`
+- Current health output confirms no adapters loaded.
 
-### 2.6 `backend/core_api/views.py`
+### 3.7 `backend/core_api/views.py`
 
-#### Global mappings/config
-- `FLORES_MAP`: now includes `'es': 'spa_Latn'`
-- `PIVOT_LANG = 'eng_Latn'`
-- `SUPPORTED_LANGUAGES`: includes `es`
-- `EDGE_TTS_DEFAULT_VOICES` includes Spanish default voice
+#### Verified global utilities
 
-#### Inference functions
-- `_infer_once()`: single NLLB generate pass with `torch.no_grad()`, beams=4, max_new_tokens=128
-- `nllb_translate()`:
-	- Resolves adapter by `mode`
-	- Handles same-language short-circuit
-	- Uses English two-hop pivot when both source+target are non-English
-	- Returns tuple: text, latency, token counts, pivot flag, model label
+- API key helpers:
+  - `_has_valid_api_key`
+  - `_require_api_key_or_401`
+- TM normalization:
+  - `_normalize_text_for_cache_lookup`
+- Phrase scan normalization:
+  - `_normalize_text_for_phrase_scan`
+- Interceptor matcher:
+  - `_find_wiki_voz_phrase_match` (greedy longest match)
 
-#### `TranslateView.post()`
-- Enforces optional API key protection (`X-API-Key`) when backend key is configured
-- Validates serializer
-- Performs greedy multi-word Wiki-Voz phrase interception (length-desc matching)
-- Checks Translation Memory cache in `TranslationLog` using normalized input (`strip + lowercase`) plus source/target language pair
-- On cache hit: bypasses NLLB inference and returns cached output with `is_cached=true`
-- Same-language pass-through path with immediate response + logging
-- Fails with 503 when model not loaded
-- Logs success/error in `TranslationLog`
-- Returns translation payload including model, latency, token counts, pivot flag, `is_cached`, and optional `wiki_voz`
+#### `TranslateView.post()` behavior
+
+Execution order in source:
+
+1. Optional API key check
+2. Serializer validation
+3. Greedy Wiki-Voz phrase interception
+4. Translation Memory lookup from `TranslationLog`
+5. Same-language passthrough shortcut
+6. Local NLLB translation path (if model loaded)
+7. Structured logging + payload response
+
+TM cache lookup details:
+
+- Uses `Lower(Trim('input_text'))` annotation.
+- Match keys: normalized text + source/target pair.
+- Returns `model='tm-cache'`, `is_cached=true`.
+
+Current runtime path if model missing:
+
+- Returns `503` with explicit message that cloud/API fallback is disabled.
 
 #### `BackTranslationVerifyView.post()`
-- Endpoint: `/api/btvl/`
-- Enforces optional API key protection (`X-API-Key`) when backend key is configured
-- Validates BTVL serializer
-- Requires model loaded (503 otherwise)
-- Executes `nllb_translate(... mode='formal')` to target English
-- Returns verification payload: text, model, latency, tokens, pivot flag
 
-#### `WikiVozView.get()`
-- `?q=` present → `term__icontains`, `[:20]`
-- no query → full ordered list, `[:100]`
+- Optional API key check
+- Serializer validation
+- Returns `503` when local model unavailable
+- Calls `nllb_translate(... mode='formal')` when available
 
 #### `TextToSpeechView.post()`
-- Enforces optional API key protection (`X-API-Key`) when backend key is configured
-- Blocks when strict offline mode is enabled
-- Validates request serializer
-- Calls `_synthesize_speech_bytes()` via `edge-tts`
-- Returns `audio/mpeg` + headers (`X-TTS-Voice`, no-store)
-- Handles validation/service exceptions with 400/503/502 paths
+
+- Optional API key check
+- Blocks with `503` when strict offline mode enabled
+- Validates request
+- Synthesizes MP3 via `edge-tts`
+- Returns `audio/mpeg` + `X-TTS-Voice`
+
+#### `WikiVozView.get()`
+
+- `q` filter uses `term__icontains` and returns up to 20
+- without `q`, returns first 100 ordered terms
+
+#### `telemetry_view`
+
+- RAM via `psutil`
+- GPU via `torch.cuda` primary path
+- GPU fallback via `GPUtil` if torch unavailable
 
 #### `HealthCheckView.get()`
-- Returns backend/model/adapter/tts status and supported languages
-- Exposes `api_key_required` + `api_key_header` and keeps `api_key_configured` for compatibility
 
-### 2.7 `backend/core_api/admin.py`
+Returns:
 
-- `CulturalTermAdmin`: search/filter/order by language/category/created
-- `TranslationLogAdmin`: ISO-oriented metrics columns, filters, search, date hierarchy
+- model status + adapter list
+- tts availability + engine
+- strict offline mode
+- API key requirement metadata
+- supported language list
+- `cloud_fallback_allowed: false`
+- `inference_mode: offline-local-only`
 
-### 2.8 `backend/core_api/tests.py`
+### 3.8 `backend/core_api/admin.py`
 
-Current suite totals **46 tests** covering:
+- `CulturalTermAdmin`: search/filter/order configured
+- `TranslationLogAdmin`: ISO-focused columns, filters, readonly date field
 
-- Translation serializer constraints
-- TTS serializer validation
-- BTVL serializer validation
-- SUPPORTED_LANGUAGES scope and disallowed lang checks
-- FLORES map completeness + Spanish mapping
-- Pivot logic test (`es -> hil` confirms two-hop via English)
-- CulturalTerm model queries
-- TranslationLog model behavior
-- Wiki endpoint behavior
-- Health endpoint fields/language scope
-- TTS endpoint mocked success/failure
-- TranslateView validation cases
-- Translation Memory cache hit/miss routing
-- Greedy Wiki-Voz longest-phrase interception
-- BTVL view success/error/validation cases
-- API-key-protection behavior for write endpoints
+### 3.9 `backend/core_api/tests.py`
 
-### 2.9 Migrations
+Current suite count by source: `46` tests.
 
-- `0001_initial.py`: base `CulturalTerm`
-- `0002_culturalterm_category_culturalterm_language_and_more.py`: category/language + `TranslationLog`
-- `0003_add_es_language_choices.py` (untracked/new): adds `es` to model-level field choices
-- `0004_culturalterm_language_free_text.py` (untracked/new): restores free-text `CulturalTerm.language`
+Coverage includes:
 
-### 2.10 Backend scripts (`backend/scripts/`)
+- serializer validation boundaries
+- language/FLORES contract checks
+- pivot routing behavior (`es -> hil` test)
+- TM cache hit/miss behavior
+- greedy longest phrase interception
+- API key protection behavior for write endpoints
+- BTVL and TTS endpoint behavior
+- health/wiki checks
 
-- `create_superuser.py`: generates strong random superuser creds and prints to stdout
-- `list_superusers.py`: prints non-sensitive superuser account metadata
-- `seed_spanish_baseline.py` (new): seeds 5 pure Spanish baseline terms (`language='es'`, category `Spanish Baseline`)
-- `seed_spanish_loanwords.py` (new): ingests CSV mapping (`spanish_loanwords_mapping.csv`) into `CulturalTerm` with dry-run/update/skip support
+### 3.10 Migrations
 
----
+Current migration set in repo and DB:
 
-## 3) Frontend Deep Scan (Actual File Internals)
+- `0001_initial`
+- `0002_culturalterm_category_culturalterm_language_and_more`
+- `0003_add_es_language_choices`
+- `0004_culturalterm_language_free_text`
 
-### 3.1 `frontend/src/App.jsx`
+### 3.11 Backend Utility Scripts (`backend/scripts/`)
 
-Core responsibilities:
+Current script set:
 
-- Computes LAN API URL dynamically: `http://${window.location.hostname}:8000/api`
-- Tracks app navigation state (`translate`, `wiki-voz`, `settings` overlay)
-- Polls health every 30 seconds
-- Aborts stale translation requests using `AbortController`
-- Sends optional `X-API-Key` header to write endpoints when `VITE_PUENTE_API_KEY` is set
-- Syncs persisted theme (`dark` / `light`) across tabs via localStorage + custom event
-- Wraps screen transitions with motion classes (`screen-transition-in`) for smoother tab/screen changes
-- Injects backend readiness into Translate screen:
-	- `apiReady = backendUp && nllbLoaded && (!apiKeyRequired || clientApiKeyConfigured)`
+- `create_superuser.py`
+- `list_superusers.py`
+- `seed_spanish_baseline.py`
+- `seed_spanish_loanwords.py`
 
-### 3.2 `frontend/src/components/screens/TranslateScreen.jsx`
+Key behavior:
 
-Implemented behaviors inside this file:
-
-- Language selectors now include Spanish in source/target dropdown sets
-- Mutual-exclusion logic between source/target language choices
-- 800ms debounce auto-translate
-- Sociolinguistic mode toggle (`formal` / `street`)
-- Input handling uses **250-character guard** aligned with backend serializer
-- Character counter appears only after user starts typing
-- Source and target TTS buttons call backend `/api/tts/`
-- BTVL button sends translated text to `/api/btvl/` and renders diagnostics panel
-- Cultural term highlighting uses `CULTURAL_TERMS_MAP`
-- Hover tooltip + modal entry display for Wiki-Voz terms
-- Mode-status banner reflects backend/API-key/model/adapter readiness states
-- Status banner uses semantic color variants and optional progress rail for model-not-loaded guidance
-
-### 3.3 `frontend/src/components/LanguageSelector.jsx`
-
-- Desktop: tab strip + animated underline indicator
-- Mobile: single dropdown
-- Language list includes `auto,en,tl,cbk,ceb,hil,es`
-- Dynamically excludes opposite-side selected language code
-- Uses spring motion classes for tab, icon, and indicator transitions
-
-### 3.4 `frontend/src/components/screens/WikiVozScreen.jsx`
-
-- Fetches `/api/wiki/` on mount
-- Maps API payload to card schema
-- Falls back to offline `WIKI_VOZ_ENTRIES` when API fails
-- Filter panel supports both category chips and language chips
-- Filter state supports reset (`Clear filters`) and active filter indicator
-- First render shows 20 cards, with `View More` pagination in +20 increments
-- Masonry-like column layout on larger breakpoints with deterministic varied image aspect ratios
-- Forces image source to local placeholders for remote/non-local URLs
-- Uses reusable `CulturalTermPopup` modal for card detail display
-
-### 3.5 `frontend/src/components/screens/SettingsScreen.jsx`
-
-- Persists default source/target language to localStorage via shared lib
-- Persists and toggles full-app theme (`dark` / `light`)
-- Shows backend/model/LoRA/TTS status from health payload
-- Polls backend `/api/telemetry/` and renders live RAM/GPU utilization
-- Shows API-key requirement + client key configuration status
-- Shows about-card summary with Wiki-Voz seed counts
-
-### 3.6 `frontend/src/lib/settings.js`
-
-- Canonical source/target code arrays include Spanish
-- Sanitizes persisted settings and prevents invalid same-language non-auto pair
-- Emits `puente-settings-updated` custom event on save
-
-### 3.7 `frontend/src/lib/ttsClient.js`
-
-- Uses axios blob requests to `/api/tts/`
-- Normalizes `lang_code` and supports default Spanish voice fallback
-- Ensures single active playback (abort/cleanup old audio/object URLs)
-- Converts blob error payloads to readable message
-
-### 3.8 Frontend shell/config
-
-- `frontend/src/main.jsx`: wraps app in `StrictMode` and `ErrorBoundary`; applies saved theme on boot
-- `frontend/src/index.css`: defines dark/light design tokens and semantic status colors via CSS variables
-- `frontend/src/App.css`: centralized spring timings, transition utilities, and screen/indicator motion tokens
-- `frontend/src/lib/apiAuth.js`: optional frontend API-key header helper
-- `frontend/.env.example`: template for `VITE_PUENTE_API_KEY`
-- `frontend/index.html`: system font stack, manifest wired, dark theme metadata
-- `frontend/public/manifest.json`: standalone PWA metadata + SVG icon declarations
-- `frontend/vite.config.js`:
-	- React SWC + Tailwind plugin
-	- PWA plugin with path quirk guard: disabled if current path contains apostrophe (`'`)
-	- runtime cache strategies for `/api/health/` and `/api/wiki/`
-
-### 3.9 Navigation and modal interaction polish
-
-- `frontend/src/components/layout/Header.jsx` adds animated desktop active-indicator tracking using measured button geometry
-- `frontend/src/components/layout/BottomNav.jsx` adds spring-based mobile tab states and active rail indicator
-- `frontend/src/components/CulturalTermPopup.jsx` is now a centered, reusable modal with backdrop blur, Esc-to-close, and resilient image fallback
-- Transition design is tuned for smoother perceived behavior across both 60Hz and higher-refresh displays
-
-### 3.10 Offline data file internals (`frontend/src/data/wikiVozData.js`)
-
-- Defines curated entries + generated template entries
-- Exports:
-	- `WIKI_VOZ_ENTRIES`
-	- `WIKI_VOZ_ENTRY_GOAL`
-	- `CULTURAL_TERMS_MAP`
-	- `getCulturalEntry()`
-- Template generation by language:
-	- Chavacano templates: 24
-	- Hiligaynon templates: 26
-	- Cebuano/Bisaya templates: 28
+- `seed_spanish_baseline.py`
+  - seeds 5 Spanish baseline entries
+  - supports `--dry-run` and `--skip-existing`
+- `seed_spanish_loanwords.py`
+  - reads `datasets/raw/02_Chavacano/spanish_loanwords_mapping.csv`
+  - normalizes/upserts entries case-insensitively
+  - supports `--dry-run` and `--skip-existing`
 
 ---
 
-## 4) ML / Evaluation Pipeline Scan
+## 4) Frontend Deep Scan (Source-Backed)
 
-### 4.1 `ml_models/README.md`
+### 4.1 `frontend/src/App.jsx`
+
+Confirmed behavior:
+
+- API base is LAN-derived:
+  - `http://${window.location.hostname}:8000/api`
+- Health polling every 30 seconds.
+- API key header support via `withApiKeyHeaders()`.
+- AbortController cancels stale translation requests.
+- Theme sync via localStorage + cross-tab events.
+- Screen routing includes:
+  - `translate`
+  - `wiki-voz`
+  - `evaluation` (uses `SystemEvaluationScreen`)
+  - settings overlay/panel
+- Translate readiness gate:
+  - `backendUp && nllbLoaded && (!apiKeyRequired || clientApiKeyConfigured)`
+
+### 4.2 `frontend/src/components/screens/TranslateScreen.jsx`
+
+Confirmed UX/logic:
+
+- Source/target language rosters include Spanish.
+- Mutual exclusion source/target handling.
+- Debounced auto-translate (`800ms`).
+- Character guard aligned to backend (`CHAR_LIMIT = 250`).
+- BTVL trigger and diagnostics rendering.
+- Edge-TTS controls for source/target text.
+- Telemetry polling (`4500ms`) and RAM/GPU bar rendering.
+- Gap analysis panel (`GapAnalysisTerminal`) with transaction-flush style logs.
+- Local model health messaging through mode status banner.
+- Current layout sizing:
+  - source/target cards: `min-h-[9rem] md:min-h-[12rem]`
+  - gap/telemetry cards mirror same min-height profile
+  - container width up to `max-w-[78rem]`
+
+### 4.3 `frontend/src/components/LanguageSelector.jsx`
+
+- Desktop: tab strip with animated active underline.
+- Mobile: unified dropdown selector.
+- Excludes opposite-side language selection.
+- Includes Spanish in available options.
+
+### 4.4 `frontend/src/components/screens/WikiVozScreen.jsx`
+
+Confirmed behavior:
+
+- Loads `/api/wiki/` on mount.
+- Falls back to local `wikiVozData` seed entries when API unavailable or empty.
+- Search sanitation:
+  - strips `<> {} \` $`
+  - max length 10 (`SEARCH_QUERY_MAX_LENGTH = 10`)
+- Validation message + counter under search field.
+- Category and language filters.
+- Spanish category handling explicitly included.
+- Progressive pagination (`20` cards at a time).
+- Masonry-style layout with deterministic aspect ratio variation.
+- Local placeholder for remote/invalid images.
+- Uses shared modal component (`CulturalTermPopup`).
+
+### 4.5 `frontend/src/components/screens/SettingsScreen.jsx`
+
+Confirmed behavior:
+
+- Persists default source/target + theme to localStorage.
+- Polls telemetry every `4000ms`.
+- Displays backend/model/adapter/TTS/API-key state.
+- Shows wiki entry goal stats from local dataset map.
+
+### 4.6 Layout Components
+
+- `Header.jsx`
+  - Branding text now `PUENTE`
+  - desktop nav contains Translate / Wiki-Voz / Evaluation / Settings
+  - no-wrap labels and animated indicator
+- `BottomNav.jsx`
+  - mobile nav includes Translate / Wiki-Voz / Evaluate / Settings
+  - one-line labels (`whitespace-nowrap`)
+
+### 4.7 `frontend/src/components/CulturalTermPopup.jsx`
+
+- Fixed backdrop + centered modal structure
+- scroll-safe max-height behavior
+- in-modal Edge-TTS support for term+definition narration
+
+### 4.8 Frontend Utility Libraries
+
+- `src/lib/settings.js`
+  - canonical language arrays + setting sanitization
+  - enforces valid source/target pair behavior
+  - emits `puente-settings-updated`
+- `src/lib/ttsClient.js`
+  - backend `/api/tts/` blob request
+  - single active playback + cleanup lifecycle
+  - blob error parsing to readable messages
+- `src/lib/apiAuth.js`
+  - optional `VITE_PUENTE_API_KEY` -> `X-API-Key` header
+
+### 4.9 Styling and Shell
+
+- `src/main.jsx` uses `StrictMode` + `ErrorBoundary`.
+- `src/index.css` defines dark/light design tokens and semantic status colors.
+- `src/App.css` defines animation timing tokens, toggle styles, and motion utilities.
+- `frontend/index.html` title is `PUENTE` and manifest is linked.
+
+### 4.10 PWA / Build Config
+
+`frontend/vite.config.js` confirms:
+
+- plugins: React SWC + Tailwind + Vite PWA
+- PWA auto-disables if current working path contains `'`
+- runtime cache policies for `/api/health/` and `/api/wiki/`
+
+### 4.11 Untracked Frontend Screens In Active Use
+
+- `frontend/src/components/screens/GapAnalysisTerminal.jsx` (untracked)
+- `frontend/src/components/screens/SystemEvaluationScreen.jsx` (untracked)
+
+These files are imported by tracked components and compile successfully in current local workspace, but remain untracked in git.
+
+---
+
+## 5) ML and Training Pipeline Scan
+
+### 5.1 `ml_models/README.md`
 
 Documents:
 
-- required runtime packages (`torch`, `transformers`, `sentencepiece`, `accelerate`, `peft`, optional `bitsandbytes`)
-- optional extras (`datasets`, `evaluate`, `sacrebleu`, `wandb`)
-- baseline evaluation scripts and expected output files
-- supported FLORES code map (now includes `spa_Latn`)
+- required package families
+- optional evaluation/training extras
+- expected model and adapter structure
+- FLORES code mapping
 
-### 4.2 `ml_models/evaluate_metrics.py` (new, untracked)
+### 5.2 `ml_models/download_model.py`
 
-Key capabilities:
+Confirmed behavior:
 
-- Generic BLEU + chrF++ evaluator using local model
-- Supports language pair options including Spanish
-- Optional LoRA mode loading (`base`, `formal`, `street`)
-- Flexible dataset extraction by candidate keys
-- Outputs structured JSON report to `evaluation_results.json`
-- On failure writes structured `status:error` payload
+- downloads `facebook/nllb-200-distilled-600M` via `snapshot_download`
+- targets fixed absolute path:
+  - `/home/rauf/Desktop/Machine Learning/ProjectPuente/ml_models/nllb-200-distilled-600M`
+- warns when target folder is non-empty
+- verifies essential expected files
 
-### 4.3 `ml_models/evaluate_spanish_baseline.py` (new, untracked)
+### 5.3 `ml_models/evaluate_metrics.py`
 
-Key capabilities:
+Confirmed capabilities:
 
-- Focused Spanish baseline evaluator (`spa_Latn -> eng_Latn`)
-- Accepts optional JSON input pair file
-- Computes BLEU + chrF++ via `sacrebleu`
-- Outputs structured report to `spanish_baseline_metrics.json`
-- On failure writes structured error payload with FLORES metadata
+- local evaluation for configurable language pair/mode
+- BLEU + chrF++ scoring (`sacrebleu`)
+- dependency guard writes structured error JSON with install command
+- output default: `evaluation_results.json`
 
-### 4.4 Current generated artifacts
+### 5.4 `ml_models/evaluate_spanish_baseline.py`
 
-- `ml_models/evaluation_results.json` → `status: error` (missing `torch`)
-- `ml_models/spanish_baseline_metrics.json` → `status: error` (missing `torch`)
-- `ml_models/spanish_baseline_input.json` includes 7 Spanish-English pairs
+Confirmed capabilities:
 
-### 4.5 Existing ML scripts (tracked)
+- fixed baseline task: `spa_Latn -> eng_Latn`
+- optional JSON input pairs
+- BLEU + chrF++ output report
+- output default: `spanish_baseline_metrics.json`
 
-- `download_model.py`: pulls NLLB-200-distilled-600M locally
-- `train_lora.py`: LoRA finetuning workflow
-- `validate_model.py`: model/adapter smoke checks
+### 5.5 `ml_models/train_lora.py`
+
+Confirmed capabilities:
+
+- trains `formal` or `street` LoRA adapters
+- consumes processed NLLB-ready JSON files
+- writes adapters to:
+  - `ml_models/lora-cbk-formal` or `ml_models/lora-cbk-street`
+
+Important consistency note:
+
+- Backend loader currently expects adapter folders under:
+  - `ml_models/lora_adapters/lora-cbk-formal`
+  - `ml_models/lora_adapters/lora-cbk-street`
+
+### 5.6 `ml_models/training_preflight.py`
+
+Fresh run result in this session:
+
+- exit code: `2`
+- overall: `BLOCKED`
+- summary: `PASS=13, WARN=1, BLOCKER=1`
+- blocker: missing local model directory
+- warn: missing python modules (`sacrebleu`, `pandas`, `pdfplumber`)
+
+### 5.7 `ml_models/validate_model.py`
+
+- local model smoke-test script
+- runs sample multilingual test translations
+- checks for presence of local LoRA directories
 
 ---
 
-## 5) Data, Datasets, and Notebooks Scan
+## 6) Data and Notebook Pipeline Scan
 
-### 5.1 Datasets
+### 6.1 Dataset Structure
 
-`datasets/` contains:
+Current major roots present:
 
-- `processed/001_chavacano/` refined NLLB-ready outputs and readiness report
-- `processed/01_chavacano/` legacy processed artifacts
-- `raw/` corpora and archives for Tagalog/Chavacano/Cebuano/Hiligaynon and monolingual sources
+- `datasets/processed/001_chavacano/`
+- `datasets/processed/01_chavacano/`
+- `datasets/raw/` (Tagalog/Chavacano/Cebuano/Hiligaynon/monolingual buckets)
 
-New untracked dataset file:
+Confirmed processed NLLB-ready files in `001_chavacano`:
 
-- `datasets/raw/02_Chavacano/spanish_loanwords_mapping.csv`
-	- 20 Spanish-derived Chavacano terms with origin/gloss/definition/category columns
+- `chavacano_lexicon_nllb.json`
+- `chavacano_parallel_sentences_nllb.json`
+- `tatoeba_parallel_nllb.json`
+- `creole_rc_chavacano_nllb.json`
 
-### 5.2 Notebooks and scripts
+### 6.2 Notebook Scripts (`notebooks/scripts/`)
 
-Notebook files:
+Current tracked active scripts:
+
+- `_path_utils.py`
+- `deep_clean_wiki.py`
+- `extract_chavacano_pdf_REFINED.py`
+- `harvest_creole_rc_REFINED.py`
+- `process_chavacano_csv_REFINED.py`
+- `process_tatoeba_REFINED.py`
+- `process_wiki_dump.py`
+- `run_nllb_pipeline.py`
+
+Pipeline orchestration:
+
+- `run_nllb_pipeline.py` launches child scripts through `sys.executable` and writes readiness report outputs.
+
+### 6.3 Additional Untracked Cloud Workflow Files
+
+- `notebooks/scripts/colab_lora_training_pipeline.py`
+- `notebooks/scripts/colab_vscode_tunnel_setup.md`
+- `CLOUD_TO_LOCAL_DEPLOYMENT_GUIDE.md`
+
+These define Colab tunnel + cloud LoRA training handoff workflow but are currently untracked.
+
+### 6.4 Notebook Artifacts in Git Status
+
+Modified tracked notebooks:
 
 - `notebooks/lora_training.ipynb`
 - `notebooks/model_validation.ipynb`
 - `notebooks/sample.ipynb`
 
-`notebooks/scripts/` now keeps refined ETL/data-processing scripts plus `_path_utils.py` for canonical `datasets/` resolution.
+### 6.5 Path-Case Hygiene Note
 
-`notebooks/README.md` documents notebook kernel dependencies and optional extras.
+- Canonical project path is lowercase `datasets/`.
+- Some non-primary scripts (`process_wiki_dump.py`, `deep_clean_wiki.py`) still reference uppercase `Datasets/` in static path strings.
 
 ---
 
-## 6) Operations, Launch, and Workspace Tooling
+## 7) Operations, Launchers, and Tooling
 
-### 6.1 Launcher scripts
+### 7.1 Launcher Scripts
+
+- `run_project.sh` (Linux/macOS) supports:
+  - `--backend-only`
+  - `--frontend-only`
+  - full stack mode
+  - port conflict checks
+  - Python path probing across common venv locations
+  - local Node path inclusion (`.tools/node/bin`)
+- sets `PUENTE_LOAD_MODEL_ON_STARTUP=true` when launching backend.
+
+### 7.2 Windows Launchers
 
 - `run_project.ps1`
-	- Supports `-BackendOnly` / `-FrontendOnly`
-	- Port conflict checks before startup
-	- Starts backend/frontend subprocesses for full stack mode
-	- Uses `PUENTE_LOAD_MODEL_ON_STARTUP=true`
-	- Displays LAN endpoint summary
-	- Cleans child process tree on exit
-
+  - supports backend-only/frontend-only/full-stack
+  - checks listening ports and process lifecycle
+  - waits for port readiness and prints LAN URLs
 - `run_project.bat`
-	- Validates script and required paths
-	- Delegates to PowerShell launcher in same terminal
+  - wrapper to execute the PowerShell launcher
 
-- `run_project.sh`
-	- Linux/macOS equivalent with `--backend-only` / `--frontend-only`
-	- Port checks and combined server lifecycle handling
+### 7.3 Root Package Scripts
 
-### 6.2 VS Code task definitions (`.vscode/tasks.json`)
+`package.json` scripts:
 
-Tasks available:
+- `backend`: `cd backend && python manage.py runserver`
+- `frontend`: `cd frontend && npm run dev`
+- `start`: `run_project.bat`
 
-- `Puente: Start full stack`
-- `Puente: Start backend`
-- `Puente: Start frontend`
+### 7.4 VS Code Task State
 
-Windows branches call `.bat`/`cmd`-compatible commands; non-Windows branches use `bash`.
+- `.vscode/tasks.json` is currently absent.
+- Current root README already documents this absence.
 
-### 6.3 Root package scripts (`package.json`)
+### 7.5 Local Toolchain Note
 
-- `backend`
-- `frontend`
-- `start` (points to `run_project.bat`)
+- System `npm` was not available in default shell during checks.
+- Local `.tools/node/bin` was used successfully for frontend lint/build.
 
 ---
 
-## 7) API Contract (Current, Verified)
+## 8) API Contract (Current Source + Runtime)
 
-### `POST /api/translate/`
+### 8.1 `POST /api/translate/`
 
-Input fields:
+Request body:
 
-- `text` (<= 250 chars, backend enforced)
+- `text` (max 250)
 - `source_lang` in `auto,en,es,tl,cbk,hil,ceb`
 - `target_lang` in `en,es,tl,cbk,hil,ceb`
-- `mode` in `formal,street` (optional, defaults formal)
-- requires `X-API-Key` only when backend `PUENTE_API_KEY` is configured
+- `mode` in `formal,street` (default `formal`)
 
-Success payload includes:
+Runtime behavior now:
 
-- `translated_text`, `model`, `latency_ms`, `tokens_in`, `tokens_out`, `pivot_used`, `is_cached`
-- plus `wiki_voz` when phrase-level cultural intercept hits (greedy longest match)
+- executes local-only path when model exists
+- includes TM cache short-circuit and `is_cached` flag
+- includes optional `wiki_voz` payload on interceptor hit
+- currently returns `503` because local model directory is missing
 
-### `POST /api/btvl/`
+### 8.2 `POST /api/btvl/`
 
-Input fields:
+Request body:
 
-- `text` (<= 250 chars)
+- `text` (max 250)
 - `source_lang` in `en,es,tl,cbk,hil,ceb`
-- optional `target_lang` (effectively fixed to `en`)
-- requires `X-API-Key` only when backend `PUENTE_API_KEY` is configured
+- `target_lang` default `en`
 
-Success payload includes:
+Runtime behavior now:
 
-- `verified_text`, `source_lang`, `target_lang`, `model`, `latency_ms`, `tokens_in`, `tokens_out`, `pivot_used`
+- returns `503` when local model is unavailable
 
-### `POST /api/tts/`
+### 8.3 `POST /api/tts/`
 
-Input fields:
+Request body:
 
-- `text` (<= 1000 chars)
+- `text` (max 1000)
 - `lang_code` in `auto,en,es,tl,cbk,hil,ceb`
 - optional `voice`
-- requires `X-API-Key` only when backend `PUENTE_API_KEY` is configured
 
-Returns:
+Runtime behavior now:
 
-- `audio/mpeg` bytes
-- header `X-TTS-Voice`
+- returned `200` with `audio/mpeg` in this session
+- `X-TTS-Voice` header present
+- blocked with `503` only when strict offline mode is enabled
 
-### `GET /api/wiki/`
+### 8.4 `GET /api/wiki/`
 
-- with `?q=` → filtered search
-- without `q` → first 100 ordered terms
+Runtime behavior now:
 
-### `GET /api/health/`
+- endpoint healthy (`200`)
+- currently returns empty `results` due zero `CulturalTerm` rows
 
-Returns:
+### 8.5 `GET /api/health/`
 
-- backend status
-- engine / model-loaded status
-- loaded LoRA adapter names
-- TTS availability
-- strict offline mode flag
-- API-key requirement metadata (`api_key_required`, `api_key_header`)
-- supported language code list
+Current runtime payload includes:
 
-### `GET /api/telemetry/`
+- `engine: offline-model-missing`
+- `nllb_loaded: false`
+- `lora_adapters: []`
+- `tts_available: true`
+- `strict_offline_mode: false`
+- `cloud_fallback_allowed: false`
+- `inference_mode: offline-local-only`
 
-Returns live backend host metrics:
+### 8.6 `GET /api/telemetry/`
+
+Current runtime payload includes:
 
 - RAM used/total/percent
-- GPU used/total/percent (when CUDA is available)
+- GPU availability/name/VRAM/percent
 
 ---
 
-## 8) Security, Reliability, and Consistency Findings
+## 9) Security, Reliability, and Consistency Findings
 
-### Strong points
+### 9.1 Confirmed Strengths
 
-- Serializer validation at API boundary
-- ORM-based DB queries (SQL injection-resistant pattern)
-- Explicit model-not-loaded failfast and health introspection
-- Translation logging with structured performance/reliability fields
-- Request cancellation on frontend to avoid stale render races
+- Validation boundaries are explicit and test-covered.
+- Language/FLORES contract is centralized.
+- TM cache reduces repeated inference cost.
+- Greedy phrase interception is implemented (not naive exact whole-input match).
+- Observer logs capture key reliability/performance/traceability fields.
+- Frontend aborts stale requests to prevent race-condition UI updates.
+- Launcher scripts include port conflict checks and controlled startup behavior.
 
-### Important caveats (verified in source)
+### 9.2 Confirmed Active Gaps / Risks
 
-1. **NLLB model still missing in this workspace runtime**
-	 - Backend logs show `ml_models/nllb-200-distilled-600M` missing, so translation/BTVL return 503 until model installation.
+1. Local model missing (runtime blocker)
+- `translate` and `btvl` are currently unavailable (`503`).
 
-2. **PWA plugin path quirk**
-	 - PWA build is auto-disabled when cwd contains apostrophe (`'`).
+2. Empty Wiki-Voz DB state
+- endpoint works, but returns empty data because `CulturalTerm` count is `0`.
 
-3. **API-key protection requires frontend/backend key parity**
-	 - When backend `PUENTE_API_KEY` is set, frontend must provide matching `VITE_PUENTE_API_KEY` for write actions.
+3. LoRA path contract mismatch
+- trainer writes `ml_models/lora-cbk-*`, while loader expects `ml_models/lora_adapters/lora-cbk-*`.
 
-4. **Edge TTS availability constraints**
-	 - `/api/tts/` depends on `edge-tts` + outbound internet
-	 - forced disabled when `STRICT_OFFLINE_MODE=True`
+4. Untracked but imported frontend files
+- `SystemEvaluationScreen.jsx` and `GapAnalysisTerminal.jsx` are used in build but untracked.
 
-5. **Large active untracked surface remains**
-	 - Multiple new scripts/artifacts/docs are still untracked and should be reviewed before commit.
+5. Untracked large toolchain directory
+- `.tools/` is large and untracked; maintain explicit policy for commit packaging.
+
+6. Absolute machine-specific model path in downloader
+- `download_model.py` uses a fixed absolute path, reducing portability across machines.
+
+7. Mixed path casing in non-canonical notebook scripts
+- some scripts reference uppercase `Datasets/` path.
 
 ---
 
-## 9) Complete Inventory Manifests
+## 10) Complete Inventory Manifests
 
-### 9.1 Exact tracked manifest (`git ls-files` snapshot)
+### 10.1 Exact Tracked Manifest (`git ls-files`, current)
 
 ```text
 .gitignore
+PROJECT_PUENTE_COMPREHENSIVE_SCAN.md
 README.md
+TRAINING_PREFLIGHT_CHECKLIST.md
 agents.md
 backend/.env.example
 backend/README.md
@@ -613,8 +828,11 @@ backend/backend/wsgi.py
 backend/core_api/__init__.py
 backend/core_api/admin.py
 backend/core_api/apps.py
+backend/core_api/languages.py
 backend/core_api/migrations/0001_initial.py
 backend/core_api/migrations/0002_culturalterm_category_culturalterm_language_and_more.py
+backend/core_api/migrations/0003_add_es_language_choices.py
+backend/core_api/migrations/0004_culturalterm_language_free_text.py
 backend/core_api/migrations/__init__.py
 backend/core_api/models.py
 backend/core_api/serializers.py
@@ -624,6 +842,8 @@ backend/manage.py
 backend/requirements.txt
 backend/scripts/create_superuser.py
 backend/scripts/list_superusers.py
+backend/scripts/seed_spanish_baseline.py
+backend/scripts/seed_spanish_loanwords.py
 datasets/processed/001_chavacano/NLLB_READINESS_REPORT.md
 datasets/processed/001_chavacano/chavacano_lexicon_nllb.json
 datasets/processed/001_chavacano/chavacano_parallel_sentences_nllb.json
@@ -654,6 +874,7 @@ datasets/raw/02_Chavacano/creole_rc/__init__.py
 datasets/raw/02_Chavacano/creole_rc/creole_rc.py
 datasets/raw/02_Chavacano/creole_rc/gitattributes (2)
 datasets/raw/02_Chavacano/creole_rc/requirements.txt
+datasets/raw/02_Chavacano/spanish_loanwords_mapping.csv
 datasets/raw/02_Chavacano/tatoeba_extracted/LICENSE
 datasets/raw/02_Chavacano/tatoeba_extracted/README
 datasets/raw/02_Chavacano/tatoeba_extracted/Tatoeba.cbk-en.cbk
@@ -664,13 +885,16 @@ datasets/raw/03_Cebuano_Bisaya/ceb-en.txt.zip
 datasets/raw/04_Hiligaynon/en-hil.txt.zip
 datasets/raw/monolingual/ChavacanoIdiomsandDictionary.pdf
 datasets/raw/monolingual/conversations/cake-ordering.csv
-datasets/raw/monolingual/conversations/zambo-artesanía.csv
+"datasets/raw/monolingual/conversations/zambo-artesan\303\255a.csv"
+frontend/.env.example
 frontend/.gitignore
 frontend/README.md
 frontend/eslint.config.js
 frontend/index.html
 frontend/package-lock.json
 frontend/package.json
+frontend/public/local-assets/README.md
+frontend/public/local-assets/placeholder.jpg
 frontend/public/manifest.json
 frontend/public/vinta.svg
 frontend/public/vite.svg
@@ -690,6 +914,7 @@ frontend/src/components/screens/TranslateScreen.jsx
 frontend/src/components/screens/WikiVozScreen.jsx
 frontend/src/data/wikiVozData.js
 frontend/src/index.css
+frontend/src/lib/apiAuth.js
 frontend/src/lib/settings.js
 frontend/src/lib/ttsClient.js
 frontend/src/main.jsx
@@ -697,8 +922,14 @@ frontend/vite.config.js
 ml_models/.gitkeep
 ml_models/README.md
 ml_models/download_model.py
+ml_models/evaluate_metrics.py
+ml_models/evaluate_spanish_baseline.py
+ml_models/evaluation_results.json
+ml_models/spanish_baseline_input.json
+ml_models/spanish_baseline_metrics.json
 ml_models/train_lora.py
 ml_models/training_preflight.py
+ml_models/training_preflight_report.json
 ml_models/validate_model.py
 notebooks/README.md
 notebooks/lora_training.ipynb
@@ -714,65 +945,214 @@ notebooks/scripts/process_wiki_dump.py
 notebooks/scripts/run_nllb_pipeline.py
 package-lock.json
 package.json
+puente_high_level_architecture.mmd
 run_project.bat
 run_project.ps1
 run_project.sh
 ```
 
-### 9.2 Untracked manifest (current workspace)
+### 10.2 Untracked Manifest (Current)
+
+```text
+.tools/
+CLOUD_TO_LOCAL_DEPLOYMENT_GUIDE.md
+frontend/src/components/screens/GapAnalysisTerminal.jsx
+frontend/src/components/screens/SystemEvaluationScreen.jsx
+ml_models/lora_adapters/
+notebooks/scripts/colab_lora_training_pipeline.py
+notebooks/scripts/colab_vscode_tunnel_setup.md
+```
+
+### 10.3 Modified Tracked Files (Current)
 
 ```text
 PROJECT_PUENTE_COMPREHENSIVE_SCAN.md
-TRAINING_PREFLIGHT_CHECKLIST.md
-backend/core_api/languages.py
-backend/core_api/migrations/0003_add_es_language_choices.py
-backend/core_api/migrations/0004_culturalterm_language_free_text.py
-backend/scripts/seed_spanish_baseline.py
-backend/scripts/seed_spanish_loanwords.py
-datasets/raw/02_Chavacano/spanish_loanwords_mapping.csv
-frontend/.env.example
-frontend/public/local-assets/README.md
-frontend/public/local-assets/placeholder.jpg
-frontend/src/lib/apiAuth.js
-ml_models/evaluate_metrics.py
-ml_models/evaluate_spanish_baseline.py
-ml_models/evaluation_results.json
-ml_models/spanish_baseline_input.json
-ml_models/spanish_baseline_metrics.json
-ml_models/training_preflight.py
-notebooks/scripts/_path_utils.py
-puente_high_level_architecture.mmd
+README.md
+backend/backend/settings.py
+backend/core_api/apps.py
+backend/core_api/views.py
+backend/requirements.txt
+frontend/index.html
+frontend/package-lock.json
+frontend/package.json
+frontend/src/App.jsx
+frontend/src/components/CulturalTermPopup.jsx
+frontend/src/components/layout/BottomNav.jsx
+frontend/src/components/layout/Header.jsx
+frontend/src/components/screens/TranslateScreen.jsx
+frontend/src/components/screens/WikiVozScreen.jsx
+ml_models/download_model.py
+ml_models/training_preflight_report.json
+notebooks/lora_training.ipynb
+notebooks/model_validation.ipynb
+notebooks/sample.ipynb
+run_project.sh
 ```
 
-### 9.3 Runtime-local sensitive artifacts (existence only)
+### 10.4 Runtime-Local Sensitive Artifacts (Existence Only)
 
 ```text
-.env
 backend/.env
 backend/db.sqlite3
-.vscode/tasks.json
 ```
 
 ---
 
-## 10) Final Practical Status (As of This Scan)
+## 11) File Purpose Index (Added Coverage)
 
-- Backend routing/validation/model orchestration is coherent and currently test-green.
-- `/api/translate/` now uses Translation Memory-first routing to reduce unnecessary GPU inference on repeat requests.
-- Backend now supports optional API-key protection for mutating endpoints plus DRF anonymous throttling.
-- Wiki-Voz interception is now phrase-aware with greedy longest-match behavior.
-- Spanish control-variable integration is present across model mapping, serializers, UI selectors, TTS mapping, migration, and evaluation tooling.
-- BTVL backend endpoint and frontend UX path are implemented.
-- Frontend write requests now support optional `X-API-Key` propagation through `VITE_PUENTE_API_KEY`.
-- Frontend now includes spring-tuned tab/screen transitions and reusable modal flows for Wiki-Voz detail views.
-- Wiki-Voz list UX now supports category+language filtering and progressive 20-card pagination.
-- ML evaluator scripts are in place but currently produce error reports in this environment until dependencies/model runtime are available.
-- Input-limit semantics are now aligned at 250 characters across backend and UI.
+This section adds concise purpose summaries for files that were previously only listed by inventory.
 
-### Recommended next hardening actions
+### 11.1 Root-Level Files
 
-1. Run `ml_models/training_preflight.py` and resolve all `BLOCKER` findings before starting LoRA training/evaluation.
-2. Install local NLLB model files in `ml_models/nllb-200-distilled-600M` and re-validate end-to-end translation latency.
-3. Decide whether `PUENTE_API_KEY` should be required by default for deployment profiles (campus LAN hardening policy).
-4. Review and stage the untracked additions (new scripts/migrations/docs) with commit grouping.
+| File | Purpose |
+|---|---|
+| `README.md` | Source-synced project-level architecture, API, and operations guide |
+| `PROJECT_PUENTE_COMPREHENSIVE_SCAN.md` | Repository-wide technical inventory and runtime audit report |
+| `agents.md` | 5-agent architecture mapping and behavior contract |
+| `TRAINING_PREFLIGHT_CHECKLIST.md` | Operator checklist for ML readiness and preflight interpretation |
+| `puente_high_level_architecture.mmd` | Mermaid architecture diagram source |
+| `package.json` | root convenience scripts (`backend`, `frontend`, `start`) |
+| `package-lock.json` | root npm dependency lockfile |
+| `run_project.sh` | Linux/macOS launcher with backend/frontend modes and port checks |
+| `run_project.ps1` | Windows PowerShell launcher with process orchestration |
+| `run_project.bat` | Windows wrapper that invokes PowerShell launcher |
+| `.gitignore` | git ignore policies |
+| `CLOUD_TO_LOCAL_DEPLOYMENT_GUIDE.md` (untracked) | cloud-to-local LoRA transfer playbook |
 
+### 11.2 Backend Files
+
+| File | Purpose |
+|---|---|
+| `backend/README.md` | backend environment, dependency, and endpoint setup notes |
+| `backend/.env.example` | backend env template for local and secured modes |
+| `backend/manage.py` | Django management command entrypoint |
+| `backend/backend/__init__.py` | backend package marker |
+| `backend/backend/asgi.py` | ASGI entrypoint |
+| `backend/backend/wsgi.py` | WSGI entrypoint |
+| `backend/backend/settings.py` | Django runtime/security/ML/TTS configuration |
+| `backend/backend/urls.py` | route registry for root/admin/API endpoints |
+| `backend/core_api/__init__.py` | core API app package marker |
+| `backend/core_api/apps.py` | singleton local model + adapter loader |
+| `backend/core_api/languages.py` | canonical language and FLORES contract |
+| `backend/core_api/models.py` | `CulturalTerm` + `TranslationLog` data schema |
+| `backend/core_api/serializers.py` | DRF validation contracts for translate/BTVL/TTS/wiki |
+| `backend/core_api/views.py` | API behavior for translate/BTVL/wiki/tts/telemetry/health |
+| `backend/core_api/admin.py` | Django admin configuration for both models |
+| `backend/core_api/tests.py` | backend functional and contract test suite |
+| `backend/core_api/migrations/0001_initial.py` | initial schema |
+| `backend/core_api/migrations/0002_*.py` | category/language schema extension |
+| `backend/core_api/migrations/0003_add_es_language_choices.py` | Spanish language choice expansion |
+| `backend/core_api/migrations/0004_culturalterm_language_free_text.py` | language field flexibility update |
+| `backend/scripts/create_superuser.py` | secure random superuser provisioning |
+| `backend/scripts/list_superusers.py` | superuser listing utility |
+| `backend/scripts/seed_spanish_baseline.py` | seeds baseline Spanish control entries |
+| `backend/scripts/seed_spanish_loanwords.py` | imports Spanish loanword map CSV into `CulturalTerm` |
+| `backend/requirements.txt` | backend python dependency manifest |
+
+### 11.3 Frontend Files
+
+| File | Purpose |
+|---|---|
+| `frontend/README.md` | frontend setup and backend dependency notes |
+| `frontend/.env.example` | frontend API-key mirror env template |
+| `frontend/package.json` | frontend scripts and dependency declarations |
+| `frontend/package-lock.json` | frontend npm lockfile |
+| `frontend/eslint.config.js` | lint rules for JS/JSX |
+| `frontend/index.html` | app shell HTML, manifest link, theme meta, title |
+| `frontend/vite.config.js` | Vite, Tailwind, and PWA runtime config |
+| `frontend/public/manifest.json` | PWA manifest metadata |
+| `frontend/public/local-assets/placeholder.jpg` | offline fallback card image |
+| `frontend/public/local-assets/README.md` | local asset usage notes |
+| `frontend/public/vinta.svg` | app icon asset |
+| `frontend/public/vite.svg` | Vite default asset |
+| `frontend/src/main.jsx` | React bootstrap + strict mode + error boundary |
+| `frontend/src/App.jsx` | top-level screen routing, health polling, translation orchestration |
+| `frontend/src/App.css` | animation, toggle, and utility classes |
+| `frontend/src/index.css` | theme tokens and Tailwind theme variable mapping |
+| `frontend/src/components/ErrorBoundary.jsx` | global UI crash fallback |
+| `frontend/src/components/LanguageSelector.jsx` | responsive source/target language selector |
+| `frontend/src/components/CulturalTermPopup.jsx` | centered modal for wiki term details + TTS |
+| `frontend/src/components/layout/Header.jsx` | desktop header nav and active indicator |
+| `frontend/src/components/layout/BottomNav.jsx` | mobile bottom nav |
+| `frontend/src/components/icons/NavIcons.jsx` | shared icon set |
+| `frontend/src/components/icons/VintaIcon.jsx` | branded boat icon component |
+| `frontend/src/components/icons/index.js` | icon export barrel |
+| `frontend/src/components/screens/TranslateScreen.jsx` | translation workspace + BTVL + telemetry + gap panel |
+| `frontend/src/components/screens/WikiVozScreen.jsx` | cultural term browser/search/filter screen |
+| `frontend/src/components/screens/SettingsScreen.jsx` | settings + health + telemetry panel |
+| `frontend/src/components/screens/GapAnalysisTerminal.jsx` (untracked) | terminal-style translation path log panel |
+| `frontend/src/components/screens/SystemEvaluationScreen.jsx` (untracked) | static metrics dashboard route for evaluation view |
+| `frontend/src/lib/settings.js` | settings persistence, sanitization, and theme helpers |
+| `frontend/src/lib/apiAuth.js` | API-key header injection helper |
+| `frontend/src/lib/ttsClient.js` | backend Edge-TTS client with playback lifecycle |
+| `frontend/src/data/wikiVozData.js` | offline wiki seed data, templates, and alias map |
+| `frontend/src/assets/react.svg` | React starter asset |
+
+### 11.4 ML Files
+
+| File | Purpose |
+|---|---|
+| `ml_models/README.md` | ML stack, package requirements, and script expectations |
+| `ml_models/download_model.py` | local base model downloader |
+| `ml_models/validate_model.py` | base model load + smoke translation validation |
+| `ml_models/train_lora.py` | local LoRA fine-tuning script |
+| `ml_models/training_preflight.py` | architecture/data/dependency preflight checker |
+| `ml_models/evaluate_metrics.py` | general BLEU/chrF++ evaluator |
+| `ml_models/evaluate_spanish_baseline.py` | Spanish control-variable baseline evaluator |
+| `ml_models/spanish_baseline_input.json` | optional baseline input samples |
+| `ml_models/evaluation_results.json` | evaluator output artifact |
+| `ml_models/spanish_baseline_metrics.json` | Spanish baseline metric artifact |
+| `ml_models/training_preflight_report.json` | latest preflight output artifact |
+| `ml_models/.gitkeep` | placeholder for empty-folder preservation |
+| `ml_models/lora_adapters/README.md` (untracked) | expected local adapter placement contract |
+
+### 11.5 Notebook and Pipeline Files
+
+| File | Purpose |
+|---|---|
+| `notebooks/README.md` | notebook kernel/dependency guidance |
+| `notebooks/lora_training.ipynb` | interactive LoRA experimentation notebook |
+| `notebooks/model_validation.ipynb` | model validation notebook |
+| `notebooks/sample.ipynb` | sample notebook workspace |
+| `notebooks/scripts/_path_utils.py` | canonical dataset path resolver helper |
+| `notebooks/scripts/run_nllb_pipeline.py` | master orchestrator for refined preprocessing scripts |
+| `notebooks/scripts/extract_chavacano_pdf_REFINED.py` | PDF lexicon extraction pipeline |
+| `notebooks/scripts/process_chavacano_csv_REFINED.py` | CSV parallel sentence normalization pipeline |
+| `notebooks/scripts/process_tatoeba_REFINED.py` | Tatoeba ZIP extract/normalize pipeline |
+| `notebooks/scripts/harvest_creole_rc_REFINED.py` | CreoleVal remote corpus harvest pipeline |
+| `notebooks/scripts/process_wiki_dump.py` | wiki XML dump extraction utility |
+| `notebooks/scripts/deep_clean_wiki.py` | aggressive post-cleaning utility for wiki monolingual text |
+| `notebooks/scripts/colab_lora_training_pipeline.py` (untracked) | Colab GPU LoRA training script |
+| `notebooks/scripts/colab_vscode_tunnel_setup.md` (untracked) | VS Code remote tunnel setup recipe for Colab |
+
+### 11.6 Dataset and Asset Purpose Groups
+
+| Path Group | Purpose |
+|---|---|
+| `datasets/raw/01_Tagalog/**` | raw Tagalog corpora and auxiliary scripts |
+| `datasets/raw/02_Chavacano/**` | raw Chavacano corpora (CSV, Tatoeba, wiki dump, loanword map) |
+| `datasets/raw/03_Cebuano_Bisaya/**` | raw Cebuano parallel archives |
+| `datasets/raw/04_Hiligaynon/**` | raw Hiligaynon parallel archives |
+| `datasets/raw/monolingual/**` | monolingual resources and conversation files |
+| `datasets/processed/001_chavacano/**` | canonical NLLB-ready processed outputs |
+| `datasets/processed/01_chavacano/**` | legacy/alternate processed outputs and cleaned wiki text |
+
+---
+
+## 12) Final Practical Status (As Of This Scan)
+
+- Backend API structure is coherent and test-green (`46/46`).
+- Frontend lint/build are green in current environment.
+- Translation and BTVL are blocked only by missing local NLLB model files.
+- TTS endpoint is operational now (`strict_offline_mode=false`, `edge-tts` available).
+- Wiki endpoint is healthy but currently empty due zero `CulturalTerm` rows.
+- Training preflight remains blocked by one blocker (missing model dir).
+- Repository includes untracked files that are actively used by current frontend route map.
+
+### Immediate High-Impact Next Steps
+
+1. Install local base model at `ml_models/nllb-200-distilled-600M` and re-run translate/BTVL probes.
+2. Seed `CulturalTerm` records (`seed_spanish_baseline.py`, `seed_spanish_loanwords.py`) so `/api/wiki/` returns real data.
+3. Resolve LoRA adapter path contract mismatch between trainer output and backend loader expectations.
+4. Decide tracking policy for currently untracked but active files (`SystemEvaluationScreen`, `GapAnalysisTerminal`, cloud docs/scripts).
+5. Review and clean `.tools/` and other non-source artifacts before commit packaging.

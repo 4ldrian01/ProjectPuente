@@ -1,0 +1,68 @@
+{
+  "generated_at_utc": "2026-04-07T23:06:51.811317+00:00",
+  "files_seen": 7,
+  "files_processed": 7,
+  "total_written": 83236,
+  "total_rejected": 1129,
+  "reports": [
+    {
+      "input": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/processed/001_chavacano/chavacano_lexicon_nllb.json",
+      "output": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/processed/jsonl/001_chavacano/chavacano_lexicon_nllb.jsonl",
+      "status": "empty_after_filter",
+      "written": 0,
+      "rejected": 1129,
+      "rejected_reasons": {
+        "lexicon_row": 1129
+      }
+    },
+    {
+      "input": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/processed/001_chavacano/chavacano_parallel_sentences_nllb.json",
+      "output": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/processed/jsonl/001_chavacano/chavacano_parallel_sentences_nllb.jsonl",
+      "status": "ok",
+      "written": 234,
+      "rejected": 0,
+      "rejected_reasons": {}
+    },
+    {
+      "input": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/processed/001_chavacano/creole_rc_chavacano_nllb.json",
+      "output": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/processed/jsonl/001_chavacano/creole_rc_chavacano_nllb.jsonl",
+      "status": "ok",
+      "written": 97,
+      "rejected": 0,
+      "rejected_reasons": {}
+    },
+    {
+      "input": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/processed/001_chavacano/pipeline_report.json",
+      "output": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/processed/jsonl/001_chavacano/pipeline_report.jsonl",
+      "status": "empty_after_filter",
+      "written": 0,
+      "rejected": 0,
+      "rejected_reasons": {}
+    },
+    {
+      "input": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/processed/001_chavacano/tatoeba_parallel_nllb.json",
+      "output": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/processed/jsonl/001_chavacano/tatoeba_parallel_nllb.jsonl",
+      "status": "ok",
+      "written": 2504,
+      "rejected": 0,
+      "rejected_reasons": {}
+    },
+    {
+      "input": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/processed/pillars/monolingual/chavacano_monolingual_corpus_nmt.json",
+      "output": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/processed/jsonl/pillars/monolingual/chavacano_monolingual_corpus_nmt.jsonl",
+      "status": "ok",
+      "written": 77663,
+      "rejected": 0,
+      "rejected_reasons": {}
+    },
+    {
+      "input": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/processed/pillars/parallel/master_parallel_corpus_nmt.json",
+      "output": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/processed/jsonl/pillars/parallel/master_parallel_corpus_nmt.jsonl",
+      "status": "ok",
+      "written": 2738,
+      "rejected": 0,
+      "rejected_reasons": {}
+    }
+  ],
+  "memory_note": "Outputs are JSONL for line-wise streaming in PyTorch/HuggingFace to reduce peak RAM pressure on consumer devices."
+}

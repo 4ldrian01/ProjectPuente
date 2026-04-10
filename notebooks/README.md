@@ -70,3 +70,16 @@ Add these on top of the minimum kernel:
 - `model_validation.ipynb` and `sample.ipynb` both load `transformers` and `torch` directly.
 - The notebook extras are documented separately because they are broader than what the live Django API needs at runtime.
 - If you want a single environment for backend + notebooks, install backend requirements first, then add only the notebook extras you need.
+
+## Dataset handoff (3-pillar architecture)
+
+- Parallel training source (seq2seq): `../datasets/processed/pillars/parallel/master_parallel_corpus_nmt.json`
+- Monolingual source (fluency/back-translation): `../datasets/processed/pillars/monolingual/chavacano_monolingual_corpus_nmt.json`
+- JSONL streaming mirror for large runs: `../datasets/processed/jsonl/pillars/`
+- Lexicon source for runtime interception (not seq2seq tensors): `../datasets/processed/001_chavacano/chavacano_lexicon_nllb.json`
+
+Notebook pipeline users can build these artifacts with:
+
+- `python ../datasets/scripts/pillar1_merge_parallel_corpus.py`
+- `python ../datasets/scripts/pillar2_structure_monolingual.py`
+- `python ../datasets/scripts/json_to_jsonl_stream.py --overwrite`

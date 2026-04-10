@@ -45,6 +45,7 @@ REQUIRED_FILES = [
     'backend/core_api/views.py',
     'backend/core_api/serializers.py',
     'backend/core_api/models.py',
+    'backend/core_api/management/commands/ingest_lexicon.py',
     'frontend/src/lib/settings.js',
     'frontend/src/components/screens/TranslateScreen.jsx',
     'notebooks/scripts/run_nllb_pipeline.py',
@@ -53,18 +54,45 @@ REQUIRED_FILES = [
     'ml_models/evaluate_spanish_baseline.py',
 ]
 
-REQUIRED_PROCESSED_FILES = [
-    'chavacano_lexicon_nllb.json',
+REQUIRED_PILLAR_PARALLEL_FILES = [
+    'master_parallel_corpus_nmt.json',
+]
+
+REQUIRED_PILLAR_MONOLINGUAL_FILES = [
+    'chavacano_monolingual_corpus_nmt.json',
+]
+
+OPTIONAL_LEGACY_PARALLEL_FILES = [
     'chavacano_parallel_sentences_nllb.json',
     'tatoeba_parallel_nllb.json',
+]
+
+OPTIONAL_LEXICON_FILES = [
+    'chavacano_lexicon_nllb.json',
     'creole_rc_chavacano_nllb.json',
 ]
 
-OPTIONAL_MODEL_FILES = [
+OPTIONAL_PILLAR_JSONL_FILES = [
+    'pillars/parallel/master_parallel_corpus_nmt.jsonl',
+    'pillars/monolingual/chavacano_monolingual_corpus_nmt.jsonl',
+]
+
+REQUIRED_MODEL_RUNTIME_FILES = [
     'config.json',
-    'tokenizer.json',
     'tokenizer_config.json',
     'sentencepiece.bpe.model',
+]
+
+# At least one of these must exist for actual local inference/training.
+REQUIRED_MODEL_WEIGHT_FILES = [
+    'model.safetensors',
+    'pytorch_model.bin',
+]
+
+OPTIONAL_MODEL_FILES = [
+    'generation_config.json',
+    'special_tokens_map.json',
+    'tokenizer.json',
 ]
 
 ACTIVE_PIPELINE_SCRIPTS = [
@@ -73,6 +101,10 @@ ACTIVE_PIPELINE_SCRIPTS = [
     'notebooks/scripts/process_chavacano_csv_REFINED.py',
     'notebooks/scripts/process_tatoeba_REFINED.py',
     'notebooks/scripts/harvest_creole_rc_REFINED.py',
+    'datasets/scripts/pillar1_merge_parallel_corpus.py',
+    'datasets/scripts/pillar2_structure_monolingual.py',
+    'datasets/scripts/json_to_jsonl_stream.py',
+    'datasets/scripts/archive_legacy_data.py',
     'ml_models/train_lora.py',
 ]
 
@@ -272,7 +304,11 @@ def check_pipeline_paths(project_root: Path, results: List[CheckResult]) -> None
 
 def check_datasets_and_models(project_root: Path, results: List[CheckResult]) -> None:
     datasets_root = project_root / 'datasets'
-    processed_root = datasets_root / 'processed' / '001_chavacano'
+    processed_root = datasets_root / 'processed'
+    pillar_parallel_root = processed_root / 'pillars' / 'parallel'
+    pillar_monolingual_root = processed_root / 'pillars' / 'monolingual'
+    legacy_root = processed_root / '001_chavacano'
+    jsonl_root = processed_root / 'jsonl'
 
     if not datasets_root.is_dir():
         add_result(results, 'datasets root', 'BLOCKER', f'Missing datasets directory: {datasets_root}')
@@ -281,16 +317,77 @@ def check_datasets_and_models(project_root: Path, results: List[CheckResult]) ->
     if not processed_root.is_dir():
         add_result(results, 'processed dataset root', 'BLOCKER', f'Missing processed dataset directory: {processed_root}')
     else:
-        missing_processed = [f for f in REQUIRED_PROCESSED_FILES if not (processed_root / f).is_file()]
-        if missing_processed:
+        missing_parallel_master = [f for f in REQUIRED_PILLAR_PARALLEL_FILES if not (pillar_parallel_root / f).is_file()]
+        if missing_parallel_master:
             add_result(
                 results,
-                'NLLB-ready processed files',
-                'WARN',
-                f"Missing one or more processed files: {', '.join(missing_processed)}",
+                'Pillar 1 master parallel corpus',
+                'BLOCKER',
+                (
+                    'Missing strict pillar parallel artifacts in '
+                    f'{pillar_parallel_root}: {", ".join(missing_parallel_master)}'
+                ),
             )
         else:
-            add_result(results, 'NLLB-ready processed files', 'PASS', 'Required processed dataset files are present.')
+            add_result(results, 'Pillar 1 master parallel corpus', 'PASS', 'Pillar 1 parallel corpus is present for strict seq2seq training.')
+
+        missing_mono = [f for f in REQUIRED_PILLAR_MONOLINGUAL_FILES if not (pillar_monolingual_root / f).is_file()]
+        if missing_mono:
+            add_result(
+                results,
+                'Pillar 2 monolingual corpus',
+                'WARN',
+                (
+                    'Missing monolingual pillar artifact(s) in '
+                    f'{pillar_monolingual_root}: {", ".join(missing_mono)}'
+                ),
+            )
+        else:
+            add_result(results, 'Pillar 2 monolingual corpus', 'PASS', 'Pillar 2 monolingual corpus is present.')
+
+        if not legacy_root.is_dir():
+            add_result(
+                results,
+                'Legacy processed dataset root',
+                'WARN',
+                f'Legacy processed root not found (optional): {legacy_root}',
+            )
+            missing_legacy_parallel = OPTIONAL_LEGACY_PARALLEL_FILES
+            missing_lexicon = OPTIONAL_LEXICON_FILES
+        else:
+            missing_legacy_parallel = [f for f in OPTIONAL_LEGACY_PARALLEL_FILES if not (legacy_root / f).is_file()]
+            missing_lexicon = [f for f in OPTIONAL_LEXICON_FILES if not (legacy_root / f).is_file()]
+
+        if missing_legacy_parallel:
+            add_result(
+                results,
+                'Legacy parallel shard files',
+                'WARN',
+                f"Legacy parallel shards not found: {', '.join(missing_legacy_parallel)}",
+            )
+        else:
+            add_result(results, 'Legacy parallel shard files', 'PASS', 'Legacy parallel shards are available for compatibility workflows.')
+
+        if missing_lexicon:
+            add_result(
+                results,
+                'Lexicon source files',
+                'WARN',
+                f"Optional lexicon files not found: {', '.join(missing_lexicon)}",
+            )
+        else:
+            add_result(results, 'Lexicon source files', 'PASS', 'Lexicon JSON sources are present for SQL ingestion.')
+
+        missing_jsonl = [f for f in OPTIONAL_PILLAR_JSONL_FILES if not (jsonl_root / f).is_file()]
+        if missing_jsonl:
+            add_result(
+                results,
+                'Pillar JSONL streaming outputs',
+                'WARN',
+                f"Missing one or more JSONL outputs: {', '.join(missing_jsonl)}",
+            )
+        else:
+            add_result(results, 'Pillar JSONL streaming outputs', 'PASS', 'JSONL streaming outputs are present for memory-safe loaders.')
 
     model_root = project_root / 'ml_models' / 'nllb-200-distilled-600M'
     if not model_root.is_dir():
@@ -301,16 +398,38 @@ def check_datasets_and_models(project_root: Path, results: List[CheckResult]) ->
             f'Model directory missing: {model_root} (run download_model.py before training/inference).',
         )
     else:
-        missing_model_files = [f for f in OPTIONAL_MODEL_FILES if not (model_root / f).is_file()]
-        if missing_model_files:
+        missing_runtime_files = [f for f in REQUIRED_MODEL_RUNTIME_FILES if not (model_root / f).is_file()]
+        has_model_weights = any((model_root / f).is_file() for f in REQUIRED_MODEL_WEIGHT_FILES)
+
+        if missing_runtime_files:
             add_result(
                 results,
                 'Base model file completeness',
-                'WARN',
-                f"Model directory exists but missing files: {', '.join(missing_model_files)}",
+                'BLOCKER',
+                f"Model directory exists but missing required runtime files: {', '.join(missing_runtime_files)}",
+            )
+        elif not has_model_weights:
+            add_result(
+                results,
+                'Base model file completeness',
+                'BLOCKER',
+                (
+                    'Model directory exists but no weight file was found '
+                    '(expected one of: model.safetensors, pytorch_model.bin). '
+                    'Complete or resume download_model.py before training/inference.'
+                ),
             )
         else:
-            add_result(results, 'Base model file completeness', 'PASS', 'Base NLLB model files look complete.')
+            missing_optional_model_files = [f for f in OPTIONAL_MODEL_FILES if not (model_root / f).is_file()]
+            if missing_optional_model_files:
+                add_result(
+                    results,
+                    'Base model file completeness',
+                    'WARN',
+                    f"Model is usable, but optional files are missing: {', '.join(missing_optional_model_files)}",
+                )
+            else:
+                add_result(results, 'Base model file completeness', 'PASS', 'Base NLLB model files look complete.')
 
 
 def check_environment_and_dependencies(project_root: Path, results: List[CheckResult]) -> None:

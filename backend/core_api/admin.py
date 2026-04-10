@@ -15,7 +15,7 @@ class TranslationLogAdmin(admin.ModelAdmin):
     """ISO 25010 metrics dashboard in Django Admin."""
     list_display = (
         'created_at', 'source_lang', 'target_lang', 'mode',
-        'latency_ms', 'status', 'pivot_used', 'wiki_voz_triggered',
+        'latency_ms', 'route_confidence', 'status', 'pivot_used', 'wiki_voz_triggered',
     )
     list_filter = (
         'status', 'mode', 'source_lang', 'target_lang',

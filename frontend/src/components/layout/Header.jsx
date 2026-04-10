@@ -6,12 +6,14 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import VintaIcon from '../icons/VintaIcon'
+import { Waypoints } from 'lucide-react'
 import { TranslateIcon, WikiVozIcon, SettingsIcon } from '../icons/NavIcons'
+import { Activity } from 'lucide-react'
 
 const NAV_ITEMS = [
   { id: 'translate', label: 'Translate', icon: TranslateIcon },
   { id: 'wiki-voz', label: 'Wiki-Voz', icon: WikiVozIcon },
+  { id: 'evaluation', label: 'Evaluation', icon: Activity },
   { id: 'settings', label: 'Settings', icon: SettingsIcon },
 ]
 
@@ -55,11 +57,11 @@ export default function Header({ activeScreen, onNavigate }) {
 
   return (
     <header className="sticky top-0 z-50 border-b border-border-subtle bg-bg-dark/95 backdrop-blur-md">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         {/* Logo Section */}
-        <div className="flex items-center gap-3">
-          <VintaIcon className="w-10 h-10" />
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-text-primary">
+        <div className="min-w-0 flex items-center gap-2.5">
+          <Waypoints strokeWidth={2} className="h-7 w-7 shrink-0 text-accent-magenta sm:h-8 sm:w-8" />
+          <h1 className="truncate whitespace-nowrap text-base font-semibold tracking-tight text-text-primary sm:text-lg lg:text-xl">
             PUENTE
           </h1>
         </div>
@@ -67,7 +69,7 @@ export default function Header({ activeScreen, onNavigate }) {
         {/* Desktop Navigation - Hidden on mobile */}
         <nav
           ref={navRef}
-          className="hidden md:flex items-center gap-1 relative rounded-xl border border-border-subtle/70 bg-bg-card/70 p-1"
+          className="relative hidden shrink-0 items-center gap-1 rounded-xl border border-border-subtle/70 bg-bg-card/75 p-1.5 md:flex"
         >
           {NAV_ITEMS.map((item) => {
             const IconComponent = item.icon
@@ -76,14 +78,14 @@ export default function Header({ activeScreen, onNavigate }) {
                 key={item.id}
                 onClick={() => onNavigate(item.id)}
                 data-nav-key={item.id}
-                className={`group spring-nav-transition relative z-10 flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm will-change-transform ${
+                className={`group spring-nav-transition relative z-10 flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium leading-none will-change-transform ${
                   activeScreen === item.id
                     ? 'text-accent-magenta scale-[1.01]'
                     : 'text-text-secondary hover:text-text-primary hover:bg-bg-elevated/60 hover:-translate-y-[1px]'
                 }`}
               >
                 <IconComponent className={`spring-icon-transition w-5 h-5 ${activeScreen === item.id ? 'scale-105' : 'group-hover:scale-105'}`} />
-                <span>{item.label}</span>
+                <span className="whitespace-nowrap">{item.label}</span>
               </button>
             )
           })}

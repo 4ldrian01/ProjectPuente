@@ -87,6 +87,25 @@ class TranslateSerializerTests(TestCase):
         s = TranslateRequestSerializer(data=data)
         self.assertFalse(s.is_valid())
 
+    def test_whitespace_text_rejected(self):
+        data = {
+            'text': '   \n   ',
+            'source_lang': 'en',
+            'target_lang': 'cbk',
+        }
+        s = TranslateRequestSerializer(data=data)
+        self.assertFalse(s.is_valid())
+
+    def test_text_is_normalized_before_validation_output(self):
+        data = {
+            'text': '  hello   \n   world  ',
+            'source_lang': 'en',
+            'target_lang': 'cbk',
+        }
+        s = TranslateRequestSerializer(data=data)
+        self.assertTrue(s.is_valid(), s.errors)
+        self.assertEqual(s.validated_data['text'], 'hello world')
+
     def test_target_auto_rejected(self):
         data = {
             'text': 'hello',
@@ -153,7 +172,16 @@ class BackTranslationSerializerTests(TestCase):
         self.assertFalse(s.is_valid())
         self.assertIn('source_lang', s.errors)
 
-    def test_target_lang_must_be_en(self):
+    def test_target_lang_accepts_en_es_tl(self):
+        for target_lang in ('en', 'es', 'tl'):
+            s = BackTranslationRequestSerializer(data={
+                'text': 'Hello',
+                'source_lang': 'cbk',
+                'target_lang': target_lang,
+            })
+            self.assertTrue(s.is_valid(), s.errors)
+
+    def test_target_lang_rejects_unsupported_language(self):
         s = BackTranslationRequestSerializer(data={
             'text': 'Hello',
             'source_lang': 'cbk',
@@ -192,8 +220,8 @@ class FloresMapTests(TestCase):
         self.assertEqual(FLORES_MAP['cbk'], 'cbk_Latn')
 
 
-class NllbPivotLogicTests(TestCase):
-    """Validate English-pivot behavior for non-English language pairs."""
+class NllbRoutingPolicyTests(TestCase):
+    """Validate direct-first routing and proximate-pivot fallback behavior."""
 
     class _DummyTokenizer:
         def encode(self, text):
@@ -204,30 +232,176 @@ class NllbPivotLogicTests(TestCase):
             return None
 
     @patch('core_api.views._infer_once')
-    def test_spanish_to_hiligaynon_uses_english_pivot(self, mock_infer):
-        mock_infer.side_effect = ['intermediate english', 'final hiligaynon']
+    def test_direct_route_is_used_when_confidence_is_sufficient(self, mock_infer):
+        mock_infer.return_value = ('Maayong aga', 0.81)
 
         with patch.object(CoreApiConfig, 'nllb_tokenizer', self._DummyTokenizer()):
             with patch.object(CoreApiConfig, 'nllb_model', self._DummyModel()):
                 with patch.object(CoreApiConfig, 'lora_adapters', {}):
-                    result, _, _, _, pivot_used, _ = nllb_translate(
-                        text='Buenos días',
-                        src_code='es',
+                    (
+                        result,
+                        _,
+                        _,
+                        _,
+                        pivot_used,
+                        pivot_language,
+                        route_strategy,
+                        route_confidence,
+                        _,
+                    ) = nllb_translate(
+                        text='Maayong buntag',
+                        src_code='ceb',
                         tgt_code='hil',
                         mode='formal',
                     )
 
-        self.assertEqual(result, 'final hiligaynon')
+        self.assertEqual(result, 'Maayong aga')
+        self.assertFalse(pivot_used)
+        self.assertEqual(pivot_language, '')
+        self.assertEqual(route_strategy, 'direct')
+        self.assertEqual(route_confidence, 0.81)
+        self.assertEqual(mock_infer.call_count, 1)
+
+        first_call = mock_infer.call_args_list[0]
+        self.assertEqual(first_call.args[3], 'ceb_Latn')
+        self.assertEqual(first_call.args[4], 'hil_Latn')
+        self.assertTrue(first_call.kwargs.get('with_confidence'))
+
+    @patch('core_api.views._infer_once')
+    def test_local_pair_low_confidence_uses_tagalog_pivot(self, mock_infer):
+        mock_infer.side_effect = [
+            ('direct-low-confidence', 0.12),
+            'tagalog-bridge',
+            'hiligaynon-final',
+        ]
+
+        with patch.object(CoreApiConfig, 'nllb_tokenizer', self._DummyTokenizer()):
+            with patch.object(CoreApiConfig, 'nllb_model', self._DummyModel()):
+                with patch.object(CoreApiConfig, 'lora_adapters', {}):
+                    (
+                        result,
+                        _,
+                        _,
+                        _,
+                        pivot_used,
+                        pivot_language,
+                        route_strategy,
+                        route_confidence,
+                        _,
+                    ) = nllb_translate(
+                        text='Maayong buntag',
+                        src_code='ceb',
+                        tgt_code='hil',
+                        mode='formal',
+                    )
+
+        self.assertEqual(result, 'hiligaynon-final')
         self.assertTrue(pivot_used)
-        self.assertEqual(mock_infer.call_count, 2)
+        self.assertEqual(pivot_language, 'tl')
+        self.assertEqual(route_strategy, 'proximate-pivot')
+        self.assertEqual(route_confidence, 0.12)
+        self.assertEqual(mock_infer.call_count, 3)
 
         first_call = mock_infer.call_args_list[0].args
         second_call = mock_infer.call_args_list[1].args
+        third_call = mock_infer.call_args_list[2].args
 
-        self.assertEqual(first_call[3], 'spa_Latn')
-        self.assertEqual(first_call[4], 'eng_Latn')
-        self.assertEqual(second_call[3], 'eng_Latn')
-        self.assertEqual(second_call[4], 'hil_Latn')
+        self.assertEqual(first_call[3], 'ceb_Latn')
+        self.assertEqual(first_call[4], 'hil_Latn')
+        self.assertEqual(second_call[3], 'ceb_Latn')
+        self.assertEqual(second_call[4], 'tgl_Latn')
+        self.assertEqual(third_call[3], 'tgl_Latn')
+        self.assertEqual(third_call[4], 'hil_Latn')
+
+        for call in mock_infer.call_args_list:
+            self.assertNotEqual(call.args[3], 'eng_Latn')
+            self.assertNotEqual(call.args[4], 'eng_Latn')
+
+    @patch('core_api.views._infer_once')
+    def test_tagalog_pair_low_confidence_uses_cebuano_secondary_pivot(self, mock_infer):
+        mock_infer.side_effect = [
+            ('direct-low-confidence', 0.09),
+            'cebuano-bridge',
+            'hiligaynon-final',
+        ]
+
+        with patch.object(CoreApiConfig, 'nllb_tokenizer', self._DummyTokenizer()):
+            with patch.object(CoreApiConfig, 'nllb_model', self._DummyModel()):
+                with patch.object(CoreApiConfig, 'lora_adapters', {}):
+                    (
+                        result,
+                        _,
+                        _,
+                        _,
+                        pivot_used,
+                        pivot_language,
+                        route_strategy,
+                        route_confidence,
+                        _,
+                    ) = nllb_translate(
+                        text='Magandang umaga',
+                        src_code='tl',
+                        tgt_code='hil',
+                        mode='formal',
+                    )
+
+        self.assertEqual(result, 'hiligaynon-final')
+        self.assertTrue(pivot_used)
+        self.assertEqual(pivot_language, 'ceb')
+        self.assertEqual(route_strategy, 'proximate-pivot')
+        self.assertEqual(route_confidence, 0.09)
+        self.assertEqual(mock_infer.call_count, 3)
+
+        second_call = mock_infer.call_args_list[1].args
+        third_call = mock_infer.call_args_list[2].args
+        self.assertEqual(second_call[4], 'ceb_Latn')
+        self.assertEqual(third_call[3], 'ceb_Latn')
+
+    @patch('core_api.views._infer_once')
+    def test_cbk_pair_low_confidence_prefers_spanish_pivot(self, mock_infer):
+        mock_infer.side_effect = [
+            ('direct-low-confidence', 0.14),
+            'spanish-bridge',
+            'hiligaynon-final',
+        ]
+
+        with patch.object(CoreApiConfig, 'nllb_tokenizer', self._DummyTokenizer()):
+            with patch.object(CoreApiConfig, 'nllb_model', self._DummyModel()):
+                with patch.object(CoreApiConfig, 'lora_adapters', {}):
+                    (
+                        result,
+                        _,
+                        _,
+                        _,
+                        pivot_used,
+                        pivot_language,
+                        route_strategy,
+                        route_confidence,
+                        _,
+                    ) = nllb_translate(
+                        text='Buenos días',
+                        src_code='cbk',
+                        tgt_code='hil',
+                        mode='formal',
+                    )
+
+        self.assertEqual(result, 'hiligaynon-final')
+        self.assertTrue(pivot_used)
+        self.assertEqual(pivot_language, 'es')
+        self.assertEqual(route_strategy, 'proximate-pivot')
+        self.assertEqual(route_confidence, 0.14)
+        self.assertEqual(mock_infer.call_count, 3)
+
+        first_call = mock_infer.call_args_list[0].args
+        second_call = mock_infer.call_args_list[1].args
+        third_call = mock_infer.call_args_list[2].args
+
+        self.assertEqual(first_call[3], 'cbk_Latn')
+        self.assertEqual(first_call[4], 'hil_Latn')
+        self.assertEqual(second_call[3], 'cbk_Latn')
+        self.assertEqual(second_call[4], 'spa_Latn')
+        self.assertEqual(third_call[3], 'spa_Latn')
+        self.assertEqual(third_call[4], 'hil_Latn')
 
 
 class CulturalTermModelTests(TestCase):
@@ -346,6 +520,95 @@ class HealthCheckViewTests(TestCase):
         self.assertIn('api_key_required', resp.data)
 
 
+class TranslationLogListViewTests(TestCase):
+    """Test observer log listing endpoint used by the Activity Logs screen."""
+
+    def setUp(self):
+        self.client_api = APIClient()
+
+        TranslationLog.objects.create(
+            source_lang='cbk',
+            target_lang='en',
+            mode='formal',
+            input_text='siyempre mabulig',
+            input_chars=16,
+            input_tokens=2,
+            output_text='of course I can help',
+            output_tokens=5,
+            model_name='nllb-200-distilled-600M',
+            pivot_used=False,
+            latency_ms=421.4,
+            status='success',
+            wiki_voz_triggered=True,
+            wiki_voz_term='siyempre mabulig',
+        )
+
+        TranslationLog.objects.create(
+            source_lang='en',
+            target_lang='cbk',
+            mode='street',
+            input_text='good morning',
+            input_chars=12,
+            input_tokens=2,
+            output_text='',
+            output_tokens=0,
+            model_name='nllb-200-distilled-600M',
+            pivot_used=False,
+            latency_ms=112.0,
+            status='error',
+            error_message='Local translation failed',
+        )
+
+    def test_logs_endpoint_returns_results(self):
+        resp = self.client_api.get('/api/logs/')
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn('results', resp.data)
+        self.assertGreaterEqual(len(resp.data['results']), 2)
+
+    def test_logs_endpoint_filters_by_status(self):
+        resp = self.client_api.get('/api/logs/', {'status': 'success'})
+        self.assertEqual(resp.status_code, 200)
+        rows = resp.data['results']
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]['status'], 'success')
+
+    def test_logs_endpoint_applies_limit(self):
+        resp = self.client_api.get('/api/logs/', {'limit': 1})
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.data['limit'], 1)
+        self.assertEqual(len(resp.data['results']), 1)
+
+    def test_logs_endpoint_query_matches_wiki_term(self):
+        resp = self.client_api.get('/api/logs/', {'q': 'mabulig'})
+        self.assertEqual(resp.status_code, 200)
+        rows = resp.data['results']
+        self.assertEqual(len(rows), 1)
+
+
+class TranslateViewErrorContractTests(TestCase):
+    """Ensure translate endpoint returns structured error payloads."""
+
+    def setUp(self):
+        self.client_api = APIClient()
+
+    def test_invalid_translate_payload_returns_error_code(self):
+        resp = self.client_api.post(
+            '/api/translate/',
+            {
+                'text': '   ',
+                'source_lang': 'en',
+                'target_lang': 'cbk',
+            },
+            format='json',
+        )
+
+        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(resp.data.get('error_code'), 'validation.translate.invalid_payload')
+        self.assertIn('details', resp.data)
+        self.assertIn('errors', resp.data['details'])
+        self.assertIn('summary', resp.data['details'])
+
+
 class TextToSpeechViewTests(TestCase):
     """Test the edge-tts synthesis endpoint."""
 
@@ -423,6 +686,7 @@ class TranslationMemoryCacheTests(TestCase):
             output_tokens=2,
             model_name='nllb-200-distilled-600M',
             pivot_used=False,
+            route_confidence=0.92,
             latency_ms=1000.0,
             status='success',
         )
@@ -440,12 +704,15 @@ class TranslationMemoryCacheTests(TestCase):
         self.assertEqual(resp.data['translated_text'], 'Of course')
         self.assertTrue(resp.data['is_cached'])
         self.assertEqual(resp.data['model'], 'tm-cache')
+        self.assertIn('route_strategy', resp.data)
+        self.assertEqual(resp.data['route_confidence'], 0.92)
+        self.assertIn('pivot_language', resp.data)
         mock_translate.assert_not_called()
 
     @patch('core_api.views.nllb_translate')
     def test_cache_miss_runs_inference(self, mock_translate):
         mock_translate.return_value = (
-            'Syempre', 101.0, 2, 1, False, 'nllb-200-distilled-600M+lora-cbk-formal',
+            'Syempre', 101.0, 2, 1, False, '', 'direct', 0.88, 'nllb-200-distilled-600M+lora-cbk-formal',
         )
 
         with patch.object(CoreApiConfig, 'model_loaded', True):
@@ -459,6 +726,9 @@ class TranslationMemoryCacheTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertFalse(resp.data['is_cached'])
         self.assertEqual(resp.data['translated_text'], 'Syempre')
+        self.assertEqual(resp.data['route_strategy'], 'direct')
+        self.assertEqual(resp.data['route_confidence'], 0.88)
+        self.assertIsNone(resp.data['pivot_language'])
         mock_translate.assert_called_once()
 
 
@@ -488,6 +758,9 @@ class WikiVozPhraseInterceptorTests(TestCase):
             5,
             5,
             False,
+            '',
+            'direct',
+            0.84,
             'nllb-200-distilled-600M+lora-cbk-formal',
         )
 
@@ -577,7 +850,7 @@ class BackTranslationViewTests(TestCase):
     @patch('core_api.views.nllb_translate')
     def test_btvl_success(self, mock_translate):
         mock_translate.return_value = (
-            'I love you', 842.7, 6, 4, False, 'nllb-200-distilled-600M+lora-cbk-formal',
+            'I love you', 842.7, 6, 4, False, '', 'direct', 0.91, 'nllb-200-distilled-600M+lora-cbk-formal',
         )
 
         with patch.object(CoreApiConfig, 'model_loaded', True):
@@ -595,6 +868,9 @@ class BackTranslationViewTests(TestCase):
         self.assertIn('tokens_in', resp.data)
         self.assertIn('tokens_out', resp.data)
         self.assertIn('pivot_used', resp.data)
+        self.assertIn('pivot_language', resp.data)
+        self.assertIn('route_strategy', resp.data)
+        self.assertEqual(resp.data['route_confidence'], 0.91)
         self.assertIn('model', resp.data)
 
     def test_btvl_invalid_payload_returns_400(self):
@@ -605,4 +881,6 @@ class BackTranslationViewTests(TestCase):
         }, format='json')
 
         self.assertEqual(resp.status_code, 400)
-        self.assertIn('errors', resp.data)
+        self.assertEqual(resp.data.get('error_code'), 'validation.btvl.invalid_payload')
+        self.assertIn('details', resp.data)
+        self.assertIn('errors', resp.data['details'])

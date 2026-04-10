@@ -108,7 +108,7 @@ This is more robust than old exact whole-input matching.
 
 ### Role
 
-Executes translation using local NLLB-200 with dynamic LoRA adapter selection and English pivot routing.
+Executes translation using local NLLB-200 with dynamic LoRA adapter selection, direct many-to-many routing, and proximate-pivot fallback when confidence is critically low.
 
 ### Implementation
 
@@ -139,9 +139,12 @@ Executes translation using local NLLB-200 with dynamic LoRA adapter selection an
 
 ### Pivot Policy
 
-If neither source nor target is English (`eng_Latn`), routing becomes:
+Routing is direct-first for all pairs. When direct confidence is critically low, proximate fallback may run:
 
-`source -> English -> target`
+- `cbk`-involved pair: pivot via `es` when usable
+- local<->local pair: pivot via `tl`
+- if `tl` is already source or target: secondary pivot `ceb`
+- `en` is never selected as pivot for local-to-local Philippine pairs
 
 ---
 
@@ -161,7 +164,7 @@ Logs every translate request outcome (success/error, cache hit/miss path, latenc
 
 - Reliability: `status`, `error_message`
 - Performance: `latency_ms`, token counts
-- Functional suitability: `pivot_used`, `wiki_voz_triggered`, `wiki_voz_term`
+- Functional suitability: `pivot_used`, `pivot_language`, `route_strategy`, `wiki_voz_triggered`, `wiki_voz_term`
 - Traceability: `model_name`, language pair, mode
 
 ---
@@ -226,7 +229,7 @@ This reduces repeated inference cost on duplicate requests.
 
 ## Supporting Module B: BTVL (Back-Translation Verification Loop)
 
-`POST /api/btvl/` translates target text back to English for semantic verification checks.
+`POST /api/btvl/` translates target text to a verification language (`en` by default) for semantic checks.
 
 - Validates payload with dedicated serializer
 - Requires local model loaded

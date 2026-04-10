@@ -5,6 +5,9 @@
   "scripts": {
     "backend": "cd backend && python manage.py runserver",
     "frontend": "cd frontend && npm run dev",
-    "start": "run_project.bat"
+    "start": "bash ./run_project.sh",
+    "start:windows": "run_project.bat",
+    "start:backend-only": "bash ./run_project.sh --backend-only",
+    "start:frontend-only": "bash ./run_project.sh --frontend-only"
   }
 }

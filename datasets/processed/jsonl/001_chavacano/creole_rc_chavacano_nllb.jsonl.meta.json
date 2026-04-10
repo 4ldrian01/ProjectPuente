@@ -1,0 +1,8 @@
+{
+  "generated_at_utc": "2026-04-07T23:06:50.647095+00:00",
+  "input": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/processed/001_chavacano/creole_rc_chavacano_nllb.json",
+  "output": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/processed/jsonl/001_chavacano/creole_rc_chavacano_nllb.jsonl",
+  "written_records": 97,
+  "rejected_records": 0,
+  "rejected_reasons": {}
+}

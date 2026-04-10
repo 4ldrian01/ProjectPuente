@@ -68,3 +68,7 @@ frontend/dist-ssr/
 *.bak
 *.tmp
 *.orig
+
+
+# TOOLS
+.tools/
