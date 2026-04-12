@@ -2,7 +2,7 @@
  * SidebarNav.jsx — Aesthetic 2026 fluid navigation rail for PUENTE.
  *
  * Architectural notes:
- * - The rail uses a two-state width system on desktop: 18rem (expanded) and 6rem (collapsed).
+ * - The rail uses a two-state width system on desktop: 16rem (expanded) and 6rem (collapsed).
  * - Width and content transitions share a premium cubic-bezier curve for coherent motion language.
  * - In collapsed mode, labels shrink to zero width and opacity while icon anchors stay centered.
  * - Tooltips are rendered outside the rail so wayfinding remains clear without re-expanding.
@@ -85,9 +85,9 @@ export default function SidebarNav({
   onCloseMobile,
   isMobileViewport,
 }) {
-  // Desktop width morphs between `w-72` and `w-24`. Mobile is always roomy enough
+  // Desktop width morphs between `w-64` and `w-24`. Mobile is always roomy enough
   // for full labels because discoverability matters more than compactness on small screens.
-  const sidebarWidthClass = isCollapsed ? 'md:w-24 w-72' : 'md:w-72 w-72'
+  const sidebarWidthClass = isCollapsed ? 'md:w-24 w-72' : 'md:w-64 w-72'
 
   // Off-canvas behavior on mobile; pinned and always visible from `md` and up.
   const mobileVisibilityClass = mobileOpen
@@ -107,14 +107,14 @@ export default function SidebarNav({
         <div className="relative border-b border-border-subtle/40 px-3 py-4">
           <div className={`flex items-start justify-between gap-2 ${isCollapsed ? 'md:justify-center' : ''}`}>
             <div
-              className={`flex min-w-0 items-center rounded-2xl border border-border-subtle/40 bg-bg-elevated/55 px-3 py-2.5 transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
+              className={`flex min-w-0 items-center rounded-2xl border border-border-subtle/40 bg-bg-elevated/55 px-3.5 py-3 transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
                 isCollapsed ? 'justify-center' : ''
               }`}
             >
-              <Waypoints className="h-5 w-5 flex-shrink-0 text-accent-magenta" />
+              <Waypoints className="h-6 w-6 flex-shrink-0 text-accent-magenta" />
               <span
-                className={`overflow-hidden whitespace-nowrap text-sm font-semibold tracking-[0.08em] text-text-primary transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
-                  isCollapsed ? 'ml-0 max-w-0 opacity-0' : 'ml-2.5 max-w-[7rem] opacity-100'
+                className={`overflow-hidden whitespace-nowrap text-base font-semibold tracking-[0.07em] text-text-primary transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
+                  isCollapsed ? 'ml-0 max-w-0 opacity-0' : 'ml-2.5 max-w-[8rem] opacity-100'
                 }`}
               >
                 PUENTE
@@ -158,7 +158,7 @@ export default function SidebarNav({
               {group.items.map((item) => {
                 const Icon = item.icon
                 const isActive = activeScreen === item.id
-                const iconSizeClass = item.id === 'translate' ? 'h-5 w-5' : 'h-4 w-4'
+                const iconSizeClass = item.id === 'translate' ? 'h-6 w-6' : 'h-4 w-4'
 
                 return (
                   <button

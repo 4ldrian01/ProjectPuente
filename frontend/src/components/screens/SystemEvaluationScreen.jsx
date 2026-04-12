@@ -79,7 +79,10 @@ function PieTooltip({ active, payload }) {
 export default function SystemEvaluationScreen() {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
-      <header className="a26-surface relative overflow-hidden p-5 md:p-6">
+      <header
+        className="a26-surface a26-intro-enter relative overflow-hidden p-5 md:p-6"
+        style={{ '--a26-intro-delay': '0ms' }}
+      >
         <div className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-accent-magenta/10 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-10 left-8 h-32 w-32 rounded-full bg-accent-gold/10 blur-3xl" />
 
@@ -94,18 +97,19 @@ export default function SystemEvaluationScreen() {
           </p>
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <span className="a26-chip"><Activity className="h-3.5 w-3.5" /> Live Dashboard</span>
-            <span className="a26-chip"><Gauge className="h-3.5 w-3.5" /> Edge Inference Signal</span>
-            <span className="a26-chip"><BrainCircuit className="h-3.5 w-3.5" /> Sociolinguistic Focus</span>
+            <span className="a26-chip a26-intro-enter" style={{ '--a26-intro-delay': '40ms' }}><Activity className="h-3.5 w-3.5" /> Live Dashboard</span>
+            <span className="a26-chip a26-intro-enter" style={{ '--a26-intro-delay': '70ms' }}><Gauge className="h-3.5 w-3.5" /> Edge Inference Signal</span>
+            <span className="a26-chip a26-intro-enter" style={{ '--a26-intro-delay': '100ms' }}><BrainCircuit className="h-3.5 w-3.5" /> Sociolinguistic Focus</span>
           </div>
         </div>
       </header>
 
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {KPI_CARDS.map((card) => (
+        {KPI_CARDS.map((card, index) => (
           <article
             key={card.key}
-            className="a26-surface p-5"
+            className="a26-surface a26-row-intro p-5"
+            style={{ '--a26-row-delay': `${index * 26}ms` }}
           >
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -131,7 +135,10 @@ export default function SystemEvaluationScreen() {
       </section>
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_1.35fr]">
-        <article className="a26-surface p-4 md:p-5">
+        <article
+          className="a26-surface a26-intro-enter p-4 md:p-5"
+          style={{ '--a26-intro-delay': '110ms' }}
+        >
           <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-text-secondary">Sociolinguistic Intercept Concurrence</h3>
           <p className="mt-1 text-sm text-text-secondary">False Cognates vs Politeness Gaps vs Idioms</p>
 
@@ -165,7 +172,10 @@ export default function SystemEvaluationScreen() {
           </div>
         </article>
 
-        <article className="a26-surface p-4 md:p-5">
+        <article
+          className="a26-surface a26-intro-enter p-4 md:p-5"
+          style={{ '--a26-intro-delay': '140ms' }}
+        >
           <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-text-secondary">Translation Length vs Inference Time</h3>
           <p className="mt-1 text-sm text-text-secondary">Mock trendline from local edge inference samples</p>
 

@@ -1,85 +1,63 @@
 # Notebooks Setup
 
-The notebooks in this repository are Python notebooks used for validation, model checks, data prep, and LoRA experimentation.
+Notebooks are used for model validation, data processing experiments, and cloud training workflows.
 
-## Notebook kernel base
+## Core notebook files
 
-| Dependency | Required | Purpose |
-|---|---:|---|
-| Python | 3.12.x | Matches the workspace virtual environment |
-| `jupyterlab` | Yes | Notebook UI/runtime |
-| `notebook` | Recommended | Classic notebook compatibility |
-| `ipykernel` | Yes | Python kernel registration |
+- `lora_training.ipynb`
+- `model_validation.ipynb`
+- `sample.ipynb`
+- `colab_vscode_tunnel_setup.ipynb`
 
-## Reused ML stack
+## Script pipeline in `notebooks/scripts/`
 
-These packages overlap with `backend/requirements.txt` and are also needed in the notebook kernel for local model loading:
-
-| Package | Purpose |
+| Script | Purpose |
 |---|---|
-| `torch` | Model execution |
-| `transformers` | NLLB model/tokenizer loading |
-| `sentencepiece` | Tokenizer backend |
-| `accelerate` | Model loading helpers |
-| `peft` | LoRA adapter work |
-| `bitsandbytes` | Optional 8-bit loading |
-| `protobuf` | Transformer/model serialization |
+| `run_nllb_pipeline.py` | Master preprocessing orchestrator |
+| `extract_chavacano_pdf_REFINED.py` | PDF extraction |
+| `process_chavacano_csv_REFINED.py` | CSV cleanup/normalization |
+| `process_tatoeba_REFINED.py` | Tatoeba processing |
+| `harvest_creole_rc_REFINED.py` | Creole RC harvesting |
+| `process_wiki_dump.py` | Wiki dump processing |
+| `deep_clean_wiki.py` | Aggressive text cleanup |
+| `colab_lora_training_pipeline.py` | Colab GPU LoRA training orchestration |
+| `colab_drive_sync.py` | Cloud Drive sync helpers |
+| `requirements_colab.txt` | Colab dependency manifest |
 
-## Packages observed in notebook scripts and notebook cells
+## Recommended notebook environment
 
-### Data preparation / extraction
+### Minimum
 
-| Package | Where it appears |
-|---|---|
-| `pandas` | CSV harvesting and dataset processing scripts |
-| `pdfplumber` | PDF extraction scripts |
-| `beautifulsoup4` | HTML/text cleanup in notebook environment |
-| `lxml` | Parsing support used with notebook tooling |
-| `clean-text[gpl]` | Text cleaning in notebook workflow |
-
-### Training / evaluation
-
-| Package | Where it appears |
-|---|---|
-| `datasets` | Hugging Face dataset loading/evaluation cells |
-| `evaluate` | Evaluation notebook cells |
-| `sacrebleu` | Translation metric evaluation |
-| `wandb` | Optional experiment tracking |
-
-## Suggested install groups
-
-### Minimum notebook kernel
+- Python 3.12
 - `jupyterlab`
 - `ipykernel`
-- everything from `backend/requirements.txt`
+- packages from `backend/requirements.txt`
 
-### Full notebook workflow
-Add these on top of the minimum kernel:
-- `pandas`
-- `datasets`
-- `evaluate`
-- `sacrebleu`
-- `pdfplumber`
-- `beautifulsoup4`
-- `lxml`
-- `clean-text[gpl]`
-- `wandb`
+### Colab/cloud workflow
+
+Install:
+
+- `notebooks/scripts/requirements_colab.txt`
+
+Includes core stack (`torch`, `transformers`, `datasets`, `peft`, etc.) and reliability/eval helpers (`huggingface_hub`, `evaluate`, `sacrebleu`, `pandas`, `pyyaml`).
+
+## Data handoff contract (3 pillars)
+
+- Parallel pillar: `../datasets/processed/pillars/parallel/master_parallel_corpus_nmt.json`
+- Monolingual pillar: `../datasets/processed/pillars/monolingual/chavacano_monolingual_corpus_nmt.json`
+- JSONL streaming mirror: `../datasets/processed/jsonl/pillars/`
+- Lexicon ingestion source: `../datasets/processed/001_chavacano/chavacano_lexicon_nllb.json`
+
+## Typical prep sequence
+
+```bash
+python ../datasets/scripts/pillar1_merge_parallel_corpus.py
+python ../datasets/scripts/pillar2_structure_monolingual.py
+python ../datasets/scripts/json_to_jsonl_stream.py --overwrite
+python ../backend/manage.py ingest_lexicon
+```
 
 ## Notes
 
-- `model_validation.ipynb` and `sample.ipynb` both load `transformers` and `torch` directly.
-- The notebook extras are documented separately because they are broader than what the live Django API needs at runtime.
-- If you want a single environment for backend + notebooks, install backend requirements first, then add only the notebook extras you need.
-
-## Dataset handoff (3-pillar architecture)
-
-- Parallel training source (seq2seq): `../datasets/processed/pillars/parallel/master_parallel_corpus_nmt.json`
-- Monolingual source (fluency/back-translation): `../datasets/processed/pillars/monolingual/chavacano_monolingual_corpus_nmt.json`
-- JSONL streaming mirror for large runs: `../datasets/processed/jsonl/pillars/`
-- Lexicon source for runtime interception (not seq2seq tensors): `../datasets/processed/001_chavacano/chavacano_lexicon_nllb.json`
-
-Notebook pipeline users can build these artifacts with:
-
-- `python ../datasets/scripts/pillar1_merge_parallel_corpus.py`
-- `python ../datasets/scripts/pillar2_structure_monolingual.py`
-- `python ../datasets/scripts/json_to_jsonl_stream.py --overwrite`
+- Notebook workloads can require broader packages than backend runtime APIs.
+- Keep training/inference model paths aligned with backend `ML_MODEL_PATH` to avoid drift between notebook and service runs.

@@ -737,13 +737,16 @@ export default function ActivityLogsScreen({ apiUrl, backendUp, notify }) {
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
-      <header className="a26-surface relative overflow-hidden p-5 md:p-6">
+      <header
+        className="a26-surface a26-intro-enter relative overflow-hidden p-5 md:p-6"
+        style={{ '--a26-intro-delay': '0ms' }}
+      >
         <div className="pointer-events-none absolute -right-8 top-0 h-36 w-36 rounded-full bg-accent-magenta/10 blur-3xl" />
 
         <div className="relative flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="a26-subtitle">Observer Agent</p>
-            <h2 className="a26-hero-title mt-1 font-semibold text-text-primary">Flight Recorder</h2>
+            <h2 className="a26-hero-title mt-1 font-semibold text-text-primary">Activity Logs</h2>
             <p className="mt-2 max-w-3xl text-sm text-text-secondary">
               Offline MLOps trace surface for translation outcomes, pivot routing, intervention tags, and recovery diagnostics.
             </p>
@@ -763,21 +766,21 @@ export default function ActivityLogsScreen({ apiUrl, backendUp, notify }) {
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
-          <span className="a26-chip"><Activity className="h-3.5 w-3.5" /> Visible {summary.total}</span>
-          <span className="rounded-full border border-status-success-border/70 bg-status-success-bg/70 px-3 py-1 text-status-success-text">
+          <span className="a26-chip a26-intro-enter" style={{ '--a26-intro-delay': '40ms' }}><Activity className="h-3.5 w-3.5" /> Visible {summary.total}</span>
+          <span className="a26-intro-enter rounded-full border border-status-success-border/70 bg-status-success-bg/70 px-3 py-1 text-status-success-text" style={{ '--a26-intro-delay': '70ms' }}>
             Success {summary.success}
           </span>
-          <span className="rounded-full border border-status-danger-border/70 bg-status-danger-bg/70 px-3 py-1 text-status-danger-text">
+          <span className="a26-intro-enter rounded-full border border-status-danger-border/70 bg-status-danger-bg/70 px-3 py-1 text-status-danger-text" style={{ '--a26-intro-delay': '95ms' }}>
             Error {summary.error}
           </span>
-          <span className="rounded-full border border-status-warning-border/70 bg-status-warning-bg/70 px-3 py-1 text-status-warning-text">
+          <span className="a26-intro-enter rounded-full border border-status-warning-border/70 bg-status-warning-bg/70 px-3 py-1 text-status-warning-text" style={{ '--a26-intro-delay': '120ms' }}>
             Timeout {summary.timeout}
           </span>
-          <span className="rounded-full border border-border-subtle/70 bg-bg-elevated/70 px-3 py-1 text-text-secondary">
+          <span className="a26-intro-enter rounded-full border border-border-subtle/70 bg-bg-elevated/70 px-3 py-1 text-text-secondary" style={{ '--a26-intro-delay': '145ms' }}>
             Total matched {Math.max(visibleLogs.length, totalCount - suppressedLogIds.size)}
           </span>
           {lastSyncedAt ? (
-            <span className="rounded-full border border-border-subtle/70 bg-bg-elevated/70 px-3 py-1 text-text-secondary">
+            <span className="a26-intro-enter rounded-full border border-border-subtle/70 bg-bg-elevated/70 px-3 py-1 text-text-secondary" style={{ '--a26-intro-delay': '170ms' }}>
               Synced {formatTime(lastSyncedAt)}
             </span>
           ) : null}
@@ -797,7 +800,10 @@ export default function ActivityLogsScreen({ apiUrl, backendUp, notify }) {
         </div>
       </header>
 
-      <section className="a26-surface p-4 md:p-5">
+      <section
+        className="a26-surface a26-intro-enter p-4 md:p-5"
+        style={{ '--a26-intro-delay': '70ms' }}
+      >
         {/* Search + filters are arranged as a stylized control rail for rapid observer triage. */}
         <div className="mb-3 overflow-hidden rounded-2xl border border-border-subtle/80 bg-bg-elevated/35">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-subtle/70 bg-bg-card/55 px-3.5 py-2.5">
@@ -832,54 +838,54 @@ export default function ActivityLogsScreen({ apiUrl, backendUp, notify }) {
                 </span>
               </label>
 
-              <label className="space-y-1.5">
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-text-secondary">
+              <label className="a26-select-stack">
+                <span className="a26-select-label inline-flex items-center gap-1">
                   <Filter className="h-3 w-3" />
                   Status
                 </span>
-                <span className="relative block">
+                <span className="a26-select-wrap">
                   <select
                     value={statusFilter}
                     onChange={(event) => setStatusFilter(event.target.value)}
-                    className="w-full appearance-none rounded-xl border border-border-subtle bg-bg-card/80 px-3 py-2.5 pr-9 text-sm font-semibold text-text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-all duration-300 focus:border-accent-magenta/70 focus:shadow-[0_0_0_3px_rgba(217,70,239,0.14)] focus:outline-none"
+                    className="a26-select"
                   >
                     {STATUS_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>{option.label}</option>
                     ))}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
+                  <ChevronDown className="a26-select-chevron" size={16} />
                 </span>
               </label>
 
-              <label className="space-y-1.5">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-text-secondary">Source</span>
-                <span className="relative block">
+              <label className="a26-select-stack">
+                <span className="a26-select-label">Source</span>
+                <span className="a26-select-wrap">
                   <select
                     value={sourceFilter}
                     onChange={(event) => setSourceFilter(event.target.value)}
-                    className="w-full appearance-none rounded-xl border border-border-subtle bg-bg-card/80 px-3 py-2.5 pr-9 text-sm font-semibold text-text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-all duration-300 focus:border-accent-magenta/70 focus:shadow-[0_0_0_3px_rgba(217,70,239,0.14)] focus:outline-none"
+                    className="a26-select"
                   >
                     {SOURCE_LANGUAGE_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>{option.label}</option>
                     ))}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
+                  <ChevronDown className="a26-select-chevron" size={16} />
                 </span>
               </label>
 
-              <label className="space-y-1.5">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-text-secondary">Target</span>
-                <span className="relative block">
+              <label className="a26-select-stack">
+                <span className="a26-select-label">Target</span>
+                <span className="a26-select-wrap">
                   <select
                     value={targetFilter}
                     onChange={(event) => setTargetFilter(event.target.value)}
-                    className="w-full appearance-none rounded-xl border border-border-subtle bg-bg-card/80 px-3 py-2.5 pr-9 text-sm font-semibold text-text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-all duration-300 focus:border-accent-magenta/70 focus:shadow-[0_0_0_3px_rgba(217,70,239,0.14)] focus:outline-none"
+                    className="a26-select"
                   >
                     {TARGET_LANGUAGE_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>{option.label}</option>
                     ))}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
+                  <ChevronDown className="a26-select-chevron" size={16} />
                 </span>
               </label>
             </div>
@@ -910,7 +916,10 @@ export default function ActivityLogsScreen({ apiUrl, backendUp, notify }) {
           </div>
         ) : null}
 
-        <div className="overflow-hidden rounded-2xl border border-border-subtle/80">
+        <div
+          className="a26-intro-enter overflow-hidden rounded-2xl border border-border-subtle/80"
+          style={{ '--a26-intro-delay': '120ms' }}
+        >
           <div className="overflow-x-auto">
             <div className="max-h-[460px] overflow-y-auto">
             <table className="min-w-full divide-y divide-border-subtle text-sm">
@@ -940,7 +949,7 @@ export default function ActivityLogsScreen({ apiUrl, backendUp, notify }) {
                     </td>
                   </tr>
                 ) : (
-                  pagedLogs.map((row) => {
+                  pagedLogs.map((row, index) => {
                     const expanded = expandedLogId === row.id
                     const btvlProxy = computeBtvlProxy(row)
                     const routeConfidenceValue = normalizeRouteConfidence(row.route_confidence)
@@ -951,7 +960,8 @@ export default function ActivityLogsScreen({ apiUrl, backendUp, notify }) {
                     return (
                       <Fragment key={row.id}>
                         <tr
-                          className="transition-colors duration-200 hover:bg-bg-elevated/55"
+                          className="a26-row-intro transition-colors duration-200 hover:bg-bg-elevated/55"
+                          style={{ '--a26-row-delay': `${Math.min(index, 8) * 24}ms` }}
                           title="Expand for flight-recorder execution details"
                         >
                           <td className="px-3 py-2 text-xs text-text-secondary">
@@ -999,7 +1009,7 @@ export default function ActivityLogsScreen({ apiUrl, backendUp, notify }) {
                         </tr>
 
                         {expanded ? (
-                          <tr className="bg-bg-elevated/35">
+                          <tr className="a26-expand-in bg-bg-elevated/35">
                             <td colSpan={9} className="px-3 py-3">
                               {/* Flight-recorder layout:
                                   Left = translation I/O payload, Right = execution metadata + interventions. */}

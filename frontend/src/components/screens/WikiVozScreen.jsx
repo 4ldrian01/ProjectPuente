@@ -444,17 +444,6 @@ export default function WikiVozScreen({ apiUrl, backendUp, ttsAvailable, notify 
   const hasActiveFilters = activeCategory !== 'all' || selectedLanguage !== 'all'
   const visibleEntries = filteredEntries.slice(0, visibleCount)
   const hasMoreEntries = visibleCount < filteredEntries.length
-  const filteredLanguageCount = useMemo(() => {
-    const uniqueLanguages = new Set(
-      filteredEntries
-        .map((entry) => entry.languageCode)
-        .filter(Boolean),
-    )
-
-    return uniqueLanguages.size
-  }, [filteredEntries])
-  const dataSourceLabel = apiEntries ? 'Live API dataset' : 'Offline fallback dataset'
-
   const handleViewMore = () => {
     setVisibleCount((previous) => Math.min(previous + WIKI_PAGE_SIZE, filteredEntries.length))
   }
@@ -491,31 +480,30 @@ export default function WikiVozScreen({ apiUrl, backendUp, ttsAvailable, notify 
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col space-y-5 pb-2">
-      <div className="a26-surface relative overflow-hidden p-4 sm:p-5 lg:p-6">
+      <div
+        className="a26-surface a26-intro-enter relative overflow-hidden p-4 sm:p-5 lg:p-6"
+        style={{ '--a26-intro-delay': '0ms' }}
+      >
         <div aria-hidden className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-accent-magenta/15 blur-3xl" />
         <div aria-hidden className="pointer-events-none absolute -left-10 bottom-[-5.5rem] h-40 w-40 rounded-full bg-accent-gold/15 blur-3xl" />
 
         <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="a26-subtitle">Wiki-Voz Intelligence Panel</p>
-            <h2 className="a26-hero-title mt-1 font-semibold text-text-primary">Cultural Term Explorer</h2>
+            <h2 className="a26-hero-title mt-1 font-semibold text-text-primary">Wiki-Voz Lexicon</h2>
             <p className="mt-2 max-w-3xl text-sm leading-relaxed text-text-secondary sm:text-[15px]">
               Scan heritage terms across Philippine languages with fuzzy search, language-scoped filters, and quick card drill-down.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-wide">
-            <span className="a26-chip">
-              {filteredEntries.length} {filteredEntries.length === 1 ? 'entry' : 'entries'}
-            </span>
-            <span className="a26-chip">{filteredLanguageCount} language{filteredLanguageCount === 1 ? '' : 's'}</span>
-            <span className="a26-chip">{dataSourceLabel}</span>
-          </div>
         </div>
       </div>
 
       {/* Fuzzy Search Header */}
-      <div className="a26-surface p-4 sm:p-5">
+      <div
+        className="a26-surface a26-intro-enter p-4 sm:p-5"
+        style={{ '--a26-intro-delay': '60ms' }}
+      >
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
           <input
@@ -524,7 +512,7 @@ export default function WikiVozScreen({ apiUrl, backendUp, ttsAvailable, notify 
             onChange={handleSearchChange}
             maxLength={SEARCH_QUERY_MAX_LENGTH}
             placeholder="Fuzzy search: term, phrase, definition, category..."
-            className="w-full rounded-xl border border-border-subtle bg-bg-elevated/75 py-3 pl-9 pr-24 text-sm text-text-primary placeholder-text-secondary/60 shadow-inner transition-all duration-300 focus:border-accent-magenta/70 focus:outline-none focus:ring-2 focus:ring-accent-magenta/20"
+            className="spring-nav-transition w-full rounded-xl border border-border-subtle bg-bg-elevated/75 py-3 pl-9 pr-24 text-sm text-text-primary placeholder-text-secondary/60 shadow-inner focus:border-accent-magenta/70 focus:outline-none focus:ring-2 focus:ring-accent-magenta/20"
           />
 
           {searchQuery && (
@@ -556,15 +544,14 @@ export default function WikiVozScreen({ apiUrl, backendUp, ttsAvailable, notify 
           </button>
         </div>
 
-        <div className="mt-2 flex items-center justify-between text-[11px]">
-          <span className={searchValidationMessage ? 'text-status-warning-text' : 'text-text-secondary'}>
-            {searchValidationMessage || 'Fuzzy scoring active (term, definition, language, category).'}
-          </span>
-          <span className="text-text-secondary">{searchQuery.length}/{SEARCH_QUERY_MAX_LENGTH}</span>
-        </div>
+        {searchValidationMessage ? (
+          <p className="mt-2 text-[11px] text-status-warning-text">
+            {searchValidationMessage}
+          </p>
+        ) : null}
 
         {filtersOpen && (
-          <div className="mt-4 grid gap-4 rounded-2xl border border-border-subtle/80 bg-bg-elevated/35 p-3.5 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+          <div className="screen-transition-in mt-4 grid gap-4 rounded-2xl border border-border-subtle/80 bg-bg-elevated/35 p-3.5 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
             <div>
               <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-text-secondary">Categories</p>
               <div className="max-h-40 overflow-y-auto pr-1">
@@ -576,7 +563,7 @@ export default function WikiVozScreen({ apiUrl, backendUp, ttsAvailable, notify 
                     className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide transition-all duration-200 active:scale-[0.98] ${
                       activeCategory === categoryKey
                         ? 'bg-accent-gold text-bg-dark'
-                        : 'border border-border-subtle bg-bg-card text-text-secondary hover:bg-bg-elevated hover:text-text-primary'
+                        : 'border border-border-subtle bg-bg-card text-text-secondary hover:-translate-y-0.5 hover:bg-bg-elevated hover:text-text-primary'
                     }`}
                   >
                     {categoryKey === 'all'
@@ -603,7 +590,7 @@ export default function WikiVozScreen({ apiUrl, backendUp, ttsAvailable, notify 
                     className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide transition-all duration-200 active:scale-[0.98] ${
                       selectedLanguage === language.key
                         ? 'bg-accent-magenta text-white'
-                        : 'border border-border-subtle bg-bg-card text-text-secondary hover:bg-bg-elevated hover:text-text-primary'
+                        : 'border border-border-subtle bg-bg-card text-text-secondary hover:-translate-y-0.5 hover:bg-bg-elevated hover:text-text-primary'
                     }`}
                   >
                     {language.label}
@@ -636,7 +623,10 @@ export default function WikiVozScreen({ apiUrl, backendUp, ttsAvailable, notify 
         </div>
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border-subtle/75 bg-bg-card/55 px-3 py-2 text-sm text-text-secondary">
+      <div
+        className="a26-intro-enter flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border-subtle/75 bg-bg-card/55 px-3 py-2 text-sm text-text-secondary"
+        style={{ '--a26-intro-delay': '110ms' }}
+      >
         <span>
           {filteredEntries.length} {filteredEntries.length === 1 ? 'entry' : 'entries'} found
           {hasActiveFilters ? ' • filters active' : ''}
@@ -653,7 +643,8 @@ export default function WikiVozScreen({ apiUrl, backendUp, ttsAvailable, notify 
         {visibleEntries.map((entry, index) => (
           <article
             key={entry.id}
-            className="a26-surface group mb-5 break-inside-avoid overflow-hidden"
+            className="a26-surface a26-row-intro group mb-5 break-inside-avoid overflow-hidden transition-all duration-300 hover:-translate-y-0.5"
+            style={{ '--a26-row-delay': `${Math.min(index, 10) * 18}ms` }}
           >
             <div
               className={`relative w-full cursor-pointer overflow-hidden bg-bg-elevated ${getMasonryAspectClass(entry, index)}`}
@@ -671,7 +662,7 @@ export default function WikiVozScreen({ apiUrl, backendUp, ttsAvailable, notify 
               <img
                 src={resolveLocalImageSrc(entry.imageUrl)}
                 alt={entry.imageAlt || entry.term}
-                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.06]"
                 loading="lazy"
                 onError={(event) => {
                   event.currentTarget.src = LOCAL_PLACEHOLDER_SRC
@@ -706,7 +697,7 @@ export default function WikiVozScreen({ apiUrl, backendUp, ttsAvailable, notify 
 
               <button
                 onClick={() => setSelectedEntry(entry)}
-                className="a26-button-primary w-full px-4 py-2 text-sm font-semibold"
+                className="a26-button-primary spring-nav-transition w-full px-4 py-2 text-sm font-semibold"
               >
                 Open Details
               </button>

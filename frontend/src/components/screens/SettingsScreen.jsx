@@ -9,6 +9,7 @@
 
 import { useEffect, useState } from 'react'
 import {
+  ChevronDown,
   CheckCircle2,
   Cpu,
   Gauge,
@@ -256,7 +257,10 @@ export default function SettingsScreen({ health, onRefreshHealth, onClose, activ
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
-      <header className="a26-surface relative overflow-hidden p-5 md:p-6">
+      <header
+        className="a26-surface a26-intro-enter relative overflow-hidden p-5 md:p-6"
+        style={{ '--a26-intro-delay': '0ms' }}
+      >
         <div className="pointer-events-none absolute -left-10 top-4 h-32 w-32 rounded-full bg-accent-magenta/10 blur-3xl" />
 
         <div className="relative flex flex-wrap items-start justify-between gap-4">
@@ -284,10 +288,13 @@ export default function SettingsScreen({ health, onRefreshHealth, onClose, activ
       </header>
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-[1.18fr_1fr]">
-        <article className="a26-surface space-y-4 p-4 md:p-5">
+        <article
+          className="a26-surface a26-intro-enter space-y-4 p-4 md:p-5"
+          style={{ '--a26-intro-delay': '70ms' }}
+        >
           <h3 className="a26-subtitle">Preferences</h3>
 
-          <div className="rounded-2xl border border-border-subtle/70 bg-bg-elevated/45 p-3.5">
+          <div className="a26-row-intro rounded-2xl border border-border-subtle/70 bg-bg-elevated/45 p-3.5" style={{ '--a26-row-delay': '18ms' }}>
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="inline-flex items-center gap-2 text-sm font-semibold text-text-primary">
@@ -312,35 +319,41 @@ export default function SettingsScreen({ health, onRefreshHealth, onClose, activ
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div className="a26-row-intro grid grid-cols-1 gap-3 md:grid-cols-2" style={{ '--a26-row-delay': '42ms' }}>
             <div className="rounded-2xl border border-border-subtle/70 bg-bg-elevated/45 p-3.5">
               <p className="mb-2 text-sm font-semibold text-text-primary">Default Source</p>
-              <select
-                value={defaultSourceLang}
-                onChange={(event) => handleSourceChange(event.target.value)}
-                className="w-full rounded-xl border border-border-subtle bg-bg-card px-3 py-2 text-sm text-text-primary focus:border-accent-magenta focus:outline-none"
-              >
-                {SOURCE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
+              <span className="a26-select-wrap">
+                <select
+                  value={defaultSourceLang}
+                  onChange={(event) => handleSourceChange(event.target.value)}
+                  className="a26-select"
+                >
+                  {SOURCE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+                <ChevronDown className="a26-select-chevron h-4 w-4" />
+              </span>
             </div>
 
             <div className="rounded-2xl border border-border-subtle/70 bg-bg-elevated/45 p-3.5">
               <p className="mb-2 text-sm font-semibold text-text-primary">Default Target</p>
-              <select
-                value={defaultTargetLang}
-                onChange={(event) => handleTargetChange(event.target.value)}
-                className="w-full rounded-xl border border-border-subtle bg-bg-card px-3 py-2 text-sm text-text-primary focus:border-accent-magenta focus:outline-none"
-              >
-                {TARGET_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
+              <span className="a26-select-wrap">
+                <select
+                  value={defaultTargetLang}
+                  onChange={(event) => handleTargetChange(event.target.value)}
+                  className="a26-select"
+                >
+                  {TARGET_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+                <ChevronDown className="a26-select-chevron h-4 w-4" />
+              </span>
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border-subtle/70 bg-bg-elevated/45 p-3.5">
+          <div className="a26-row-intro rounded-2xl border border-border-subtle/70 bg-bg-elevated/45 p-3.5" style={{ '--a26-row-delay': '66ms' }}>
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="inline-flex items-center gap-2 text-sm font-semibold text-text-primary">
@@ -388,7 +401,10 @@ export default function SettingsScreen({ health, onRefreshHealth, onClose, activ
           </button>
         </article>
 
-        <article className="a26-surface space-y-3 p-4 md:p-5">
+        <article
+          className="a26-surface a26-intro-enter space-y-3 p-4 md:p-5"
+          style={{ '--a26-intro-delay': '100ms' }}
+        >
           <div className="flex items-center justify-between gap-2">
             <h3 className="a26-subtitle">Connection Status</h3>
             <span className="text-xs text-text-secondary">
@@ -407,15 +423,16 @@ export default function SettingsScreen({ health, onRefreshHealth, onClose, activ
             </div>
           </div>
 
-          {connectionItems.map((item) => (
-            <ConnectionRow
-              key={item.key}
-              icon={item.icon}
-              label={item.label}
-              value={item.value}
-              healthy={item.healthy}
-              hint={item.hint}
-            />
+          {connectionItems.map((item, index) => (
+            <div key={item.key} className="a26-row-intro" style={{ '--a26-row-delay': `${Math.min(index, 8) * 22}ms` }}>
+              <ConnectionRow
+                icon={item.icon}
+                label={item.label}
+                value={item.value}
+                healthy={item.healthy}
+                hint={item.hint}
+              />
+            </div>
           ))}
 
           <button

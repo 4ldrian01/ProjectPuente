@@ -2,7 +2,7 @@
  * App.jsx — Enterprise shell for the PUENTE dashboard.
  *
  * Architectural notes:
- * - Desktop layout uses a margin-coupled content column that tracks sidebar width (`ml-64 -> ml-20`).
+ * - Desktop layout uses a margin-coupled content column that tracks sidebar width (`ml-64 -> ml-24`).
  * - Mobile layout uses an off-canvas drawer + scrim, decoupled from desktop collapse behavior.
  * - Content container applies larger horizontal rhythm and max-width constraints for ultra-wide screens.
  */
@@ -699,7 +699,7 @@ function App() {
       {/* Main column margin is coupled to desktop sidebar width with the same easing curve. */}
       <div
         className={`flex min-h-screen min-w-0 flex-1 flex-col transition-[margin] duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
-          isSidebarCollapsed ? 'md:ml-24' : 'md:ml-72'
+          isSidebarCollapsed ? 'md:ml-24' : 'md:ml-64'
         }`}
       >
         <GlobalHeader

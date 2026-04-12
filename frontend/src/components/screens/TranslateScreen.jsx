@@ -426,16 +426,6 @@ export default function TranslateScreen({
     ])
   }, [btvlResult])
 
-  /* Smooth auto-grow for source input */
-  useEffect(() => {
-    const el = sourceTextareaRef.current
-    if (!el) return
-
-    const minHeight = 156
-    el.style.height = 'auto'
-    el.style.height = `${Math.max(minHeight, el.scrollHeight)}px`
-  }, [sourceText])
-
   useEffect(() => {
     return () => {
       if (copyResetTimerRef.current) clearTimeout(copyResetTimerRef.current)
@@ -1066,17 +1056,8 @@ export default function TranslateScreen({
     <div className={`relative flex min-h-[14.5rem] flex-col rounded-[1.25rem] border shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 ${
       isCharLimitExceeded
         ? 'border-status-danger-border/90 bg-bg-card/92 shadow-[0_0_0_1px_rgba(185,28,28,0.3),0_10px_24px_rgba(0,0,0,0.08)]'
-        : isSourceInputFocused
-          ? 'border-accent-magenta/80 bg-bg-card/95 shadow-[0_0_0_1px_rgba(217,70,239,0.28),0_14px_32px_rgba(0,0,0,0.09)]'
-          : 'border-border-subtle bg-bg-card/90'
+        : 'border-border-subtle bg-bg-card/90'
     }`}>
-      <span
-        className={`pointer-events-none absolute inset-x-0 top-0 h-14 rounded-t-[1.25rem] bg-gradient-to-b from-accent-magenta/10 to-transparent transition-opacity duration-300 ${
-          isSourceInputFocused ? 'opacity-100' : 'opacity-0'
-        }`}
-        aria-hidden="true"
-      />
-
       <div className="border-b border-border-subtle/55 px-4 py-2.5">
         <div className="ml-1 w-full max-w-[20rem] sm:max-w-[64%]">
           {sourceLangBar}
@@ -1084,36 +1065,6 @@ export default function TranslateScreen({
       </div>
 
       <div className="relative">
-        {showSourceQuickActions && (
-          <div className="pointer-events-none absolute inset-x-0 top-3 z-10 flex flex-col items-start px-4">
-            <div className="pointer-events-none flex items-center gap-2 rounded-2xl border border-border-subtle/70 bg-bg-elevated/88 px-2.5 py-2 shadow-[0_8px_24px_rgb(0,0,0,0.08)] backdrop-blur-sm">
-              <button
-                type="button"
-                onClick={handleCycleSample}
-                className="pointer-events-auto a26-button-ghost inline-flex items-center gap-1 border-dashed px-2.5 py-1 text-xs font-medium"
-                title="Load the next thesis sample input"
-              >
-                <FlaskConical className="h-3.5 w-3.5" />
-                Sample Test
-              </button>
-              <span className="h-4 w-px bg-border-subtle/70" aria-hidden="true" />
-              <button
-                type="button"
-                onClick={handlePasteText}
-                className="pointer-events-auto a26-button-ghost inline-flex items-center gap-1 border-dashed px-2.5 py-1 text-xs font-medium"
-                title="Paste source text from clipboard"
-              >
-                <ClipboardPaste className="h-3.5 w-3.5" />
-                Paste Text
-              </button>
-            </div>
-
-            <p className="mt-3 pl-1 text-sm font-medium tracking-[0.004em] text-left text-text-secondary/62">
-              {SOURCE_PLACEHOLDER}
-            </p>
-          </div>
-        )}
-
         {hasSourceChars && (
           <button
             type="button"
@@ -1132,15 +1083,40 @@ export default function TranslateScreen({
           onChange={(event) => setSourceText(event.target.value)}
           onFocus={() => setIsSourceInputFocused(true)}
           onBlur={() => setIsSourceInputFocused(false)}
-          placeholder={showSourceQuickActions ? '' : SOURCE_PLACEHOLDER}
-          className="w-full resize-none overflow-hidden bg-transparent px-4 pt-3 pb-2 text-base font-medium leading-relaxed tracking-[0.004em] text-text-primary placeholder-text-secondary/45 focus:outline-none transition-[height] duration-150 ease-out"
-          style={{ minHeight: '156px' }}
+          placeholder={SOURCE_PLACEHOLDER}
+          className="translate-workbench-source h-[156px] w-full resize-none overflow-y-auto bg-transparent px-4 pt-3 pb-2 text-left text-base font-medium leading-relaxed tracking-[0.004em] text-text-primary placeholder-text-secondary/45 focus:outline-none"
           maxLength={CHAR_LIMIT}
         />
       </div>
 
-      <div className={`flex items-center border-t border-border-subtle/40 px-4 py-2 ${hasSourceChars ? 'justify-between' : 'justify-end'}`}>
-        {hasSourceChars && (
+      {showSourceQuickActions && (
+        <div className="flex justify-center px-4 pb-2 pt-1">
+          <div className="flex flex-wrap items-center justify-center gap-2 rounded-2xl border border-border-subtle/70 bg-bg-elevated/88 px-2.5 py-2 shadow-[0_8px_24px_rgb(0,0,0,0.08)] backdrop-blur-sm">
+            <button
+              type="button"
+              onClick={handleCycleSample}
+              className="a26-button-ghost inline-flex items-center gap-1 border-dashed px-2.5 py-1 text-xs font-medium"
+              title="Load the next thesis sample input"
+            >
+              <FlaskConical className="h-3.5 w-3.5" />
+              Sample Test
+            </button>
+            <span className="h-4 w-px bg-border-subtle/70" aria-hidden="true" />
+            <button
+              type="button"
+              onClick={handlePasteText}
+              className="a26-button-ghost inline-flex items-center gap-1 border-dashed px-2.5 py-1 text-xs font-medium"
+              title="Paste source text from clipboard"
+            >
+              <ClipboardPaste className="h-3.5 w-3.5" />
+              Paste Text
+            </button>
+          </div>
+        </div>
+      )}
+
+      {hasSourceChars && (
+        <div className="flex items-center justify-between border-t border-border-subtle/40 px-4 py-2">
           <button
             onClick={() => handleSpeak(sourceText, effectiveSourceLang, 'source')}
             disabled={!canUseTts}
@@ -1149,14 +1125,12 @@ export default function TranslateScreen({
           >
             {ttsLoadingKey === 'source' ? '🔊 Speaking…' : '🔊 Source TTS'}
           </button>
-        )}
 
-        {hasSourceChars && (
           <span className={`text-xs tabular-nums ${isCharLimitExceeded ? 'text-status-danger-text' : 'text-text-secondary'}`}>
             {sourceCharCount}/{CHAR_LIMIT}
           </span>
-        )}
-      </div>
+        </div>
+      )}
 
       {isCharLimitExceeded && (
         <div className="px-4 pb-2 text-xs text-status-danger-text">
@@ -1215,7 +1189,7 @@ export default function TranslateScreen({
         </div>
       </div>
 
-      <div className="flex-1 min-h-[9.75rem] px-4 pt-3 pb-1">
+      <div className="translate-workbench-target h-[156px] overflow-y-auto px-4 pt-3 pb-1">
         {loading ? (
           <div className="flex items-center gap-3 text-accent-magenta">
             <svg className="h-4.5 w-4.5 animate-spin" viewBox="0 0 24 24" fill="none">
@@ -1253,7 +1227,7 @@ export default function TranslateScreen({
             className={actionButtonClass}
             title={apiReady ? 'Run Back-Translation Verification Loop' : 'Backend/model is not ready'}
           >
-            {btvlLoading ? '🔄 BTVL…' : '🔄 BTVL'}
+            {btvlLoading ? '🔄 Analyzing Gap…' : '🔄 Analyze Gap'}
           </button>
 
           <button
@@ -1417,7 +1391,10 @@ export default function TranslateScreen({
      ════════════════════════════════════════════════════════════ */
   return (
         <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col space-y-4 overflow-y-auto">
-          <section className="a26-surface relative overflow-hidden px-4 py-4 sm:px-5">
+          <section
+            className="a26-surface a26-intro-enter relative overflow-hidden px-4 py-4 sm:px-5"
+            style={{ '--a26-intro-delay': '0ms' }}
+          >
             <div className="pointer-events-none absolute -top-8 right-0 h-24 w-24 rounded-full bg-accent-magenta/10 blur-2xl" />
             <div className="pointer-events-none absolute -bottom-8 left-6 h-20 w-20 rounded-full bg-accent-gold/10 blur-2xl" />
 
@@ -1428,58 +1405,68 @@ export default function TranslateScreen({
               </p>
 
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                <span className="a26-chip">Mode {activeModeLabel}</span>
-                <span className="a26-chip">Engine {translationEngine || 'unknown'}</span>
-                <span className="a26-chip">Telemetry {telemetry.loading ? 'Syncing' : 'Live'}</span>
+                <span className="a26-chip a26-intro-enter" style={{ '--a26-intro-delay': '40ms' }}>Mode {activeModeLabel}</span>
+                <span className="a26-chip a26-intro-enter" style={{ '--a26-intro-delay': '70ms' }}>Engine {translationEngine || 'unknown'}</span>
+                <span className="a26-chip a26-intro-enter" style={{ '--a26-intro-delay': '100ms' }}>Telemetry {telemetry.loading ? 'Syncing' : 'Live'}</span>
               </div>
             </div>
           </section>
 
       {/* ══ DESKTOP ══ (md+) */}
       <div className="hidden flex-1 flex-col md:flex">
-        <div className="mb-3 flex flex-col items-center gap-2">
+        <div className="a26-intro-enter mb-3 flex flex-col items-center gap-2" style={{ '--a26-intro-delay': '50ms' }}>
           {modeToggle}
           {swapBtn}
         </div>
 
-        <div className="mb-3">{renderLidMismatchBanner()}</div>
+        <div className="a26-intro-enter mb-3" style={{ '--a26-intro-delay': '80ms' }}>{renderLidMismatchBanner()}</div>
 
         <div className="grid grid-cols-2 gap-4">
-          {renderInputBox()}
-          {renderOutputBox()}
+          <div className="a26-intro-enter" style={{ '--a26-intro-delay': '110ms' }}>
+            {renderInputBox()}
+          </div>
+          <div className="a26-intro-enter" style={{ '--a26-intro-delay': '140ms' }}>
+            {renderOutputBox()}
+          </div>
         </div>
 
         <div className="mt-4 grid auto-rows-fr grid-cols-2 gap-4">
-          <GapAnalysisTerminal
-            logs={systemLogs}
-            isFlushing={loading}
-            className="h-full min-h-[10rem]"
-          />
-          {renderProfilerCard()}
+          <div className="a26-intro-enter" style={{ '--a26-intro-delay': '170ms' }}>
+            <GapAnalysisTerminal
+              logs={systemLogs}
+              isFlushing={loading}
+              className="h-full min-h-[10rem]"
+            />
+          </div>
+          <div className="a26-intro-enter" style={{ '--a26-intro-delay': '200ms' }}>
+            {renderProfilerCard()}
+          </div>
         </div>
       </div>
 
       {/* ══ MOBILE ══ (<md) */}
       <div className="flex flex-1 flex-col gap-2.5 md:hidden">
-        <div className="mt-0.5 flex flex-col items-center gap-2">
+        <div className="a26-intro-enter mt-0.5 flex flex-col items-center gap-2" style={{ '--a26-intro-delay': '50ms' }}>
           {modeToggle}
           {swapBtn}
         </div>
-        {renderInputBox()}
-        {renderLidMismatchBanner()}
-        {renderOutputBox()}
+        <div className="a26-intro-enter" style={{ '--a26-intro-delay': '85ms' }}>{renderInputBox()}</div>
+        <div className="a26-intro-enter" style={{ '--a26-intro-delay': '115ms' }}>{renderLidMismatchBanner()}</div>
+        <div className="a26-intro-enter" style={{ '--a26-intro-delay': '145ms' }}>{renderOutputBox()}</div>
 
         <div className="mt-1 flex flex-col gap-2.5">
-          <GapAnalysisTerminal
-            logs={systemLogs}
-            isFlushing={loading}
-            className="min-h-[10rem]"
-          />
-          {renderProfilerCard()}
+          <div className="a26-intro-enter" style={{ '--a26-intro-delay': '175ms' }}>
+            <GapAnalysisTerminal
+              logs={systemLogs}
+              isFlushing={loading}
+              className="min-h-[10rem]"
+            />
+          </div>
+          <div className="a26-intro-enter" style={{ '--a26-intro-delay': '205ms' }}>{renderProfilerCard()}</div>
         </div>
       </div>
 
-      <div className="mt-3 flex flex-col items-center gap-2">
+      <div className="a26-intro-enter mt-3 flex flex-col items-center gap-2" style={{ '--a26-intro-delay': '230ms' }}>
         <div className={`w-full max-w-3xl rounded-xl border px-3 py-2.5 text-xs spring-nav-transition ${modeStatus.className}`}>
           <div className="flex items-start gap-2">
             <span className="text-[13px] leading-none" aria-hidden="true">{modeStatus.icon}</span>

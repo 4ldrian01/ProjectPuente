@@ -7,7 +7,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import axios from 'axios'
-import { Database, FileUp, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
+import { ChevronDown, Database, FileUp, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
 import { WIKI_VOZ_ENTRIES } from '../../data/wikiVozData'
 
 const LANGUAGE_OPTIONS = [
@@ -362,7 +362,10 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
-      <header className="a26-surface relative overflow-hidden p-5 md:p-6">
+      <header
+        className="a26-surface a26-intro-enter relative overflow-hidden p-5 md:p-6"
+        style={{ '--a26-intro-delay': '0ms' }}
+      >
         <div className="pointer-events-none absolute -right-12 top-2 h-32 w-32 rounded-full bg-accent-magenta/10 blur-3xl" />
 
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -400,7 +403,10 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
         />
       </header>
 
-      <section className="a26-surface p-4 md:p-5">
+      <section
+        className="a26-surface a26-intro-enter p-4 md:p-5"
+        style={{ '--a26-intro-delay': '70ms' }}
+      >
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <div className="relative min-w-[220px] flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
@@ -412,20 +418,23 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
             />
           </div>
 
-          <select
-            value={languageFilter}
-            onChange={(event) => setLanguageFilter(event.target.value)}
-            className="rounded-xl border border-border-subtle bg-bg-elevated/60 px-3 py-2.5 text-sm text-text-primary transition-all duration-300 focus:border-accent-magenta/70 focus:outline-none"
-          >
-            <option value="all">All Languages</option>
-            {LANGUAGE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
-            ))}
-          </select>
+          <span className="a26-select-wrap min-w-[190px]">
+            <select
+              value={languageFilter}
+              onChange={(event) => setLanguageFilter(event.target.value)}
+              className="a26-select"
+            >
+              <option value="all">All Languages</option>
+              {LANGUAGE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+            <ChevronDown className="a26-select-chevron h-4 w-4" />
+          </span>
         </div>
 
         {notice && (
-          <div className="mb-3 rounded-xl border border-status-info-border/55 bg-status-info-bg/80 px-3 py-2 text-xs text-status-info-text">
+          <div className="a26-expand-in mb-3 rounded-xl border border-status-info-border/55 bg-status-info-bg/80 px-3 py-2 text-xs text-status-info-text">
             {notice}
           </div>
         )}
@@ -454,8 +463,12 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
                     <td colSpan={6} className="px-3 py-6 text-center text-text-secondary">No records match the current filters.</td>
                   </tr>
                 ) : (
-                  filteredRecords.map((record) => (
-                    <tr key={record.id} className="transition-colors duration-200 hover:bg-bg-elevated/55">
+                  filteredRecords.map((record, index) => (
+                    <tr
+                      key={record.id}
+                      className="a26-row-intro transition-colors duration-200 hover:bg-bg-elevated/55"
+                      style={{ '--a26-row-delay': `${Math.min(index, 10) * 20}ms` }}
+                    >
                       <td className="px-3 py-2 font-semibold text-text-primary">{record.term}</td>
                       <td className="px-3 py-2 text-text-secondary">{record.language}</td>
                       <td className="px-3 py-2 text-text-secondary">{record.category}</td>
@@ -494,7 +507,7 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-overlay-scrim/65 backdrop-blur-sm" onClick={closeModal} />
 
-          <div className="a26-surface relative z-10 w-full max-w-xl p-4">
+          <div className="a26-surface a26-expand-in relative z-10 w-full max-w-xl p-4">
             <div className="mb-3 flex items-center justify-between">
               <div className="inline-flex items-center gap-2">
                 <Database className="h-4 w-4 text-accent-magenta" />
@@ -525,28 +538,34 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary">Language</label>
-                  <select
-                    value={form.language}
-                    onChange={(event) => setForm((previous) => ({ ...previous, language: event.target.value }))}
-                    className="w-full rounded-xl border border-border-subtle bg-bg-elevated/60 px-3 py-2 text-sm text-text-primary focus:border-accent-magenta/70 focus:outline-none"
-                  >
-                    {LANGUAGE_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
+                  <span className="a26-select-wrap">
+                    <select
+                      value={form.language}
+                      onChange={(event) => setForm((previous) => ({ ...previous, language: event.target.value }))}
+                      className="a26-select"
+                    >
+                      {LANGUAGE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="a26-select-chevron h-4 w-4" />
+                  </span>
                 </div>
 
                 <div>
                   <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary">Category</label>
-                  <select
-                    value={form.category}
-                    onChange={(event) => setForm((previous) => ({ ...previous, category: event.target.value }))}
-                    className="w-full rounded-xl border border-border-subtle bg-bg-elevated/60 px-3 py-2 text-sm text-text-primary focus:border-accent-magenta/70 focus:outline-none"
-                  >
-                    {CATEGORY_OPTIONS.map((category) => (
-                      <option key={category} value={category}>{category}</option>
-                    ))}
-                  </select>
+                  <span className="a26-select-wrap">
+                    <select
+                      value={form.category}
+                      onChange={(event) => setForm((previous) => ({ ...previous, category: event.target.value }))}
+                      className="a26-select"
+                    >
+                      {CATEGORY_OPTIONS.map((category) => (
+                        <option key={category} value={category}>{category}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="a26-select-chevron h-4 w-4" />
+                  </span>
                 </div>
               </div>
 

@@ -1,6 +1,7 @@
 # Project PUENTE - Colab runtime dependencies
 # Install with: pip install -r notebooks/scripts/requirements_colab.txt
 
+# Core training stack
 torch
 transformers
 datasets
@@ -8,3 +9,10 @@ peft
 accelerate
 sentencepiece
 safetensors
+
+# Reliability + evaluation helpers used in notebook pipeline scripts
+huggingface_hub
+evaluate
+sacrebleu
+pandas
+pyyaml

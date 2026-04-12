@@ -1,52 +1,73 @@
 # Frontend Setup
 
-The frontend is a React 19 + Vite 7 progressive web app that talks to the Django backend over LAN.
+The frontend is a React 19 + Vite 7 app for translation UX, observer dashboards, and operations panels.
 
 ## Required system software
 
 | Dependency | Required | Notes |
 |---|---:|---|
-| Node.js | 18+ | Needed for Vite and the React toolchain |
-| npm | 9+ | Comes with Node.js |
+| Node.js | 18+ | Vite runtime/tooling |
+| npm | 9+ | Package manager |
 | Python | No | Backend only |
 
 ## Runtime dependencies (`dependencies`)
 
 | Package | Purpose |
 |---|---|
-| `axios` | HTTP client for `/api/translate/`, `/api/wiki/`, `/api/health/`, and `/api/tts/` |
 | `react` | UI runtime |
 | `react-dom` | Browser renderer |
+| `axios` | API requests |
+| `lucide-react` | Icon system |
+| `recharts` | Evaluation charts |
+| `react-is` | React utility compatibility |
 
 ## Development/build dependencies (`devDependencies`)
 
 | Package | Purpose |
 |---|---|
-| `vite` | Dev server and production bundler |
-| `@vitejs/plugin-react-swc` | Fast React transform with SWC |
-| `vite-plugin-pwa` | Service worker + PWA integration |
-| `@eslint/js` | ESLint base config |
-| `eslint` | Linting |
-| `eslint-plugin-react-hooks` | React Hooks lint rules |
-| `eslint-plugin-react-refresh` | React refresh lint rules |
-| `globals` | Shared ESLint globals |
+| `vite` | Dev server + build |
+| `@vitejs/plugin-react-swc` | Fast React transform |
+| `vite-plugin-pwa` | PWA build integration |
+| `@tailwindcss/vite` | Tailwind + Vite integration |
 | `tailwindcss` | Utility CSS framework |
-| `@tailwindcss/vite` | Tailwind integration for Vite |
-| `postcss` | CSS transform pipeline |
-| `autoprefixer` | Vendor prefixing |
-| `@types/react` | React types for tooling |
-| `@types/react-dom` | React DOM types for tooling |
+| `eslint` + plugins | Linting |
+| `@types/react` / `@types/react-dom` | Tooling support |
 
-## Frontend features that depend on the backend
+## Screens currently wired in app shell
 
-| Feature | Backend dependency |
+- `TranslateScreen`
+- `WikiVozScreen`
+- `ActivityLogsScreen`
+- `DatabaseAdminScreen`
+- `SystemEvaluationScreen`
+- `SettingsScreen`
+
+Layout shell components:
+
+- `GlobalHeader`
+- `SidebarNav`
+- `ToastViewport`
+
+## Backend integrations
+
+| Feature | Endpoint |
 |---|---|
 | Translation | `/api/translate/` |
-| Back-translation verification | `/api/btvl/` |
-| Wiki-Voz API mode | `/api/wiki/` |
-| TTS buttons | `/api/tts/` with backend `edge-tts` installed |
-| Health badge / settings | `/api/health/` |
-| Hardware telemetry panel | `/api/telemetry/` |
+| BTVL | `/api/btvl/` |
+| Wiki entries | `/api/wiki/` |
+| Activity logs | `/api/logs/` |
+| TTS | `/api/tts/` |
+| Health status | `/api/health/` |
+| Telemetry | `/api/telemetry/` |
+
+## Runtime host behavior
+
+`src/lib/apiRuntime.js` handles:
+
+- host detection from browser runtime
+- `projectpuente.local` preference when reachable
+- fallback to localhost aliases
+- health-based API URL resolution
 
 ## Optional frontend environment variables
 
@@ -54,11 +75,20 @@ Copy `frontend/.env.example` to `frontend/.env` only when needed:
 
 | Variable | Required | Purpose |
 |---|---:|---|
-| `VITE_PUENTE_API_KEY` | Optional | Sends `X-API-Key` header for `/api/translate/`, `/api/btvl/`, and `/api/tts/` when backend protection is enabled |
+| `VITE_PUENTE_API_KEY` | Optional | Adds `X-API-Key` to protected write requests |
+
+## Run and verify
+
+```bash
+cd frontend
+npm install
+npm run dev -- --host 0.0.0.0 --strictPort
+npm run lint
+npm run build
+```
 
 ## Notes
 
-- The frontend still works with offline seed data for Wiki-Voz when the backend wiki API is unavailable.
-- The TTS buttons now use the backend `edge-tts` endpoint instead of the browser Web Speech API.
-- The frontend automatically derives the API host from `window.location.hostname`, so it stays LAN-friendly without hardcoded IP addresses.
-- If backend API-key protection is enabled, you must set `VITE_PUENTE_API_KEY` or write actions will be rejected with HTTP 401.
+- Wiki-Voz screen falls back to local seed data when API data is unavailable or empty.
+- Local image placeholder fallback is sourced from `public/local-assets/placeholder.jpg`.
+- If backend API-key protection is enabled, write actions need `VITE_PUENTE_API_KEY`.

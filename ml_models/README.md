@@ -1,96 +1,77 @@
 # ML Models Setup
 
-This directory holds the local NLLB-200 base model and LoRA adapters used by the Django backend.
+This directory holds local model/runtime tooling for NLLB and LoRA workflows.
+
+## Core scripts
+
+| Script | Purpose |
+|---|---|
+| `download_model.py` | Downloads base NLLB model to project-local path (or `ML_MODEL_PATH`) |
+| `validate_model.py` | Smoke-tests local model loading and sample translation |
+| `train_lora.py` | Trains LoRA adapters from strict parallel datasets |
+| `training_preflight.py` | Read-only architecture/readiness audit |
+| `evaluate_metrics.py` | General BLEU/chrF++ evaluator |
+| `evaluate_spanish_baseline.py` | Spanish control-variable baseline evaluator |
 
 ## Required Python packages
 
-These are the direct packages used by `download_model.py`, `validate_model.py`, and `train_lora.py`.
-
-| Package | Required for | Purpose |
-|---|---|---|
-| `torch` | validate + train + runtime | Core tensor/model runtime |
-| `transformers` | all ML scripts | Model/tokenizer loading |
-| `sentencepiece` | download + validate + runtime | Tokenizer backend |
-| `accelerate` | runtime | Loading and device helpers |
-| `peft` | train + runtime | LoRA adapter creation and loading |
-| `bitsandbytes` | optional runtime | 8-bit quantization on supported setups |
-| `protobuf` | download/runtime | Model serialization support |
-
-## Optional training/evaluation extras
+(Provided by `backend/requirements.txt`)
 
 | Package | Purpose |
 |---|---|
-| `datasets` | Hugging Face dataset handling |
-| `evaluate` | Evaluation pipelines |
-| `sacrebleu` | Translation metric scoring |
-| `wandb` | Optional experiment tracking |
+| `torch` | Tensor runtime |
+| `transformers` | Model/tokenizer loading |
+| `huggingface_hub` | Download helper/runtime APIs |
+| `sentencepiece` | Tokenization |
+| `accelerate` | Runtime loading helpers |
+| `peft` | LoRA adapters |
+| `bitsandbytes` | Optional INT8 loading |
+| `protobuf` | Serialization support |
+| `sacrebleu` | Evaluation metrics |
+| `pandas` | Data utility workflows |
+| `pdfplumber` | PDF extraction workflows |
+| `ijson` | Streaming JSON utilities |
 
-## Baseline evaluation scripts
+## Expected local model path
 
-| Script | Purpose | Output |
-|---|---|---|
-| `evaluate_metrics.py` | General offline BLEU + chrF++ evaluator across supported language pairs | `evaluation_results.json` |
-| `evaluate_spanish_baseline.py` | Pure Spanish (`spa_Latn`) → English (`eng_Latn`) control-variable baseline evaluation | `spanish_baseline_metrics.json` |
-| `training_preflight.py` | Read-only architecture/training readiness audit (no installs) | `training_preflight_report.json` |
+Default backend expectation:
 
-## Directory Structure (after setup)
+- `ml_models/nllb-200-distilled-600M`
 
+`download_model.py` now resolves this path portably using project root (or `ML_MODEL_PATH` override).
+
+## Adapter path contract
+
+Backend loader expects:
+
+- `ml_models/lora_adapters/lora-cbk-formal/`
+- `ml_models/lora_adapters/lora-cbk-street/`
+
+`train_lora.py` output paths should be aligned/copied to this contract before runtime adapter loading.
+
+## Data contract for training
+
+Use strict 3-pillar outputs:
+
+- Parallel (seq2seq): `datasets/processed/pillars/parallel/master_parallel_corpus_nmt.json`
+- Monolingual (fluency/BT): `datasets/processed/pillars/monolingual/chavacano_monolingual_corpus_nmt.json`
+- JSONL mirrors: `datasets/processed/jsonl/pillars/...`
+- Lexicon data is for SQL retrieval (`ingest_lexicon`), not seq2seq loss tensors.
+
+## Preflight status meanings
+
+`training_preflight.py` exit behavior:
+
+- `0` -> no blockers
+- `2` -> one or more blockers (e.g., missing base model directory)
+
+## Quick workflow
+
+```bash
+cd ml_models
+python download_model.py
+python validate_model.py
+python training_preflight.py
+python train_lora.py --mode formal --dataset ../datasets/processed/pillars/parallel/
+python train_lora.py --mode street --dataset ../datasets/processed/pillars/parallel/
 ```
-ml_models/
-├── README.md
-├── download_model.py
-├── train_lora.py
-├── validate_model.py
-├── nllb-200-distilled-600M/
-│   ├── config.json
-│   ├── pytorch_model.bin             (~2.4 GB full precision download)
-│   ├── sentencepiece.bpe.model
-│   ├── tokenizer_config.json
-│   ├── tokenizer.json
-│   └── special_tokens_map.json
-├── lora-cbk-formal/
-│   ├── adapter_config.json
-│   └── adapter_model.bin
-└── lora-cbk-street/
-    ├── adapter_config.json
-    └── adapter_model.bin
-```
-
-## What each script needs
-
-| Script | Packages |
-|---|---|
-| `download_model.py` | `transformers`, `sentencepiece`, `protobuf` |
-| `validate_model.py` | `torch`, `transformers`, `sentencepiece` |
-| `train_lora.py` | `torch`, `transformers`, `sentencepiece`, `peft` |
-| `training_preflight.py` | Python standard library only |
-
-## Canonical training paths
-
-- Preferred strict parallel corpus directory: `../datasets/processed/pillars/parallel/`
-- Preferred evaluator file: `../datasets/processed/pillars/parallel/master_parallel_corpus_nmt.json`
-- Memory-safe streaming alternative: `../datasets/processed/jsonl/pillars/parallel/master_parallel_corpus_nmt.jsonl` (use `--dataset-file` in `train_lora.py`).
-- Legacy `../datasets/processed/001_chavacano/` remains supported as a compatibility fallback.
-
-## 3-Pillar contract reminder
-
-- `Parallel` pillar is the only corpus used for seq2seq loss tensors.
-- `Monolingual` pillar is reserved for fluency / back-translation flows.
-- `Lexicon` pillar must be ingested to SQL via `python backend/manage.py ingest_lexicon` and excluded from LoRA training tensors.
-
-## Notes
-
-- The backend loads the base model from this directory at startup via `core_api/apps.py`.
-- If the LoRA adapter folders are missing, translation still works with the base NLLB model.
-- See `../backend/README.md` for runtime/backend dependency details and `../notebooks/README.md` for notebook-only extras.
-
-## Supported FLORES Codes
-
-| Language | FLORES Code |
-|---|---|
-| English | `eng_Latn` |
-| Spanish | `spa_Latn` |
-| Tagalog | `tgl_Latn` |
-| Chavacano | `cbk_Latn` |
-| Cebuano | `ceb_Latn` |
-| Hiligaynon | `hil_Latn` |

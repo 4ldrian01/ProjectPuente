@@ -38,14 +38,14 @@ export function TranslationStudioIcon({ className = 'w-6 h-6' }) {
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
-      strokeWidth={1.7}
+      strokeWidth={1.9}
     >
       <text
         x="7.2"
-        y="11"
+        y="12.2"
         textAnchor="middle"
-        fontSize="7.1"
-        fontWeight="700"
+        fontSize="9.3"
+        fontWeight="800"
         fill="currentColor"
         stroke="none"
       >
@@ -55,20 +55,20 @@ export function TranslationStudioIcon({ className = 'w-6 h-6' }) {
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
-        d="M9.5 13.5c1.25 2.15 3.35 3.72 5.85 4.2"
+        d="M10 14.2c1.35 2.35 3.6 4 6.25 4.5"
       />
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
-        d="m13.9 18.1 2 .2-.2-2"
+        d="m14.5 19.1 2.35.25-.25-2.35"
       />
 
       <text
-        x="16.9"
-        y="17.15"
+        x="17.4"
+        y="18"
         textAnchor="middle"
-        fontSize="6.3"
-        fontWeight="700"
+        fontSize="8.1"
+        fontWeight="800"
         fill="currentColor"
         stroke="none"
       >

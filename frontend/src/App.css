@@ -18,6 +18,16 @@
   --a26-ambient-magenta: rgba(217, 70, 239, 0.2);
   --a26-ambient-gold: rgba(250, 204, 21, 0.12);
   --a26-grid-stroke: rgba(163, 163, 163, 0.09);
+
+  /* Unified select rhythm tokens (shared across cards and modals) */
+  --a26-select-height: 2.625rem;
+  --a26-select-radius: 0.78rem;
+  --a26-select-font-size: 0.92rem;
+  --a26-select-font-weight: 600;
+  --a26-select-padding-inline: 0.8rem;
+  --a26-select-chevron-offset: 0.75rem;
+  --a26-select-chevron-size: 1rem;
+  --a26-select-stack-gap: 0.375rem;
 }
 
 :root[data-theme='light'],
@@ -156,6 +166,87 @@ body[data-theme='light'] {
 }
 
 /* ============================================
+   UNIFIED DROPDOWN CONTROLS
+   ============================================ */
+.a26-select-wrap {
+  position: relative;
+  display: block;
+}
+
+.a26-select-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--a26-select-stack-gap);
+}
+
+.a26-select-label {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--puente-text-secondary);
+}
+
+.a26-select {
+  width: 100%;
+  min-height: var(--a26-select-height);
+  height: var(--a26-select-height);
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  border-radius: var(--a26-select-radius);
+  border: 1px solid color-mix(in srgb, var(--puente-border-subtle) 82%, transparent);
+  background: color-mix(in srgb, var(--puente-bg-card) 86%, var(--puente-bg-elevated));
+  color: var(--puente-text-primary);
+  padding: 0 calc(var(--a26-select-chevron-offset) + var(--a26-select-chevron-size) + 0.7rem) 0 var(--a26-select-padding-inline);
+  font-size: var(--a26-select-font-size);
+  font-weight: var(--a26-select-font-weight);
+  line-height: 1.2;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 10%, transparent);
+  transition: border-color 220ms var(--spring-ease), box-shadow 220ms var(--spring-ease), background-color 220ms var(--spring-ease), color 220ms var(--spring-ease);
+}
+
+.a26-select:hover {
+  border-color: color-mix(in srgb, var(--puente-accent-magenta) 34%, var(--puente-border-subtle));
+}
+
+.a26-select:focus,
+.a26-select:focus-visible {
+  outline: none;
+  border-color: color-mix(in srgb, var(--puente-accent-magenta) 68%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #ffffff 10%, transparent),
+    0 0 0 3px color-mix(in srgb, var(--puente-accent-magenta) 16%, transparent);
+}
+
+.a26-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.a26-select-chevron {
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  right: var(--a26-select-chevron-offset);
+  transform: translateY(-50%);
+  line-height: 0;
+  color: var(--puente-text-secondary);
+  transition: color 200ms var(--spring-ease);
+}
+
+.a26-select-wrap:focus-within .a26-select-chevron {
+  color: var(--puente-accent-magenta);
+}
+
+.a26-select option,
+.a26-select optgroup {
+  background-color: var(--puente-bg-card);
+  color: var(--puente-text-primary);
+}
+
+/* ============================================
    TOGGLE SWITCH COMPONENT
    ============================================ */
 .toggle-switch {
@@ -262,6 +353,56 @@ body[data-theme='light'] {
 
 .settings-panel {
   animation: slideInRight var(--spring-duration-screen) var(--spring-ease);
+}
+
+@keyframes a26IntroReveal {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.995);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes a26RowReveal {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes a26ExpandReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.a26-intro-enter {
+  animation: a26IntroReveal 520ms var(--spring-ease) both;
+  animation-delay: var(--a26-intro-delay, 0ms);
+  will-change: transform, opacity;
+}
+
+.a26-row-intro {
+  animation: a26RowReveal 360ms var(--spring-ease) both;
+  animation-delay: var(--a26-row-delay, 0ms);
+  will-change: transform, opacity;
+}
+
+.a26-expand-in {
+  animation: a26ExpandReveal 260ms var(--spring-ease) both;
+  will-change: transform, opacity;
 }
 
 /* ============================================
@@ -383,6 +524,43 @@ select:focus-visible {
 }
 
 /* ============================================
+   TRANSLATION WORKBENCH TEXT SCROLL AREAS
+   ============================================ */
+.translate-workbench-source,
+.translate-workbench-target {
+  scrollbar-width: thin;
+  scrollbar-color: var(--puente-scrollbar-thumb) var(--puente-scrollbar-track);
+}
+
+.translate-workbench-source::-webkit-scrollbar,
+.translate-workbench-target::-webkit-scrollbar {
+  width: 8px;
+}
+
+.translate-workbench-source::-webkit-scrollbar-track,
+.translate-workbench-target::-webkit-scrollbar-track {
+  background: var(--puente-scrollbar-track);
+  border-radius: 4px;
+}
+
+.translate-workbench-source::-webkit-scrollbar-thumb,
+.translate-workbench-target::-webkit-scrollbar-thumb {
+  background: var(--puente-scrollbar-thumb);
+  border-radius: 4px;
+}
+
+.translate-workbench-source::-webkit-scrollbar-thumb:hover,
+.translate-workbench-target::-webkit-scrollbar-thumb:hover {
+  background: var(--puente-scrollbar-thumb-hover);
+}
+
+.translate-workbench-source:focus,
+.translate-workbench-source:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* ============================================
    CARD HOVER EFFECTS
    ============================================ */
 .card-hover {
@@ -429,7 +607,10 @@ select:focus-visible {
   .animate-slide-up,
   .animate-fade-in,
   .settings-panel,
-  .animate-pulse {
+  .animate-pulse,
+  .a26-intro-enter,
+  .a26-row-intro,
+  .a26-expand-in {
     animation: none !important;
     transition-duration: 0.01ms !important;
   }
