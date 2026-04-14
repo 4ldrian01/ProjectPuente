@@ -27,7 +27,7 @@ import shutil
 import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional
 
 import torch
 from peft import LoraConfig, TaskType, get_peft_model
@@ -111,6 +111,54 @@ def env_bool(key: str, default: bool) -> bool:
     if not value:
         return default
     return value.strip().casefold() in {'1', 'true', 'yes', 'y', 'on'}
+
+
+def resolve_hf_token() -> Optional[str]:
+    for env_name in ('HF_TOKEN', 'HUGGINGFACEHUB_API_TOKEN', 'HUGGINGFACE_TOKEN'):
+        value = os.getenv(env_name)
+        if value and value.strip():
+            return value.strip()
+
+    token_file = os.getenv('PUENTE_HF_TOKEN_FILE', '').strip()
+    if token_file:
+        path = Path(token_file).expanduser()
+        if path.is_file():
+            try:
+                for raw_line in path.read_text(encoding='utf-8').splitlines():
+                    candidate = raw_line.strip().strip('"').strip("'")
+                    if candidate:
+                        return candidate
+            except OSError:
+                pass
+
+    return None
+
+
+def hf_auth_kwargs(from_pretrained_callable, token: Optional[str]) -> Dict[str, str]:
+    if not token:
+        return {}
+
+    try:
+        params = inspect.signature(from_pretrained_callable).parameters
+    except Exception:
+        params = {}
+
+    if 'token' in params:
+        return {'token': token}
+    if 'use_auth_token' in params:
+        return {'use_auth_token': token}
+    return {'token': token}
+
+
+def model_dtype_kwargs(dtype_value) -> Dict[str, torch.dtype]:
+    try:
+        params = inspect.signature(AutoModelForSeq2SeqLM.from_pretrained).parameters
+    except Exception:
+        params = {}
+
+    if 'dtype' in params:
+        return {'dtype': dtype_value}
+    return {'torch_dtype': dtype_value}
 
 
 FLORES_TO_SCHEMA_KEY = {
@@ -428,11 +476,21 @@ def main() -> None:
     preflight_validate_local_splits(paths, cfg)
     gpu_gc('before-model-load')
 
+    hf_token = resolve_hf_token()
+    if hf_token:
+        print('[auth] HF token detected; authenticated model download enabled.')
+    else:
+        print('[auth] HF token not detected; unauthenticated download may be rate-limited.')
+
     print('[model] loading tokenizer and base model...')
-    tokenizer = AutoTokenizer.from_pretrained(cfg.model_id)
+    tokenizer = AutoTokenizer.from_pretrained(
+        cfg.model_id,
+        **hf_auth_kwargs(AutoTokenizer.from_pretrained, hf_token),
+    )
     base_model = AutoModelForSeq2SeqLM.from_pretrained(
         cfg.model_id,
-        torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
+        **model_dtype_kwargs(torch.float16 if torch.cuda.is_available() else torch.float32),
+        **hf_auth_kwargs(AutoModelForSeq2SeqLM.from_pretrained, hf_token),
     )
 
     print('[model] applying LoRA adapter configuration...')

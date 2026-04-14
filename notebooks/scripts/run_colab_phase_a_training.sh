@@ -58,6 +58,24 @@ export PUENTE_LR="${PUENTE_LR:-0.0002}"
 export PUENTE_GRADIENT_CHECKPOINTING="${PUENTE_GRADIENT_CHECKPOINTING:-true}"
 export PUENTE_SAVE_STEPS="${PUENTE_SAVE_STEPS:-500}"
 
+# Optional HF auth bootstrap for stable model downloads.
+default_hf_token_file="${PUENTE_PROJECT_ROOT}/.secrets/hf_token"
+export PUENTE_HF_TOKEN_FILE="${PUENTE_HF_TOKEN_FILE:-${default_hf_token_file}}"
+
+if [[ -z "${HF_TOKEN:-}" ]] && [[ -f "${PUENTE_HF_TOKEN_FILE}" ]]; then
+  hf_token_from_file="$(awk 'NF {print; exit}' "${PUENTE_HF_TOKEN_FILE}" | tr -d '\r')"
+  if [[ -n "${hf_token_from_file}" ]]; then
+    export HF_TOKEN="${hf_token_from_file}"
+    echo "[auth] HF token loaded from PUENTE_HF_TOKEN_FILE."
+  fi
+fi
+
+if [[ -n "${HF_TOKEN:-}" ]]; then
+  echo "[auth] HF token available for authenticated model access."
+else
+  echo "[auth] HF token not set; proceeding unauthenticated (may be rate-limited)."
+fi
+
 for split in train eval test; do
   split_path="${PUENTE_DRIVE_ROOT}/${PUENTE_DATASET_REL_DIR}/${split}.jsonl"
   if [[ ! -f "${split_path}" ]]; then
