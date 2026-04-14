@@ -195,6 +195,18 @@ def is_valid_schema_key(value: str) -> bool:
     return bool(SCHEMA_KEY_RE.fullmatch(value))
 
 
+def _normalize_text_pair(source_text, target_text) -> Optional[tuple[str, str]]:
+    if not isinstance(source_text, str) or not isinstance(target_text, str):
+        return None
+
+    source_text = source_text.strip()
+    target_text = target_text.strip()
+    if not source_text or not target_text:
+        return None
+
+    return source_text, target_text
+
+
 def _extract_source_target_text(record: Dict, cfg: ColabConfig) -> Optional[tuple[str, str]]:
     """Extract a source/target text pair from supported dataset schemas.
 
@@ -213,25 +225,27 @@ def _extract_source_target_text(record: Dict, cfg: ColabConfig) -> Optional[tupl
 
     translation_block = record.get('translation')
     if isinstance(translation_block, dict):
-        source_text = translation_block.get(cfg.source_translation_key)
-        target_text = translation_block.get(cfg.target_translation_key)
-        if isinstance(source_text, str) and isinstance(target_text, str):
-            return source_text, target_text
+        normalized = _normalize_text_pair(
+            translation_block.get(cfg.source_translation_key),
+            translation_block.get(cfg.target_translation_key),
+        )
+        if normalized is not None:
+            return normalized
 
-    source_text = record.get('source_text')
-    target_text = record.get('target_text')
-    if isinstance(source_text, str) and isinstance(target_text, str):
-        return source_text, target_text
+    normalized = _normalize_text_pair(record.get('source_text'), record.get('target_text'))
+    if normalized is not None:
+        return normalized
 
-    source_text = record.get('source')
-    target_text = record.get('target')
-    if isinstance(source_text, str) and isinstance(target_text, str):
-        return source_text, target_text
+    normalized = _normalize_text_pair(record.get('source'), record.get('target'))
+    if normalized is not None:
+        return normalized
 
-    source_text = record.get(cfg.source_translation_key)
-    target_text = record.get(cfg.target_translation_key)
-    if isinstance(source_text, str) and isinstance(target_text, str):
-        return source_text, target_text
+    normalized = _normalize_text_pair(
+        record.get(cfg.source_translation_key),
+        record.get(cfg.target_translation_key),
+    )
+    if normalized is not None:
+        return normalized
 
     return None
 
@@ -470,6 +484,39 @@ def load_parallel_dataset(paths: Dict[str, Path]):
     )
 
 
+def sanitize_dataset_records(dataset, cfg: ColabConfig):
+    """Drop malformed rows to avoid crashing during tokenization.
+
+    Any row that does not produce a non-empty source/target text pair is removed.
+    This keeps long-running cloud jobs resilient to occasional bad records.
+    """
+    split_names = ['train', 'validation', 'test']
+    before_counts = {split: len(dataset[split]) for split in split_names}
+
+    def is_valid_record(example):
+        return _extract_source_target_text(example, cfg) is not None
+
+    sanitized = dataset.filter(is_valid_record)
+    after_counts = {split: len(sanitized[split]) for split in split_names}
+
+    dropped_total = 0
+    for split in split_names:
+        dropped = before_counts[split] - after_counts[split]
+        dropped_total += dropped
+        print(f'[data] {split}: kept {after_counts[split]}/{before_counts[split]} rows (dropped {dropped}).')
+
+    if after_counts['train'] == 0 or after_counts['validation'] == 0 or after_counts['test'] == 0:
+        raise ValueError(
+            'Dataset sanitization removed all rows from at least one split. '
+            'Verify JSONL schema and text fields.'
+        )
+
+    if dropped_total > 0:
+        print('[data] Sanitization removed malformed rows; training will proceed with valid records only.')
+
+    return sanitized
+
+
 def build_training_args(cfg: ColabConfig, paths: Dict[str, Path]) -> Seq2SeqTrainingArguments:
     checkpoint_output_dir = paths['checkpoint_output_dir']
     checkpoint_output_dir.mkdir(parents=True, exist_ok=True)
@@ -569,6 +616,7 @@ def main() -> None:
     model.print_trainable_parameters()
 
     dataset = load_parallel_dataset(paths)
+    dataset = sanitize_dataset_records(dataset, cfg)
 
     def preprocess_function(example):
         tokenizer.src_lang = cfg.source_flores
