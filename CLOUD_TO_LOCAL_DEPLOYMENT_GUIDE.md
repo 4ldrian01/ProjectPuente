@@ -40,8 +40,12 @@ Expected input files in Drive:
 Expected JSONL schema:
 
 ```json
-{"source_text": "Good morning", "target_text": "Buenos dias"}
+{"translation": {"cbk": "Good morning", "en": "Buenos dias"}}
 ```
+
+This unified schema applies to both Chavacano (`cbk`) and Cebuano (`ceb`) datasets,
+using the same nested `translation` object with the source language key (`cbk` or
+`ceb`) and the target key `en`.
 
 LoRA configuration in script:
 
@@ -59,7 +63,7 @@ Export products:
 
 ## Task 3 - Offline Local Preparation
 
-### Download base model locally (one-time)
+### Download base model locally (one-time, optional until inference staging)
 
 From project root:
 
@@ -67,6 +71,11 @@ From project root:
 cd ml_models
 python download_model.py
 ```
+
+Dependency-only exception:
+
+- You may defer this step during system setup and install all packages first.
+- If deferred, backend still boots, but translation and BTVL stay in explicit 503 state until local weights are present.
 
 This writes to:
 

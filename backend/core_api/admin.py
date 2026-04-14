@@ -8,6 +8,9 @@ class CulturalTermAdmin(admin.ModelAdmin):
     search_fields = ('term', 'definition')
     list_filter = ('language', 'category', 'created_at')
     ordering = ('term',)
+    list_per_page = 20
+    list_max_show_all = 400
+    show_full_result_count = True
 
 
 @admin.register(TranslationLog)
@@ -25,4 +28,7 @@ class TranslationLogAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at',)
     date_hierarchy = 'created_at'
     ordering = ('-created_at',)
+    list_per_page = 20
+    list_max_show_all = 400
+    show_full_result_count = True
 

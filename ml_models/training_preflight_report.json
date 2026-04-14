@@ -1,11 +1,11 @@
 {
-  "generated_at_utc": "2026-04-07T23:30:39.618095+00:00",
+  "generated_at_utc": "2026-04-13T21:35:48.523664+00:00",
   "project_root": "/home/rauf/Desktop/Machine Learning/ProjectPuente",
-  "python_executable": "/home/rauf/Desktop/Machine Learning/ProjectPuente/venv/bin/python",
+  "python_executable": "/home/rauf/Desktop/Machine Learning/ProjectPuente/.venv/bin/python",
   "overall_status": "BLOCKED",
   "summary": {
-    "PASS": 18,
-    "WARN": 0,
+    "PASS": 16,
+    "WARN": 2,
     "BLOCKER": 1
   },
   "results": [
@@ -91,13 +91,13 @@
     },
     {
       "name": "Virtual environment duplication",
-      "status": "PASS",
-      "details": "Single virtual environment layout detected."
+      "status": "WARN",
+      "details": "Both venv/ and .venv/ exist. Keep one canonical environment to reduce confusion."
     },
     {
       "name": "Python dependency availability",
-      "status": "PASS",
-      "details": "Required training/processing modules are importable."
+      "status": "WARN",
+      "details": "Missing modules in current interpreter: torch, transformers, peft, sacrebleu, pandas, pdfplumber"
     },
     {
       "name": "Legacy script redundancy",

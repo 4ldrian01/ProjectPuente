@@ -14,12 +14,16 @@ class CulturalTerm(models.Model):
 
     term = models.CharField(
         max_length=200,
-        unique=True,
         db_index=True,
         help_text='The cultural term or phrase (case-insensitive lookup).',
     )
     definition = models.TextField(
         help_text='Cultural definition and context for this term.',
+    )
+    trigger_words = models.JSONField(
+        default=list,
+        blank=True,
+        help_text='List of trigger terms/phrases used for Wiki-Voz interception.',
     )
     image_url = models.URLField(
         max_length=500,
@@ -46,6 +50,12 @@ class CulturalTerm(models.Model):
         ordering = ['term']
         verbose_name = 'Cultural Term'
         verbose_name_plural = 'Cultural Terms'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['term', 'language'],
+                name='unique_cultural_term_per_language',
+            ),
+        ]
 
     def __str__(self):
         return self.term

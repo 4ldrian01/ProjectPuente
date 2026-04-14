@@ -77,7 +77,7 @@ Important repository note:
 | Translation endpoint | Present | `TranslateView` |
 | BTVL endpoint | Present | `BackTranslationVerifyView` |
 | TTS endpoint | Present | `TextToSpeechView` |
-| Wiki-Voz endpoint | Present | `WikiVozView` |
+| Wiki-Voz endpoint | Present | `WikiVozViewSet` |
 | Telemetry endpoint | Present | `telemetry_view` |
 | Health endpoint | Present | `HealthCheckView` |
 | Optional API key protection | Present | `_require_api_key_or_401` + `PUENTE_API_KEY` |
@@ -244,12 +244,24 @@ Auth:
 
 - Same optional `X-API-Key` enforcement.
 
-### 6.4 `GET /api/wiki/`
+### 6.4 `GET|POST|DELETE /api/wiki/`
 
 Behavior:
 
-- with `?q=`: case-insensitive term filter, up to 20 results
-- without query: first 100 terms, ordered by term
+- `GET /api/wiki/`
+  - list scoped Wiki-Voz rows
+  - supports `q`, `language`, and `category` filters
+- `POST /api/wiki/`
+  - create row when `id` is not provided
+  - update row when `id` is provided
+  - write-protected by `X-API-Key` when `PUENTE_API_KEY` is configured
+- `DELETE /api/wiki/?id=<pk>`
+  - delete by query id
+  - write-protected by `X-API-Key` when `PUENTE_API_KEY` is configured
+
+Compatibility route:
+
+- `DELETE /api/wiki/<pk>/`
 
 ### 6.5 `GET /api/telemetry/`
 
@@ -298,12 +310,11 @@ Current behavior includes:
 Current behavior includes:
 
 - API fetch from `/api/wiki/`
-- Fallback to local seed entries if API data unavailable
-- Search by term/definition/language/category
-- Category and language filters
-- Progressive pagination (`20` entries per expansion)
-- Masonry-style desktop layout
-- Local placeholder fallback for remote/invalid image URLs
+- Search by term/definition/language/category/trigger words
+- Strict category filter scope (`Idioms`, `False Cognates`, `Honorifics`, `Expressions`)
+- Dynamic language filters from live API payload
+- Scrollable data grid with card details popup
+- Local placeholder fallback for missing/invalid image URLs
 
 ### 7.3 Settings Screen
 
@@ -323,12 +334,17 @@ Current behavior includes:
 
 Core fields:
 
-- `term` (unique, indexed)
+- `term` (indexed)
 - `definition`
+- `trigger_words` (JSON list)
 - `image_url`
 - `language` (free text)
 - `category`
 - timestamps
+
+Uniqueness constraint:
+
+- unique pair on (`term`, `language`)
 
 ### 8.2 `TranslationLog`
 
@@ -412,6 +428,7 @@ Project-owned manifests currently present:
 - `backend/requirements.txt`
 - `frontend/package.json`
 - `package.json`
+- `notebooks/scripts/requirements_colab.txt`
 - `datasets/raw/02_Chavacano/creole_rc/requirements.txt`
 
 Primary runtime manifests:
@@ -427,11 +444,19 @@ Primary runtime manifests:
 
 Install these first:
 
-- Python 3
-- Node.js + npm
+- Python 3.12+
+- Node.js 20+ + npm (or local `.tools/node/bin` fallback)
 - Git
 
 SQLite is used by default and is built into Python.
+
+Optional local Node fallback (no system package manager required):
+
+```bash
+mkdir -p .tools
+# Place a Node distribution so .tools/node/bin/node and .tools/node/bin/npm exist.
+# run_project.sh will auto-prepend this path when present.
+```
 
 ### 11.2 Backend setup
 
@@ -444,25 +469,50 @@ cp .env.example .env
 python manage.py migrate
 ```
 
+Optional CPU-only / low-`/tmp` install path (prevents large CUDA wheel downloads and temp-space failures):
+
+```bash
+cd backend
+python -m venv ../.venv
+source ../.venv/bin/activate
+mkdir -p ../.pip-tmp
+TMPDIR="$PWD/../.pip-tmp" pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch torchaudio
+TMPDIR="$PWD/../.pip-tmp" pip install --no-cache-dir -r requirements.txt
+rm -rf ../.pip-tmp
+cp .env.example .env
+python manage.py migrate
+```
+
 Optional admin user:
 
 ```bash
 python manage.py createsuperuser
 ```
 
-### 11.3 Model setup
+### 11.3 Model setup (optional, deferred during dependency-only prep)
 
 ```bash
 cd ../ml_models
-python download_model.py
-python validate_model.py
 python training_preflight.py
 ```
+
+Notes:
+
+- Keep model download deferred if you are only preparing dependencies right now.
+- Do not run `python download_model.py` until you are ready to stage local NLLB weights.
+- With no local weights, backend starts but `/api/translate/` and `/api/btvl/` return HTTP 503 by design.
 
 ### 11.4 Frontend setup
 
 ```bash
 cd ../frontend
+npm install
+```
+
+If using local Node fallback:
+
+```bash
+export PATH="$PWD/../.tools/node/bin:$PATH"
 npm install
 ```
 
@@ -502,6 +552,46 @@ Default URLs:
 - Backend: `http://0.0.0.0:8000`
 - Frontend: `http://0.0.0.0:5173`
 - Admin: `http://localhost:8000/admin/`
+
+### 11.6 Canonical Wiki Sync (Deployment Safe)
+
+From repo root, use this pipeline for strict JSON-to-SQLite synchronization:
+
+```bash
+bash scripts/wiki_sync_pipeline.sh
+```
+
+Dry-run validation:
+
+```bash
+bash scripts/wiki_sync_pipeline.sh --dry-run
+```
+
+What it does:
+
+- cleans/pads canonical Wiki-Voz JSON
+- applies backend migrations
+- runs `seed_wiki --prune` so stale DB rows are removed
+
+### 11.7 Progressive Chavacano Curation
+
+Generate an editable template from current Chavacano placeholders:
+
+```bash
+python scripts/replace_chavacano_placeholders.py --export-template scripts/chavacano_curation_template.json --dry-run
+```
+
+Apply curated replacements:
+
+```bash
+python scripts/replace_chavacano_placeholders.py --replacements scripts/chavacano_curated_updates.json
+```
+
+Notes:
+
+- replacement tool preserves dataset shape (`200` total, `50` per language)
+- only schema-valid Chavacano replacements are accepted
+- after applying replacements, run the canonical sync pipeline to update SQLite
 
 ---
 

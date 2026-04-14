@@ -8,6 +8,14 @@ import { applyThemeToDocument, loadSettings } from './lib/settings'
 const initialSettings = loadSettings()
 applyThemeToDocument(initialSettings.theme)
 
+if (typeof window !== 'undefined') {
+  // Recover from stale hashed bundles (common after deploy + active SW cache).
+  window.addEventListener('vite:preloadError', (event) => {
+    event.preventDefault()
+    window.location.reload()
+  })
+}
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ErrorBoundary>

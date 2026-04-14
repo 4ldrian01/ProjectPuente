@@ -1,17 +1,22 @@
 import { Activity, BrainCircuit, Gauge, ShieldCheck, Sparkles } from 'lucide-react'
+import * as echarts from 'echarts/core'
+import ReactEChartsCore from 'echarts-for-react/lib/core.js'
+import { PieChart, LineChart } from 'echarts/charts'
 import {
-  CartesianGrid,
-  Cell,
-  Legend,
-  Line,
-  LineChart,
-  Pie,
+  GridComponent,
+  LegendComponent,
+  TooltipComponent,
+} from 'echarts/components'
+import { CanvasRenderer } from 'echarts/renderers'
+
+echarts.use([
   PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
+  LineChart,
+  GridComponent,
+  LegendComponent,
+  TooltipComponent,
+  CanvasRenderer,
+])
 
 const KPI_CARDS = [
   {
@@ -48,32 +53,160 @@ const LENGTH_INFERENCE_DATA = [
   { lengthTokens: 55, inferenceMs: 1650 },
 ]
 
-function DashboardTooltip({ active, payload, label }) {
-  if (!active || !payload || payload.length === 0) {
-    return null
-  }
+const INTERCEPT_TOTAL = INTERCEPT_CONCURRENCE_DATA.reduce((sum, entry) => sum + entry.value, 0)
 
-  return (
-    <div className="rounded-lg border border-border-subtle bg-bg-card px-3 py-2 text-xs text-text-primary shadow-xl">
-      <p className="font-semibold text-text-primary">Length: {label} tokens</p>
-      <p className="mt-1 text-text-secondary">Inference Time: <span className="text-text-primary">{payload[0].value} ms</span></p>
-    </div>
-  )
+const INTERCEPT_CHART_OPTION = {
+  animationDuration: 700,
+  animationEasing: 'cubicOut',
+  color: INTERCEPT_CONCURRENCE_DATA.map((entry) => entry.fill),
+  tooltip: {
+    trigger: 'item',
+    backgroundColor: '#111827',
+    borderColor: '#374151',
+    borderWidth: 1,
+    textStyle: {
+      color: '#f9fafb',
+      fontSize: 12,
+      fontWeight: 500,
+    },
+    formatter: (params) => `${params.name}<br/>Share: ${params.value}%`,
+  },
+  legend: {
+    bottom: 0,
+    icon: 'circle',
+    textStyle: {
+      color: '#9ca3af',
+      fontSize: 12,
+    },
+  },
+  series: [
+    {
+      name: 'Intercept Share',
+      type: 'pie',
+      radius: ['52%', '78%'],
+      center: ['50%', '43%'],
+      padAngle: 3,
+      avoidLabelOverlap: true,
+      itemStyle: {
+        borderColor: '#0f172a',
+        borderWidth: 2,
+      },
+      label: {
+        show: false,
+      },
+      data: INTERCEPT_CONCURRENCE_DATA.map((entry) => ({
+        value: entry.value,
+        name: entry.name,
+      })),
+      emphasis: {
+        scale: true,
+        itemStyle: {
+          shadowBlur: 12,
+          shadowColor: 'rgba(0, 0, 0, 0.35)',
+        },
+      },
+    },
+  ],
 }
 
-function PieTooltip({ active, payload }) {
-  if (!active || !payload || payload.length === 0) {
-    return null
-  }
+const LENGTH_INFERENCE_CHART_OPTION = {
+  animationDuration: 800,
+  animationEasing: 'quarticOut',
+  tooltip: {
+    trigger: 'axis',
+    backgroundColor: '#111827',
+    borderColor: '#374151',
+    borderWidth: 1,
+    textStyle: {
+      color: '#f9fafb',
+      fontSize: 12,
+      fontWeight: 500,
+    },
+    axisPointer: {
+      type: 'line',
+      lineStyle: {
+        color: '#d946ef',
+        width: 1,
+      },
+    },
+    formatter: (params) => {
+      const point = params?.[0]
+      if (!point) {
+        return ''
+      }
 
-  const item = payload[0]
-
-  return (
-    <div className="rounded-lg border border-border-subtle bg-bg-card px-3 py-2 text-xs text-text-primary shadow-xl">
-      <p className="font-semibold text-text-primary">{item.name}</p>
-      <p className="mt-1 text-text-secondary">Share: <span className="text-text-primary">{item.value}%</span></p>
-    </div>
-  )
+      return `Length: ${point.axisValue} tokens<br/>Inference Time: ${point.data} ms`
+    },
+  },
+  grid: {
+    top: 12,
+    right: 20,
+    bottom: 52,
+    left: 46,
+  },
+  xAxis: {
+    type: 'category',
+    name: 'Length (tokens)',
+    nameLocation: 'middle',
+    nameGap: 30,
+    boundaryGap: false,
+    axisLine: {
+      lineStyle: {
+        color: '#374151',
+      },
+    },
+    axisTick: {
+      show: false,
+    },
+    axisLabel: {
+      color: '#9ca3af',
+      fontSize: 12,
+    },
+    data: LENGTH_INFERENCE_DATA.map((point) => point.lengthTokens),
+  },
+  yAxis: {
+    type: 'value',
+    name: 'Inference ms',
+    nameLocation: 'middle',
+    nameGap: 42,
+    axisLine: {
+      show: false,
+    },
+    axisTick: {
+      show: false,
+    },
+    axisLabel: {
+      color: '#9ca3af',
+      fontSize: 12,
+    },
+    splitLine: {
+      lineStyle: {
+        type: 'dashed',
+        color: 'rgba(107, 114, 128, 0.35)',
+      },
+    },
+  },
+  series: [
+    {
+      type: 'line',
+      smooth: true,
+      symbol: 'circle',
+      symbolSize: 7,
+      lineStyle: {
+        color: '#d946ef',
+        width: 3,
+      },
+      itemStyle: {
+        color: '#111827',
+        borderColor: '#d946ef',
+        borderWidth: 2,
+      },
+      areaStyle: {
+        color: 'rgba(217, 70, 239, 0.14)',
+      },
+      data: LENGTH_INFERENCE_DATA.map((point) => point.inferenceMs),
+    },
+  ],
 }
 
 export default function SystemEvaluationScreen() {
@@ -136,30 +269,15 @@ export default function SystemEvaluationScreen() {
           <p className="mt-1 text-sm text-text-secondary">False Cognates vs Politeness Gaps vs Idioms</p>
 
           <div className="relative mt-4 h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={INTERCEPT_CONCURRENCE_DATA}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={72}
-                  outerRadius={108}
-                  paddingAngle={3}
-                  stroke="none"
-                >
-                  {INTERCEPT_CONCURRENCE_DATA.map((entry) => (
-                    <Cell key={entry.name} fill={entry.fill} />
-                  ))}
-                </Pie>
-                <Tooltip content={<PieTooltip />} />
-                <Legend verticalAlign="bottom" height={28} iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
-              </PieChart>
-            </ResponsiveContainer>
+            <ReactEChartsCore
+              echarts={echarts}
+              option={INTERCEPT_CHART_OPTION}
+              style={{ height: '100%', width: '100%' }}
+              opts={{ renderer: 'canvas' }}
+            />
 
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-3xl font-black text-text-primary">100%</span>
+              <span className="text-3xl font-black text-text-primary">{INTERCEPT_TOTAL}%</span>
               <span className="text-[11px] uppercase tracking-[0.12em] text-text-secondary">Intercept Share</span>
             </div>
           </div>
@@ -170,33 +288,12 @@ export default function SystemEvaluationScreen() {
           <p className="mt-1 text-sm text-text-secondary">Mock trendline from local edge inference samples</p>
 
           <div className="mt-4 h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={LENGTH_INFERENCE_DATA} margin={{ top: 10, right: 16, left: 0, bottom: 6 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--puente-border-subtle)" opacity={0.45} />
-                <XAxis
-                  dataKey="lengthTokens"
-                  tick={{ fill: 'var(--puente-text-secondary)', fontSize: 12 }}
-                  tickLine={false}
-                  axisLine={{ stroke: 'var(--puente-border-subtle)' }}
-                  label={{ value: 'Length (tokens)', position: 'insideBottom', offset: -4, fill: 'var(--puente-text-secondary)', fontSize: 11 }}
-                />
-                <YAxis
-                  tick={{ fill: 'var(--puente-text-secondary)', fontSize: 12 }}
-                  tickLine={false}
-                  axisLine={{ stroke: 'var(--puente-border-subtle)' }}
-                  label={{ value: 'Inference ms', angle: -90, position: 'insideLeft', fill: 'var(--puente-text-secondary)', fontSize: 11 }}
-                />
-                <Tooltip content={<DashboardTooltip />} />
-                <Line
-                  type="monotone"
-                  dataKey="inferenceMs"
-                  stroke="#d946ef"
-                  strokeWidth={2.8}
-                  dot={{ r: 3, strokeWidth: 1.5, fill: '#121212' }}
-                  activeDot={{ r: 5 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <ReactEChartsCore
+              echarts={echarts}
+              option={LENGTH_INFERENCE_CHART_OPTION}
+              style={{ height: '100%', width: '100%' }}
+              opts={{ renderer: 'canvas' }}
+            />
           </div>
         </article>
       </section>

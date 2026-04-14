@@ -29,6 +29,9 @@ export default defineConfig({
       includeAssets: ['vinta.svg'],
       manifest: false,  // Using manual manifest.json in public/
       workbox: {
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [
           {

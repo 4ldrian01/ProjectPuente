@@ -16,7 +16,7 @@ Open and run:
 
 Run cells in order:
 
-1. Cell 1 mounts Drive at `/content/drive`.
+1. Cell 1 optionally mounts Drive at `/content/drive`.
 2. Cell 2 installs `curl` and `tar`, then downloads/extracts the official standalone VS Code CLI to `/content/vscode-cli`.
 3. Cell 3 starts tunnel host `puente-colab-rde` and prints the GitHub auth URL + one-time code.
 
@@ -31,11 +31,12 @@ Keep Cell 3 running while connected.
 
 ## 4) Open the Correct Remote Project Root
 
-After connection, open this exact folder on the remote host:
+After connection, open one of these folders on the remote host:
 
-- `/content/drive/MyDrive/ProjectPuenteCloud`
+- `/content/drive/MyDrive/ProjectPuenteCloud` (persistent; recommended)
+- `/content/ProjectPuente` (non-Drive clone; ephemeral)
 
-This path is the canonical root for cloud training and keeps all artifacts persistent in Drive.
+If you use the non-Drive path, runtime artifacts are lost when Colab resets.
 
 ## 5) Verify Remote Workspace Contract
 
@@ -54,15 +55,35 @@ If any are missing, re-run Cell 1 in the notebook and re-open the folder.
 Run from the remote terminal (inside the connected tunnel session):
 
 ```bash
+# Optional explicit root (only needed when auto-detect is not correct)
+# export PUENTE_PROJECT_ROOT=/content/ProjectPuente
+
+# Preferred: launcher adds dependency bootstrap and preflight guardrails
 bash notebooks/scripts/run_colab_phase_a_training.sh
+
+# Direct pipeline execution (use when dependencies are already installed)
+python "${PUENTE_PROJECT_ROOT:-$PWD}"/notebooks/scripts/colab_lora_training_pipeline.py
 ```
 
-The launcher enforces:
+The workflow enforces:
 
 - split-file existence checks for `train.jsonl`, `eval.jsonl`, `test.jsonl`
-- dependency install from `notebooks/scripts/requirements_colab.txt`
-- checksum-safe Drive -> `/content/data` staging before training
-- periodic and on-save checkpoint mirroring back to Drive
+- schema checks for required translation keys (`translation.<source_key>` plus `translation.en`)
+- checksum-safe source storage -> `/content/data` staging before training
+- checkpoints written directly to artifact storage at configured save intervals (default 500 steps)
+
+If you use direct `python` execution, install dependencies first:
+
+```bash
+python -m pip install -r notebooks/scripts/requirements_colab.txt
+```
+
+Sequential language workflow (beginner-safe):
+
+1. Train one language pair at a time (`source -> en`).
+2. Run evaluation/test for that single language.
+3. Keep adapter + metrics for that run.
+4. Change `PUENTE_SOURCE_FLORES`, `PUENTE_SOURCE_TRANSLATION_KEY`, `PUENTE_DATASET_REL_DIR`, and `PUENTE_RUN_NAME` for the next language.
 
 ## 7) Optional Session Stability
 

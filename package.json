@@ -8,6 +8,10 @@
     "start": "bash ./run_project.sh",
     "start:windows": "run_project.bat",
     "start:backend-only": "bash ./run_project.sh --backend-only",
-    "start:frontend-only": "bash ./run_project.sh --frontend-only"
+    "start:frontend-only": "bash ./run_project.sh --frontend-only",
+    "wiki:sync": "bash ./scripts/wiki_sync_pipeline.sh",
+    "wiki:sync:dry-run": "bash ./scripts/wiki_sync_pipeline.sh --dry-run",
+    "wiki:chavacano:template": "python ./scripts/replace_chavacano_placeholders.py --export-template ./scripts/chavacano_curation_template.json --dry-run",
+    "wiki:chavacano:apply": "python ./scripts/replace_chavacano_placeholders.py --replacements ./scripts/chavacano_curated_updates.json"
   }
 }

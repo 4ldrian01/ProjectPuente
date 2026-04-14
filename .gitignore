@@ -11,6 +11,14 @@ __pycache__/
 .eggs/
 dist/
 build/
+.python-version
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.coverage
+.coverage.*
+htmlcov/
 
 # ── Virtual Environments ─────────────────────────────────────
 venv/
@@ -62,6 +70,7 @@ ml_models/*.h5
 node_modules/
 frontend/dist/
 frontend/dist-ssr/
+coverage/
 *.local
 
 # ── Misc ──────────────────────────────────────────────────────

@@ -6,10 +6,16 @@ The notebooks in this repository are Python notebooks used for validation, model
 
 | Dependency | Required | Purpose |
 |---|---:|---|
-| Python | 3.12.x | Matches the workspace virtual environment |
+| Python | 3.12+ | Compatible with the workspace virtual environment |
 | `jupyterlab` | Yes | Notebook UI/runtime |
 | `notebook` | Recommended | Classic notebook compatibility |
 | `ipykernel` | Yes | Python kernel registration |
+
+## Canonical cloud training entrypoints
+
+- Preferred launcher: `notebooks/scripts/run_colab_phase_a_training.sh`
+- Direct fallback: `notebooks/scripts/colab_lora_training_pipeline.py`
+- Post-training validation notebook: `notebooks/lora_inference_validation.ipynb`
 
 ## Reused ML stack
 

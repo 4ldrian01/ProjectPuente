@@ -1,8 +1,0 @@
-{
-  "generated_at_utc": "2026-04-07T23:06:51.810992+00:00",
-  "input": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/processed/pillars/parallel/master_parallel_corpus_nmt.json",
-  "output": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/processed/jsonl/pillars/parallel/master_parallel_corpus_nmt.jsonl",
-  "written_records": 2738,
-  "rejected_records": 0,
-  "rejected_reasons": {}
-}

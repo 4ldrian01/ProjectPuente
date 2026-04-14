@@ -1,8 +1,0 @@
-{
-  "generated_at_utc": "2026-04-07T23:06:50.643702+00:00",
-  "input": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/processed/001_chavacano/chavacano_parallel_sentences_nllb.json",
-  "output": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/processed/jsonl/001_chavacano/chavacano_parallel_sentences_nllb.jsonl",
-  "written_records": 234,
-  "rejected_records": 0,
-  "rejected_reasons": {}
-}

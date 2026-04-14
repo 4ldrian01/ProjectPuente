@@ -10,9 +10,20 @@ from core_api.views import (
     TranslationLogListView,
     TextToSpeechView,
     TranslateView,
-    WikiVozView,
+    WikiVozViewSet,
     telemetry_view,
 )
+
+
+wiki_voz_collection = WikiVozViewSet.as_view({
+    'get': 'list',
+    'post': 'create',
+    'delete': 'destroy',
+})
+
+wiki_voz_detail = WikiVozViewSet.as_view({
+    'delete': 'destroy',
+})
 
 urlpatterns = [
     path('', APIRootView.as_view(), name='api-root'),
@@ -22,6 +33,7 @@ urlpatterns = [
     path('api/logs/', TranslationLogListView.as_view(), name='translation-logs'),
     path('api/telemetry/', telemetry_view, name='telemetry'),
     path('api/tts/', TextToSpeechView.as_view(), name='text-to-speech'),
-    path('api/wiki/', WikiVozView.as_view(), name='wiki-voz'),
+    path('api/wiki/', wiki_voz_collection, name='wiki-voz'),
+    path('api/wiki/<int:pk>/', wiki_voz_detail, name='wiki-voz-detail'),
     path('api/health/', HealthCheckView.as_view(), name='health-check'),
 ]

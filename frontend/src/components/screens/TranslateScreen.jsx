@@ -18,6 +18,7 @@ import GapAnalysisTerminal from './GapAnalysisTerminal'
 import { loadSettings, SETTINGS_STORAGE_KEY, SETTINGS_UPDATED_EVENT } from '../../lib/settings'
 import { withApiKeyHeaders } from '../../lib/apiAuth'
 import { speakWithEdgeTts, stopEdgeTtsPlayback } from '../../lib/ttsClient'
+import { useWikiVozLexicon } from '../../lib/wikiVozLexicon'
 
 /* ── Language config (with Spanish baseline control variable) ── */
 const SOURCE_VISIBLE = ['auto', 'en', 'tl']
@@ -179,6 +180,40 @@ function extractApiErrorMessage(payload, fallback = 'Request failed.') {
   return fallback
 }
 
+function escapeRegex(value) {
+  return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function normalizeWikiCardEntry(entry) {
+  if (!entry || typeof entry !== 'object') {
+    return null
+  }
+
+  const term = String(entry.term || entry.title || entry.matched_trigger || '').trim()
+  const definition = String(entry.definition || entry.description || '').trim()
+
+  if (!term || !definition) {
+    return null
+  }
+
+  return {
+    ...entry,
+    term,
+    definition,
+    image_url: entry.image_url || entry.imageUrl || '',
+  }
+}
+
+function buildWikiEntryKey(entry) {
+  if (!entry) {
+    return ''
+  }
+
+  return String(entry.id || `${entry.term}|${entry.language}|${entry.category}`)
+    .toLowerCase()
+    .trim()
+}
+
 /* ── Component ───────────────────────────────────────────────── */
 export default function TranslateScreen({
   onTranslate,
@@ -258,6 +293,35 @@ export default function TranslateScreen({
   const isCharLimitExceeded = sourceCharCount > CHAR_LIMIT
   const canTranslate = normalizedText.length > 0 && !isCharLimitExceeded
   const hasTranslatedText = Boolean(translatedText?.trim())
+  const { matches: lexiconMatches } = useWikiVozLexicon(translatedText, {
+    enabled: hasTranslatedText,
+    path: '/data/wiki_voz_kb.json',
+  })
+  const matchedWikiEntries = useMemo(() => {
+    const deduped = []
+    const seen = new Set()
+
+    const pushIfNew = (entry) => {
+      const normalized = normalizeWikiCardEntry(entry)
+      if (!normalized) {
+        return
+      }
+
+      const key = buildWikiEntryKey(normalized)
+      if (!key || seen.has(key)) {
+        return
+      }
+
+      seen.add(key)
+      deduped.push(normalized)
+    }
+
+    pushIfNew(wikiData)
+    lexiconMatches.forEach((entry) => pushIfNew(entry))
+
+    return deduped
+  }, [lexiconMatches, wikiData])
+  const primaryWikiEntry = matchedWikiEntries[0] || null
   const effectiveSourceLang = sourceLang === 'auto' ? 'en' : sourceLang
   const canUseTts = backendUp && ttsAvailable
   const canVerifyBtvl = apiReady && hasTranslatedText && !btvlLoading
@@ -390,12 +454,17 @@ export default function TranslateScreen({
       'PRESENTATION :: Target payload committed to workbench viewport',
     ]
 
-    if (wikiData?.term) {
-      nextLogs.splice(2, 0, `INTERCEPT_TRIGGERED :: ${wikiData.term} semantic override surfaced`)
+    if (matchedWikiEntries.length > 0) {
+      const termPreview = matchedWikiEntries
+        .slice(0, 2)
+        .map((entry) => entry.term)
+        .join(', ')
+      const overflow = matchedWikiEntries.length > 2 ? ` (+${matchedWikiEntries.length - 2} more)` : ''
+      nextLogs.splice(2, 0, `INTERCEPT_TRIGGERED :: ${termPreview}${overflow} semantic override surfaced`)
     }
 
     setSystemLogs(nextLogs)
-  }, [activeMode, loading, sourceLang, targetLang, translatedText, translationMeta, wikiData])
+  }, [activeMode, loading, matchedWikiEntries, sourceLang, targetLang, translatedText, translationMeta])
 
   useEffect(() => {
     if (!postProfiler) {
@@ -947,10 +1016,10 @@ export default function TranslateScreen({
   /* ── Cultural-term highlighting ── */
   const renderHighlightedText = () => {
     if (!translatedText) return null
-    if (!wikiData || !wikiData.term) return <span>{translatedText}</span>
+    if (!primaryWikiEntry || !primaryWikiEntry.term) return <span>{translatedText}</span>
 
-    const searchStr = wikiData.term.toLowerCase()
-    const regex = new RegExp(`(${wikiData.term})`, 'gi')
+    const searchStr = primaryWikiEntry.term.toLowerCase()
+    const regex = new RegExp(`(${escapeRegex(primaryWikiEntry.term)})`, 'gi')
 
     return translatedText.split(regex).map((part, index) => {
       if (part.toLowerCase() === searchStr) {
@@ -959,12 +1028,12 @@ export default function TranslateScreen({
             key={`${part}-${index}`}
             className="cultural-term cursor-pointer text-accent-gold underline decoration-accent-gold decoration-2 underline-offset-2 transition-colors hover:text-accent-gold/80"
             onMouseEnter={(event) => {
-              setHoveredWikiTerm(wikiData)
+              setHoveredWikiTerm(primaryWikiEntry)
               updateTooltipPosition(event)
             }}
             onMouseMove={updateTooltipPosition}
             onMouseLeave={() => setHoveredWikiTerm(null)}
-            onClick={() => setSelectedTerm(wikiData)}
+            onClick={() => setSelectedTerm(primaryWikiEntry)}
           >
             {part}
           </span>
@@ -1504,7 +1573,7 @@ export default function TranslateScreen({
       </div>
 
       {/* ══ SHARED — Wiki-Voz cards ══ */}
-      {wikiData && !selectedTerm && (
+      {matchedWikiEntries.length > 0 && !selectedTerm && (
         <div className="mt-4 animate-slide-up">
           <div className="rounded-xl border border-accent-gold/40 bg-bg-card p-4">
             <div className="mb-3 flex items-center gap-2">
@@ -1512,22 +1581,38 @@ export default function TranslateScreen({
               <span className="text-xs font-semibold uppercase tracking-wider text-accent-gold">Wiki-Voz</span>
             </div>
 
-            <div className="flex gap-4">
-              {wikiData.image_url && (
-                <img
-                  src={wikiData.image_url}
-                  alt={wikiData.term}
-                  className="h-20 w-20 shrink-0 rounded-lg border border-border-subtle object-cover"
-                  onError={(event) => {
-                    event.target.style.display = 'none'
-                  }}
-                />
-              )}
+            <div className="space-y-3">
+              {matchedWikiEntries.map((entry) => (
+                <button
+                  key={buildWikiEntryKey(entry)}
+                  type="button"
+                  onClick={() => setSelectedTerm(entry)}
+                  className="w-full rounded-lg border border-border-subtle/70 bg-bg-elevated/40 px-3 py-2.5 text-left transition-colors hover:border-accent-gold/45 hover:bg-bg-elevated/70"
+                >
+                  <div className="flex gap-4">
+                    {entry.image_url && (
+                      <img
+                        src={entry.image_url}
+                        alt={entry.term}
+                        className="h-20 w-20 shrink-0 rounded-lg border border-border-subtle object-cover"
+                        onError={(event) => {
+                          event.currentTarget.style.display = 'none'
+                        }}
+                      />
+                    )}
 
-              <div>
-                <h4 className="text-lg font-bold text-text-primary">{wikiData.term}</h4>
-                <p className="text-sm text-text-secondary">{wikiData.definition}</p>
-              </div>
+                    <div>
+                      <h4 className="text-lg font-bold text-text-primary">{entry.term}</h4>
+                      <p className="text-sm text-text-secondary">{entry.definition}</p>
+                      {entry.matched_trigger && entry.matched_trigger.toLowerCase() !== entry.term.toLowerCase() ? (
+                        <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-accent-gold/90">
+                          Matched trigger: {entry.matched_trigger}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
         </div>

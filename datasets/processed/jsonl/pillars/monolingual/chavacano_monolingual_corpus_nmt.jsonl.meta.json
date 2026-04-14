@@ -1,8 +1,0 @@
-{
-  "generated_at_utc": "2026-04-07T23:06:51.768626+00:00",
-  "input": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/processed/pillars/monolingual/chavacano_monolingual_corpus_nmt.json",
-  "output": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/processed/jsonl/pillars/monolingual/chavacano_monolingual_corpus_nmt.jsonl",
-  "written_records": 77663,
-  "rejected_records": 0,
-  "rejected_reasons": {}
-}

@@ -33,7 +33,7 @@ These are the direct packages used by `download_model.py`, `validate_model.py`, 
 | `evaluate_spanish_baseline.py` | Pure Spanish (`spa_Latn`) → English (`eng_Latn`) control-variable baseline evaluation | `spanish_baseline_metrics.json` |
 | `training_preflight.py` | Read-only architecture/training readiness audit (no installs) | `training_preflight_report.json` |
 
-## Directory Structure (after setup)
+## Directory Structure (after model download)
 
 ```
 ml_models/
@@ -72,6 +72,12 @@ ml_models/
 - Memory-safe streaming alternative: `../datasets/processed/jsonl/pillars/parallel/master_parallel_corpus_nmt.jsonl` (use `--dataset-file` in `train_lora.py`).
 - Legacy `../datasets/processed/001_chavacano/` remains supported as a compatibility fallback.
 
+## Training mode boundaries
+
+- Cloud Phase A production path: `../notebooks/scripts/run_colab_phase_a_training.sh` (or direct `colab_lora_training_pipeline.py`).
+- `train_lora.py` remains available for local experimentation and controlled runs.
+- Post-training adapter checks should use `../notebooks/lora_inference_validation.ipynb`.
+
 ## 3-Pillar contract reminder
 
 - `Parallel` pillar is the only corpus used for seq2seq loss tensors.
@@ -81,6 +87,7 @@ ml_models/
 ## Notes
 
 - The backend loads the base model from this directory at startup via `core_api/apps.py`.
+- You can defer `download_model.py` during dependency-only setup; in that state the backend starts but translation/BTVL return 503 until weights are available.
 - If the LoRA adapter folders are missing, translation still works with the base NLLB model.
 - See `../backend/README.md` for runtime/backend dependency details and `../notebooks/README.md` for notebook-only extras.
 

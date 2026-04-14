@@ -1,0 +1,32 @@
+{
+  "generated_at_utc": "2026-04-14T12:13:38.043841+00:00",
+  "dataset_id": "openlanguagedata/flores_plus",
+  "revision": null,
+  "source_config": "ceb_Latn",
+  "target_config": "eng_Latn",
+  "source_key": "ceb",
+  "target_key": "en",
+  "splits": [
+    "dev",
+    "devtest"
+  ],
+  "split_counts": {
+    "source": {
+      "dev": 997,
+      "devtest": 1012
+    },
+    "target": {
+      "dev": 997,
+      "devtest": 1012
+    }
+  },
+  "total_rows": 2009,
+  "expected_total": 2009,
+  "include_id": false,
+  "output_jsonl": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/raw/ceb/flores_ceb_en.jsonl",
+  "output_sha256": "401e7859b427db870520473e183ef2cabead63dc80537ba0da5449f26bfc98f5",
+  "datasets_package": {
+    "version": "4.8.4",
+    "module_path": "/home/rauf/Desktop/Machine Learning/ProjectPuente/.venv/lib/python3.13/site-packages/datasets/__init__.py"
+  }
+}

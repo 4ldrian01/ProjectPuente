@@ -9,10 +9,10 @@ This runbook is the end-to-end cloud workflow for LoRA training using:
 ## Architecture Snapshot
 
 1. Local VS Code connects to Colab via `ms-vscode.remote-server` (Remote - Tunnels).
-2. Training data (`train.jsonl`, `eval.jsonl`, `test.jsonl`) remains versioned in Drive.
+2. Training data (`train.jsonl`, `eval.jsonl`, `test.jsonl`) lives under the configured project root.
 3. Before training, split files are copied to `/content/data` with SHA-256 verification.
 4. Trainer reads only from `/content/data` to avoid Drive FUSE I/O bottlenecks.
-5. Checkpoints and adapters are mirrored back to Drive during training.
+5. Checkpoints are written directly to artifact storage during training; final adapters are saved there after training.
 
 ## Why `/content/data` Is Faster Than Drive During Training
 
@@ -21,12 +21,11 @@ Colab Drive mount uses a network-backed FUSE layer. During tokenization, dataloa
 ## Prerequisites
 
 - Google Colab runtime is active.
-- Drive is mounted at `/content/drive`.
-- Project root exists at `/content/drive/MyDrive/ProjectPuenteCloud`.
+- Project root exists at either `/content/drive/MyDrive/ProjectPuenteCloud` (persistent) or `/content/ProjectPuente` (ephemeral).
 - Split files exist:
-  - `/content/drive/MyDrive/ProjectPuenteCloud/datasets/processed/001_chavacano/train.jsonl`
-  - `/content/drive/MyDrive/ProjectPuenteCloud/datasets/processed/001_chavacano/eval.jsonl`
-  - `/content/drive/MyDrive/ProjectPuenteCloud/datasets/processed/001_chavacano/test.jsonl`
+  - `<project_root>/datasets/processed/001_chavacano/train.jsonl`
+  - `<project_root>/datasets/processed/001_chavacano/eval.jsonl`
+  - `<project_root>/datasets/processed/001_chavacano/test.jsonl`
 
 ## Step 1: Start Colab Tunnel
 
@@ -48,63 +47,100 @@ Authenticate using the URL/code printed by Cell 3.
 2. Open Command Palette (`Ctrl+Shift+P`).
 3. Run `Remote - Tunnels: Connect to Tunnel...`.
 4. Select tunnel `puente-colab-rde`.
-5. Open folder `/content/drive/MyDrive/ProjectPuenteCloud`.
+5. Open folder `/content/drive/MyDrive/ProjectPuenteCloud` (or `/content/ProjectPuente` for non-Drive runs).
 
 ## Step 3: Launch Cloud Training
 
 From the remote tunnel terminal:
 
 ```bash
+# Optional explicit root (only needed when auto-detect is not correct)
+# export PUENTE_PROJECT_ROOT=/content/ProjectPuente
+
+# Preferred: launcher installs dependencies and runs pipeline safely
 bash notebooks/scripts/run_colab_phase_a_training.sh
+
+# Direct pipeline execution (use when dependencies are already installed)
+python "${PUENTE_PROJECT_ROOT:-$PWD}"/notebooks/scripts/colab_lora_training_pipeline.py
 ```
 
-This launcher:
+This workflow:
 
 1. validates split JSONL presence
-2. installs runtime dependencies
+2. validates translation schema keys (`translation.<source_key>` plus `translation.en`)
 3. executes checksum-safe staging to `/content/data`
 4. starts LoRA training
-5. syncs checkpoints/adapters back to Drive
+5. writes checkpoints and final adapter artifacts to artifact storage
+
+If you use direct `python` execution, install dependencies first:
+
+```bash
+python -m pip install -r notebooks/scripts/requirements_colab.txt
+```
 
 ## Dynamic Runtime Overrides (Recommended)
 
 You can override language pair, dataset path, and tuning values without editing code:
 
 ```bash
-export PUENTE_SOURCE_FLORES=eng_Latn
-export PUENTE_TARGET_FLORES=cbk_Latn
+export PUENTE_PROJECT_ROOT=/content/ProjectPuente
+export PUENTE_SOURCE_FLORES=cbk_Latn
+export PUENTE_TARGET_FLORES=eng_Latn
+export PUENTE_SOURCE_TRANSLATION_KEY=cbk
+export PUENTE_TARGET_TRANSLATION_KEY=en
 export PUENTE_DATASET_REL_DIR=datasets/processed/001_chavacano
-export PUENTE_RUN_NAME=lora-eng-to-cbk-cloud
+export PUENTE_RUN_NAME=lora-cbk-to-eng-cloud
 export PUENTE_EPOCHS=3
 export PUENTE_BATCH_SIZE_TRAIN=4
 export PUENTE_BATCH_SIZE_EVAL=4
 export PUENTE_GRAD_ACCUM_STEPS=4
 export PUENTE_LR=0.0002
 export PUENTE_GRADIENT_CHECKPOINTING=true
+export PUENTE_SAVE_STEPS=500
 bash notebooks/scripts/run_colab_phase_a_training.sh
+
+# Optional direct invocation after exports
+python "${PUENTE_PROJECT_ROOT:-$PWD}"/notebooks/scripts/colab_lora_training_pipeline.py
 ```
+
+Sequential training policy (recommended):
+
+1. Train one source language at a time (for example: `cbk -> en`).
+2. Evaluate on that language's held-out test split.
+3. Save metrics and adapter artifact.
+4. Start a fresh run for the next language (`ceb -> en`, then `es -> en`, etc.).
+
+For other source languages, update only these environment variables:
+
+- `PUENTE_SOURCE_FLORES` (example: `ceb_Latn`, `spa_Latn`)
+- `PUENTE_SOURCE_TRANSLATION_KEY` (example: `ceb`, `es`)
+- `PUENTE_DATASET_REL_DIR`
+- `PUENTE_RUN_NAME`
 
 ## Reliability and Safety Controls Already Enabled
 
 - SHA-256 validation on split staging and artifact mirroring.
-- periodic checkpoint sync thread (time-based)
-- checkpoint sync callback (step-based and save-event based)
+- checkpoints written directly to Drive on trainer save steps (`PUENTE_SAVE_STEPS`, default 500)
 - aggressive GPU cleanup hooks (`torch.cuda.empty_cache()` + `torch.cuda.ipc_collect()`)
-- schema preflight for required split keys (`source_text`, `target_text` by default)
+- schema preflight for required translation keys (`translation.<source_key>` plus `translation.en`)
 
 ## Outputs and Persistence
 
-Primary persistent output root:
+Primary outputs are written under the artifact root (defaults to `PUENTE_DRIVE_ROOT`):
 
-- `/content/drive/MyDrive/ProjectPuenteCloud/outputs/<run_name>/`
+- checkpoints: `<artifact_root>/models/checkpoints/`
+- final adapter: `<artifact_root>/models/lora_adapters/<run_name>/`
+- run metadata: `<artifact_root>/outputs/<run_name>/`
 
-Contains:
+Run metadata contains:
 
-- trainer checkpoints (`trainer_runs/`)
-- adapter folder (`adapter/`)
-- adapter zip (`adapter.zip`)
 - run config (`run_config.json`)
 - metrics (`training_metrics.json`)
+
+Ephemeral local runtime artifacts (not guaranteed after Colab reset):
+
+- `/content/outputs/<run_name>/adapter/`
+- `/content/outputs/<run_name>/adapter.zip`
 
 ## Troubleshooting Quick Checks
 
@@ -116,5 +152,5 @@ Contains:
 ## Next Step After Phase A Training
 
 1. Evaluate adapter outputs on held-out `test.jsonl` metrics.
-2. Promote best adapter artifact from `outputs/<run_name>/adapter/`.
+2. Promote best adapter artifact from `models/lora_adapters/<run_name>/`.
 3. Sync adapter into backend runtime adapter path for local inference and API validation.

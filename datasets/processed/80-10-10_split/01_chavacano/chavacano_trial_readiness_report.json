@@ -1,0 +1,77 @@
+{
+  "dataset": "chavacano_cbk_en",
+  "generated_by": "automated_readiness_audit",
+  "source_files": {
+    "train": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/processed/80-10-10_split/01_chavacano/cbk_en_train.jsonl",
+    "val": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/processed/80-10-10_split/01_chavacano/cbk_en_val.jsonl",
+    "test": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/processed/80-10-10_split/01_chavacano/cbk_en_test.jsonl"
+  },
+  "counts": {
+    "train": 2190,
+    "val": 274,
+    "test": 274,
+    "combined": 2738
+  },
+  "quality": {
+    "schema_errors": 0,
+    "split_overlap_pairs": {
+      "train_val": 0,
+      "train_test": 0,
+      "val_test": 0,
+      "combined_overlap_count": 0
+    },
+    "within_split_duplicates": {
+      "train": 0,
+      "val": 0,
+      "test": 0
+    },
+    "token_stats": {
+      "train": {
+        "avg_src_tokens": 5.8,
+        "avg_tgt_tokens": 5.57,
+        "min_src_tokens": 2,
+        "max_src_tokens": 36,
+        "min_tgt_tokens": 2,
+        "max_tgt_tokens": 35
+      }
+    },
+    "uniqueness": {
+      "train_source_unique_ratio": 0.984,
+      "train_target_unique_ratio": 0.8945
+    }
+  },
+  "readiness_score": {
+    "overall_100": 93.19,
+    "level": "high",
+    "dimensions": {
+      "schema": 100.0,
+      "integrity": 100.0,
+      "size_for_trial": 72.0,
+      "diversity": 93.93
+    }
+  },
+  "trial_small_split": {
+    "seed": 2026,
+    "counts": {
+      "train": 480,
+      "val": 60,
+      "test": 60,
+      "combined": 600
+    },
+    "files": {
+      "train": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/processed/80-10-10_split/01_chavacano/trial_small/cbk_en_trial_train.jsonl",
+      "val": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/processed/80-10-10_split/01_chavacano/trial_small/cbk_en_trial_val.jsonl",
+      "test": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/processed/80-10-10_split/01_chavacano/trial_small/cbk_en_trial_test.jsonl"
+    },
+    "sha256": {
+      "train": "e2cd066872759333fd572aadf65be2c75867dede0b531305a51710fb7f96da65",
+      "val": "19352ad453f871a253c39f5e804c8115ab813597c038f6128ae16bb55cf90362",
+      "test": "c459ef762a178520218a5e72c1304c48f99a6205dfa100f828e1050d81c7da0d"
+    }
+  },
+  "recommendations": [
+    "Use the trial_small split for fast smoke training before full runs.",
+    "If BLEU/ChrF plateaus early, increase data volume and/or run more epochs.",
+    "For production adapter quality, target >10k clean parallel pairs where possible."
+  ]
+}

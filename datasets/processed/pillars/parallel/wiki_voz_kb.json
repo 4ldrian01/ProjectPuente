@@ -1,0 +1,2268 @@
+{
+  "wiki_voz_entries": [
+    {
+      "id": "cbk_fc_01",
+      "trigger_words": [
+        "siguro",
+        "seguro"
+      ],
+      "language": "Chavacano",
+      "category": "False Cognates",
+      "title": "Siguro vs. Seguro",
+      "description": "Semantic Shift: In Spanish, 'seguro' means 'certain'. In Chavacano, influenced by Tagalog, it shifted to mean 'maybe' or 'uncertain'.",
+      "image_url": "/assets/cbk_siguro.png"
+    },
+    {
+      "id": "cbk_fc_02",
+      "trigger_words": [
+        "siempre"
+      ],
+      "language": "Chavacano",
+      "category": "False Cognates",
+      "title": "Siempre",
+      "description": "In Spanish, 'siempre' means 'always'. In Chavacano, it is used as an expression meaning 'of course' or 'naturally'.",
+      "image_url": "/assets/cbk_siempre.png"
+    },
+    {
+      "id": "cbk_fc_03",
+      "trigger_words": [
+        "con"
+      ],
+      "language": "Chavacano",
+      "category": "False Cognates",
+      "title": "Con (Object Marker)",
+      "description": "In Spanish, 'con' means 'with'. In Chavacano, it functions as a direct object marker (like Tagalog 'kay' or 'sa').",
+      "image_url": "/assets/cbk_con.png"
+    },
+    {
+      "id": "cbk_fc_04",
+      "trigger_words": [
+        "masiao",
+        "demasiado"
+      ],
+      "language": "Chavacano",
+      "category": "False Cognates",
+      "title": "Masiao",
+      "description": "Derived from Spanish 'demasiado' (too much), used locally as an intensifier similar to 'very' or 'grabe'.",
+      "image_url": "/assets/cbk_masiao.png"
+    },
+    {
+      "id": "cbk_idm_01",
+      "trigger_words": [
+        "rompe cabeza",
+        "rompecabeza"
+      ],
+      "language": "Chavacano",
+      "category": "Idioms",
+      "title": "Rompe Cabeza",
+      "description": "Literally 'break head'. Used locally to describe a highly difficult problem or a puzzle.",
+      "image_url": "/assets/cbk_rompe.png"
+    },
+    {
+      "id": "cbk_idm_02",
+      "trigger_words": [
+        "alza balutan"
+      ],
+      "language": "Chavacano",
+      "category": "Idioms",
+      "title": "Alza Balutan",
+      "description": "Literally 'lift the bundle'. An idiom meaning to pack up one's things and leave abruptly, often in anger.",
+      "image_url": "/assets/cbk_alza.png"
+    },
+    {
+      "id": "cbk_idm_03",
+      "trigger_words": [
+        "cara de viernes santo"
+      ],
+      "language": "Chavacano",
+      "category": "Idioms",
+      "title": "Cara de Viernes Santo",
+      "description": "Literally 'Good Friday face'. Used to describe someone looking extremely sad, gloomy, or depressed.",
+      "image_url": "/assets/cbk_cara.png"
+    },
+    {
+      "id": "cbk_pol_01",
+      "trigger_words": [
+        "ñora",
+        "ñor"
+      ],
+      "language": "Chavacano",
+      "category": "Honorifics",
+      "title": "Ñor / Ñora",
+      "description": "A localized, condensed honorific derived from Spanish 'Señor/Señora'. A deep sign of respect for elders.",
+      "image_url": "/assets/cbk_nora.png"
+    },
+    {
+      "id": "cbk_pol_02",
+      "trigger_words": [
+        "tio",
+        "tia"
+      ],
+      "language": "Chavacano",
+      "category": "Honorifics",
+      "title": "Tio / Tia",
+      "description": "Spanish for uncle/aunt, but used in Zamboanga as a polite honorific for any older stranger.",
+      "image_url": "/assets/cbk_tio.png"
+    },
+    {
+      "id": "cbk_pol_03",
+      "trigger_words": [
+        "hijo",
+        "hija"
+      ],
+      "language": "Chavacano",
+      "category": "Honorifics",
+      "title": "Hijo / Hija",
+      "description": "Used affectionately by elders to address younger people, regardless of actual blood relation.",
+      "image_url": "/assets/cbk_hijo.png"
+    },
+    {
+      "id": "cbk_exp_01",
+      "trigger_words": [
+        "ansina"
+      ],
+      "language": "Chavacano",
+      "category": "Expressions",
+      "title": "Ansina",
+      "description": "Meaning 'like that' or 'that is how it is'. A core street-level conversational filler.",
+      "image_url": "/assets/cbk_ansina.png"
+    },
+    {
+      "id": "cbk_exp_02",
+      "trigger_words": [
+        "era"
+      ],
+      "language": "Chavacano",
+      "category": "Expressions",
+      "title": "Era (Hope)",
+      "description": "A linguistic particle added to sentences to express hope or desire, similar to Tagalog 'sana'.",
+      "image_url": "/assets/cbk_era.png"
+    },
+    {
+      "id": "cbk_exp_03",
+      "trigger_words": [
+        "manada"
+      ],
+      "language": "Chavacano",
+      "category": "Expressions",
+      "title": "Manada",
+      "description": "Derived from Spanish 'flock/herd', used in Chavacano to simply mean 'a lot' or 'many'.",
+      "image_url": "/assets/cbk_manada.png"
+    },
+    {
+      "id": "cbk_cul_01",
+      "trigger_words": [
+        "vinta"
+      ],
+      "language": "Chavacano",
+      "category": "Expressions",
+      "title": "Vinta",
+      "description": "A traditional outrigger boat with a colorful sail, an untranslatable cultural icon of Zamboanga.",
+      "image_url": "/assets/cbk_vinta.png"
+    },
+    {
+      "id": "cbk_cul_02",
+      "trigger_words": [
+        "hermosa"
+      ],
+      "language": "Chavacano",
+      "category": "Expressions",
+      "title": "Hermosa",
+      "description": "Refers not just to 'beautiful', but culturally ties to the Fiesta Pilar (Zamboanga Hermosa Festival).",
+      "image_url": "/assets/cbk_hermosa.png"
+    },
+    {
+      "id": "cbk_pending_01",
+      "trigger_words": [
+        "camisa"
+      ],
+      "language": "Chavacano",
+      "category": "Expressions",
+      "title": "Camisa",
+      "description": "Clothing term for shirt used in casual and formal contexts.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_02",
+      "trigger_words": [
+        "pantalon"
+      ],
+      "language": "Chavacano",
+      "category": "Expressions",
+      "title": "Pantalon",
+      "description": "Clothing term for trousers or pants in common use.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_03",
+      "trigger_words": [
+        "iglesia"
+      ],
+      "language": "Chavacano",
+      "category": "Expressions",
+      "title": "Iglesia",
+      "description": "Religious and community landmark term with strong historical continuity.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_04",
+      "trigger_words": [
+        "mesa"
+      ],
+      "language": "Chavacano",
+      "category": "Expressions",
+      "title": "Mesa",
+      "description": "Household table term widely used in Chavacano daily conversation.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_05",
+      "trigger_words": [
+        "escuela"
+      ],
+      "language": "Chavacano",
+      "category": "Expressions",
+      "title": "Escuela",
+      "description": "Education-related term used in family and institutional contexts.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_06",
+      "trigger_words": [
+        "mercado"
+      ],
+      "language": "Chavacano",
+      "category": "Expressions",
+      "title": "Mercado",
+      "description": "Refers to public market spaces for trade and food purchase.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_07",
+      "trigger_words": [
+        "trabajo"
+      ],
+      "language": "Chavacano",
+      "category": "Expressions",
+      "title": "Trabajo",
+      "description": "Core livelihood term meaning work, labor, or employment.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_08",
+      "trigger_words": [
+        "silla"
+      ],
+      "language": "Chavacano",
+      "category": "Expressions",
+      "title": "Silla",
+      "description": "Basic furniture term for chair inherited from Spanish usage.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_09",
+      "trigger_words": [
+        "dinero"
+      ],
+      "language": "Chavacano",
+      "category": "Expressions",
+      "title": "Dinero",
+      "description": "Frequent transactional term for money in commerce and household budgeting.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_10",
+      "trigger_words": [
+        "fiesta"
+      ],
+      "language": "Chavacano",
+      "category": "Expressions",
+      "title": "Fiesta",
+      "description": "Cultural celebration term tied to local community and religious events.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_11",
+      "trigger_words": [
+        "familia"
+      ],
+      "language": "Chavacano",
+      "category": "Expressions",
+      "title": "Familia",
+      "description": "Kinship term central to social identity and household life.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_12",
+      "trigger_words": [
+        "ventana"
+      ],
+      "language": "Chavacano",
+      "category": "Expressions",
+      "title": "Ventana",
+      "description": "Refers to a window in homes, classrooms, and offices.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_13",
+      "trigger_words": [
+        "comida"
+      ],
+      "language": "Chavacano",
+      "category": "Expressions",
+      "title": "Comida",
+      "description": "General term for food and meals in domestic and public settings.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_14",
+      "trigger_words": [
+        "calle"
+      ],
+      "language": "Chavacano",
+      "category": "Expressions",
+      "title": "Calle",
+      "description": "Urban navigation term for roads and streets in city discourse.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_15",
+      "trigger_words": [
+        "tiempo"
+      ],
+      "language": "Chavacano",
+      "category": "Expressions",
+      "title": "Tiempo",
+      "description": "High-frequency term referring to time, weather, or period depending on context.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_16",
+      "trigger_words": [
+        "puerta"
+      ],
+      "language": "Chavacano",
+      "category": "Expressions",
+      "title": "Puerta",
+      "description": "Common word for door in household and public spaces.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_17",
+      "trigger_words": [
+        "pending_cbk_17"
+      ],
+      "language": "Chavacano",
+      "category": "Idioms",
+      "title": "[PENDING] Chavacano Idioms Stub 17",
+      "description": "[PENDING] Curate and replace this placeholder Chavacano entry for the Idioms category.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_18",
+      "trigger_words": [
+        "pending_cbk_18"
+      ],
+      "language": "Chavacano",
+      "category": "False Cognates",
+      "title": "[PENDING] Chavacano False Cognates Stub 18",
+      "description": "[PENDING] Curate and replace this placeholder Chavacano entry for the False Cognates category.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_19",
+      "trigger_words": [
+        "pending_cbk_19"
+      ],
+      "language": "Chavacano",
+      "category": "Honorifics",
+      "title": "[PENDING] Chavacano Honorifics Stub 19",
+      "description": "[PENDING] Curate and replace this placeholder Chavacano entry for the Honorifics category.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_20",
+      "trigger_words": [
+        "cuchara"
+      ],
+      "language": "Chavacano",
+      "category": "Expressions",
+      "title": "Cuchara",
+      "description": "Utensil term used in food and dining contexts.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_21",
+      "trigger_words": [
+        "pending_cbk_21"
+      ],
+      "language": "Chavacano",
+      "category": "Idioms",
+      "title": "[PENDING] Chavacano Idioms Stub 21",
+      "description": "[PENDING] Curate and replace this placeholder Chavacano entry for the Idioms category.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_22",
+      "trigger_words": [
+        "pending_cbk_22"
+      ],
+      "language": "Chavacano",
+      "category": "False Cognates",
+      "title": "[PENDING] Chavacano False Cognates Stub 22",
+      "description": "[PENDING] Curate and replace this placeholder Chavacano entry for the False Cognates category.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_23",
+      "trigger_words": [
+        "pending_cbk_23"
+      ],
+      "language": "Chavacano",
+      "category": "Honorifics",
+      "title": "[PENDING] Chavacano Honorifics Stub 23",
+      "description": "[PENDING] Curate and replace this placeholder Chavacano entry for the Honorifics category.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_24",
+      "trigger_words": [
+        "tenedor"
+      ],
+      "language": "Chavacano",
+      "category": "Expressions",
+      "title": "Tenedor",
+      "description": "Dining fork term retained through Spanish lexical influence.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_25",
+      "trigger_words": [
+        "pending_cbk_25"
+      ],
+      "language": "Chavacano",
+      "category": "Idioms",
+      "title": "[PENDING] Chavacano Idioms Stub 25",
+      "description": "[PENDING] Curate and replace this placeholder Chavacano entry for the Idioms category.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_26",
+      "trigger_words": [
+        "pending_cbk_26"
+      ],
+      "language": "Chavacano",
+      "category": "False Cognates",
+      "title": "[PENDING] Chavacano False Cognates Stub 26",
+      "description": "[PENDING] Curate and replace this placeholder Chavacano entry for the False Cognates category.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_27",
+      "trigger_words": [
+        "pending_cbk_27"
+      ],
+      "language": "Chavacano",
+      "category": "Honorifics",
+      "title": "[PENDING] Chavacano Honorifics Stub 27",
+      "description": "[PENDING] Curate and replace this placeholder Chavacano entry for the Honorifics category.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_28",
+      "trigger_words": [
+        "cuchillo"
+      ],
+      "language": "Chavacano",
+      "category": "Expressions",
+      "title": "Cuchillo",
+      "description": "Kitchen and dining knife term shared across many local speech communities.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_29",
+      "trigger_words": [
+        "pending_cbk_29"
+      ],
+      "language": "Chavacano",
+      "category": "Idioms",
+      "title": "[PENDING] Chavacano Idioms Stub 29",
+      "description": "[PENDING] Curate and replace this placeholder Chavacano entry for the Idioms category.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_30",
+      "trigger_words": [
+        "pending_cbk_30"
+      ],
+      "language": "Chavacano",
+      "category": "False Cognates",
+      "title": "[PENDING] Chavacano False Cognates Stub 30",
+      "description": "[PENDING] Curate and replace this placeholder Chavacano entry for the False Cognates category.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_31",
+      "trigger_words": [
+        "pending_cbk_31"
+      ],
+      "language": "Chavacano",
+      "category": "Honorifics",
+      "title": "[PENDING] Chavacano Honorifics Stub 31",
+      "description": "[PENDING] Curate and replace this placeholder Chavacano entry for the Honorifics category.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_32",
+      "trigger_words": [
+        "zapato"
+      ],
+      "language": "Chavacano",
+      "category": "Expressions",
+      "title": "Zapato",
+      "description": "General term for shoes in everyday market and household speech.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_33",
+      "trigger_words": [
+        "pending_cbk_33"
+      ],
+      "language": "Chavacano",
+      "category": "Idioms",
+      "title": "[PENDING] Chavacano Idioms Stub 33",
+      "description": "[PENDING] Curate and replace this placeholder Chavacano entry for the Idioms category.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_34",
+      "trigger_words": [
+        "pending_cbk_34"
+      ],
+      "language": "Chavacano",
+      "category": "False Cognates",
+      "title": "[PENDING] Chavacano False Cognates Stub 34",
+      "description": "[PENDING] Curate and replace this placeholder Chavacano entry for the False Cognates category.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "cbk_pending_35",
+      "trigger_words": [
+        "pending_cbk_35"
+      ],
+      "language": "Chavacano",
+      "category": "Honorifics",
+      "title": "[PENDING] Chavacano Honorifics Stub 35",
+      "description": "[PENDING] Curate and replace this placeholder Chavacano entry for the Honorifics category.",
+      "image_url": "/assets/pending_placeholder.png"
+    },
+    {
+      "id": "ceb_fc_01",
+      "trigger_words": [
+        "libang",
+        "kalibangon"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "False Cognates",
+      "title": "Libang",
+      "description": "In Tagalog, 'libang' means entertainment. In Cebuano, it means to defecate. A critical ML cultural patch.",
+      "image_url": "/assets/ceb_libang.png"
+    },
+    {
+      "id": "ceb_fc_02",
+      "trigger_words": [
+        "langgam"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "False Cognates",
+      "title": "Langgam",
+      "description": "In Tagalog, it means ant. In Cebuano, it means bird. The AI must use context to translate properly.",
+      "image_url": "/assets/ceb_langgam.png"
+    },
+    {
+      "id": "ceb_fc_03",
+      "trigger_words": [
+        "bitaw"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "False Cognates",
+      "title": "Bitaw",
+      "description": "In Tagalog, it means to let go. In Cebuano, it is an expression of strong agreement ('indeed' or 'really').",
+      "image_url": "/assets/ceb_bitaw.png"
+    },
+    {
+      "id": "ceb_fc_04",
+      "trigger_words": [
+        "sabot",
+        "kasabot"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "False Cognates",
+      "title": "Sabot",
+      "description": "In Tagalog, 'sabot' (hair). In Cebuano, it means to understand or make an agreement.",
+      "image_url": "/assets/ceb_sabot.png"
+    },
+    {
+      "id": "ceb_idm_01",
+      "trigger_words": [
+        "nangita og sakit sa lawas",
+        "nangitag sakit sa lawas"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Idioms",
+      "title": "Nangita og sakit sa lawas",
+      "description": "Literally 'looking for body aches'. Used to describe someone looking for trouble.",
+      "image_url": "/assets/ceb_sakit.png"
+    },
+    {
+      "id": "ceb_idm_02",
+      "trigger_words": [
+        "gikumot ang kasing-kasing",
+        "gikumot akong kasingkasing"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Idioms",
+      "title": "Gikumot ang Kasing-kasing",
+      "description": "Literally 'heart was crumpled'. Idiom for feeling extreme emotional pain or heartbreak.",
+      "image_url": "/assets/ceb_kumot.png"
+    },
+    {
+      "id": "ceb_idm_03",
+      "trigger_words": [
+        "gibaligya ang unod"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Idioms",
+      "title": "Gibaligya ang Unod",
+      "description": "Literally 'sold the flesh'. A street-level idiom referring to sex work or extreme desperation.",
+      "image_url": "/assets/ceb_unod.png"
+    },
+    {
+      "id": "ceb_pol_01",
+      "trigger_words": [
+        "dong",
+        "dodong"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Honorifics",
+      "title": "Dong / Dodong",
+      "description": "Affectionate honorific for a younger male. Patches the cold English word 'boy'.",
+      "image_url": "/assets/ceb_dong.png"
+    },
+    {
+      "id": "ceb_pol_02",
+      "trigger_words": [
+        "day",
+        "inday"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Honorifics",
+      "title": "Day / Inday",
+      "description": "Affectionate honorific for a younger female. Patches the English word 'girl' or 'miss'.",
+      "image_url": "/assets/ceb_day.png"
+    },
+    {
+      "id": "ceb_pol_03",
+      "trigger_words": [
+        "noy",
+        "nang",
+        "manoy",
+        "manang"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Honorifics",
+      "title": "Noy / Nang",
+      "description": "Respectful honorific for an older male or female, bridging the formal gap of 'Sir/Ma'am'.",
+      "image_url": "/assets/ceb_noy.png"
+    },
+    {
+      "id": "ceb_exp_01",
+      "trigger_words": [
+        "charot",
+        "char"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Expressions",
+      "title": "Charot",
+      "description": "Modern slang meaning 'just kidding' or 'joke only'. A crucial piece of Bislish/Street code-switching.",
+      "image_url": "/assets/ceb_charot.png"
+    },
+    {
+      "id": "ceb_exp_02",
+      "trigger_words": [
+        "chuy",
+        "tsuy"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Expressions",
+      "title": "Chuy",
+      "description": "Street slang for 'cool', 'handsome', or 'awesome'. Untranslatable by literal dictionary models.",
+      "image_url": "/assets/ceb_chuy.png"
+    },
+    {
+      "id": "ceb_exp_03",
+      "trigger_words": [
+        "puhon"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Expressions",
+      "title": "Puhon",
+      "description": "A deeply cultural expression meaning 'God willing' or 'hopefully in the future'.",
+      "image_url": "/assets/ceb_puhon.png"
+    },
+    {
+      "id": "ceb_cul_01",
+      "trigger_words": [
+        "habal-habal",
+        "habal habal"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Expressions",
+      "title": "Habal-Habal",
+      "description": "A highly modified motorcycle for rough terrain. Replaces the generic English 'taxi'.",
+      "image_url": "/assets/ceb_habal.png"
+    },
+    {
+      "id": "ceb_cul_02",
+      "trigger_words": [
+        "pasalubong"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Expressions",
+      "title": "Pasalubong",
+      "description": "The cultural tradition of bringing gifts from a journey. Patches the English 'souvenir'.",
+      "image_url": "/assets/ceb_pasalubong.png"
+    },
+    {
+      "id": "ceb_idm_04",
+      "trigger_words": [
+        "baga og nawong",
+        "bagag nawong"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Idioms",
+      "title": "Baga og Nawong",
+      "description": "Idiomatic Patch: Literally 'thick face'. Used to describe someone who is shameless, audacious, or lacks basic etiquette.",
+      "image_url": "/assets/ceb_baganawong.png"
+    },
+    {
+      "id": "ceb_idm_05",
+      "trigger_words": [
+        "layo ra sa tina-i",
+        "layo ra sa tinai"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Idioms",
+      "title": "Layo ra sa Tina-i",
+      "description": "Idiomatic Patch: Literally 'far from the intestines'. A cultural idiom said to someone who gets a minor cut or injury, meaning 'it won't kill you / you will survive'.",
+      "image_url": "/assets/ceb_tinai.png"
+    },
+    {
+      "id": "ceb_idm_06",
+      "trigger_words": [
+        "tulog mantika",
+        "tulog manteca"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Idioms",
+      "title": "Tulog Mantika",
+      "description": "Idiomatic Patch: Literally 'sleeping fat/oil' (like congealed cooking oil). Used to describe a very heavy sleeper who is hard to wake up.",
+      "image_url": "/assets/ceb_mantika.png"
+    },
+    {
+      "id": "ceb_idm_07",
+      "trigger_words": [
+        "nag-aso ang dunggan",
+        "nag aso ang dunggan"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Idioms",
+      "title": "Nag-aso ang Dunggan",
+      "description": "Idiomatic Patch: Literally 'ears are smoking'. Translates the English intent of someone being furiously angry.",
+      "image_url": "/assets/ceb_aso.png"
+    },
+    {
+      "id": "ceb_idm_08",
+      "trigger_words": [
+        "namuti ang mata",
+        "namuti akong mata"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Idioms",
+      "title": "Namuti ang Mata",
+      "description": "Idiomatic Patch: Literally 'eyes turned white'. Used when someone has been waiting for a very long time.",
+      "image_url": "/assets/ceb_mata.png"
+    },
+    {
+      "id": "ceb_idm_09",
+      "trigger_words": [
+        "lawom og bulsa",
+        "lawom ug bulsa"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Idioms",
+      "title": "Lawom og Bulsa",
+      "description": "Idiomatic Patch: Literally 'deep pockets'. While in English it means rich, in Cebuano it means someone who is extremely stingy or cheap.",
+      "image_url": "/assets/ceb_bulsa.png"
+    },
+    {
+      "id": "ceb_idm_10",
+      "trigger_words": [
+        "kuskos balungos",
+        "daghan og kuskos balungos"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Idioms",
+      "title": "Kuskos Balungos",
+      "description": "Idiomatic Patch: Describes unnecessary delays, too many trivial complaints, or overly complicated procedures.",
+      "image_url": "/assets/ceb_kuskos.png"
+    },
+    {
+      "id": "ceb_idm_11",
+      "trigger_words": [
+        "basa ang papel",
+        "basa na ang papel"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Idioms",
+      "title": "Basa ang Papel",
+      "description": "Idiomatic Patch: Literally 'wet paper'. Means someone has a ruined reputation or is no longer trusted in the community.",
+      "image_url": "/assets/ceb_papel.png"
+    },
+    {
+      "id": "ceb_idm_12",
+      "trigger_words": [
+        "walay kukaluoy",
+        "way kukaluoy"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Idioms",
+      "title": "Walay Kukaluoy",
+      "description": "Idiomatic Patch: Absolutely ruthless, without a single drop of pity or mercy.",
+      "image_url": "/assets/ceb_kaluoy.png"
+    },
+    {
+      "id": "ceb_idm_13",
+      "trigger_words": [
+        "gipahilak og lansang",
+        "pahilakon ug lansang"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Idioms",
+      "title": "Gipahilak og Lansang",
+      "description": "Idiomatic Patch: Literally 'made to cry nails'. Meaning someone was put through extreme hardship or severe suffering.",
+      "image_url": "/assets/ceb_lansang.png"
+    },
+    {
+      "id": "ceb_idm_14",
+      "trigger_words": [
+        "gasa sa kahitas-an",
+        "gasa sa labawng makagagahum"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Idioms",
+      "title": "Gasa sa Kahitas-an",
+      "description": "Idiomatic Patch: 'Gift from above'. A deeply cultural and spiritual idiom representing a blessing or miracle.",
+      "image_url": "/assets/ceb_gasa.png"
+    },
+    {
+      "id": "ceb_idm_15",
+      "trigger_words": [
+        "hugas kamot",
+        "nanghugas og kamot"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Idioms",
+      "title": "Hugas Kamot",
+      "description": "Idiomatic Patch: Literally 'washing hands'. Meaning to deny any involvement or escape responsibility from a problem.",
+      "image_url": "/assets/ceb_hugas.png"
+    },
+    {
+      "id": "ceb_pol_04",
+      "trigger_words": [
+        "bai",
+        "bay"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Honorifics",
+      "title": "Bai / Bay",
+      "description": "Politeness Gap: A ubiquitous term for 'friend' or 'buddy'. The ultimate peer-to-peer honorific among Cebuano males.",
+      "image_url": "/assets/ceb_bai.png"
+    },
+    {
+      "id": "ceb_pol_05",
+      "trigger_words": [
+        "migo"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Honorifics",
+      "title": "Migo",
+      "description": "Politeness Gap: Derived from Spanish 'amigo', a casual yet polite way to address a male peer or acquaintance.",
+      "image_url": "/assets/ceb_migo.png"
+    },
+    {
+      "id": "ceb_pol_06",
+      "trigger_words": [
+        "miga"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Honorifics",
+      "title": "Miga",
+      "description": "Politeness Gap: A casual yet polite way to address a female peer, waitress, or acquaintance.",
+      "image_url": "/assets/ceb_miga.png"
+    },
+    {
+      "id": "ceb_pol_07",
+      "trigger_words": [
+        "tay",
+        "tatay"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Honorifics",
+      "title": "Tay / Tatay",
+      "description": "Politeness Gap: 'Father', but broadly used as a high-respect honorific for any elderly man, transcending family lines.",
+      "image_url": "/assets/ceb_tay.png"
+    },
+    {
+      "id": "ceb_pol_08",
+      "trigger_words": [
+        "nay",
+        "nanay"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Honorifics",
+      "title": "Nay / Nanay",
+      "description": "Politeness Gap: 'Mother', but broadly used to address any elderly woman with deep communal respect.",
+      "image_url": "/assets/ceb_nay.png"
+    },
+    {
+      "id": "ceb_pol_09",
+      "trigger_words": [
+        "iyo",
+        "tiyo"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Honorifics",
+      "title": "Iyo / Tiyo",
+      "description": "Politeness Gap: Uncle. Used locally to address middle-aged men politely.",
+      "image_url": "/assets/ceb_iyo.png"
+    },
+    {
+      "id": "ceb_pol_10",
+      "trigger_words": [
+        "iya",
+        "tiya"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Honorifics",
+      "title": "Iya / Tiya",
+      "description": "Politeness Gap: Aunt. Used locally to address middle-aged women politely.",
+      "image_url": "/assets/ceb_iya.png"
+    },
+    {
+      "id": "ceb_pol_11",
+      "trigger_words": [
+        "maninoy"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Honorifics",
+      "title": "Maninoy",
+      "description": "Politeness Gap: Godfather. Carries immense sociolinguistic weight in the Visayas due to the Compadrazgo system.",
+      "image_url": "/assets/ceb_maninoy.png"
+    },
+    {
+      "id": "ceb_pol_12",
+      "trigger_words": [
+        "maninay"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Honorifics",
+      "title": "Maninay",
+      "description": "Politeness Gap: Godmother. A deeply respected honorific bridging religious and social family structures.",
+      "image_url": "/assets/ceb_maninay.png"
+    },
+    {
+      "id": "ceb_pol_13",
+      "trigger_words": [
+        "kol",
+        "ankol"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Honorifics",
+      "title": "Kol / Ankol",
+      "description": "Politeness Gap: Localized spelling of 'Uncle'. Street-level honorific used heavily for drivers, guards, or older strangers.",
+      "image_url": "/assets/ceb_kol.png"
+    },
+    {
+      "id": "ceb_pol_14",
+      "trigger_words": [
+        "ante",
+        "anti"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Honorifics",
+      "title": "Ante / Anti",
+      "description": "Politeness Gap: Localized spelling of 'Auntie'. Street-level honorific for female vendors or strangers.",
+      "image_url": "/assets/ceb_ante.png"
+    },
+    {
+      "id": "ceb_pol_15",
+      "trigger_words": [
+        "bos",
+        "boss"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Honorifics",
+      "title": "Bos / Boss",
+      "description": "Politeness Gap: English loanword entirely co-opted by Visayan street culture as a polite greeting for male strangers.",
+      "image_url": "/assets/ceb_boss.png"
+    },
+    {
+      "id": "ceb_fc_05",
+      "trigger_words": [
+        "libog",
+        "makalibog"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "False Cognates",
+      "title": "Libog",
+      "description": "Critical False Cognate: In Tagalog, 'libog' means sexual lust. In Cebuano, it simply means 'confused' or 'confusing'. Prevents massive AI context failures.",
+      "image_url": "/assets/ceb_libog.png"
+    },
+    {
+      "id": "ceb_fc_06",
+      "trigger_words": [
+        "hilo"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "False Cognates",
+      "title": "Hilo",
+      "description": "False Cognate: In Tagalog, 'hilo' means dizzy. In Cebuano, it means 'poison'. A mistranslation here can alter severe medical context.",
+      "image_url": "/assets/ceb_hilo.png"
+    },
+    {
+      "id": "ceb_fc_07",
+      "trigger_words": [
+        "hubad",
+        "gihubad"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "False Cognates",
+      "title": "Hubad",
+      "description": "False Cognate: In Tagalog, 'hubad' means naked. In Cebuano, it is the exact verb for 'to translate' or 'to untie'.",
+      "image_url": "/assets/ceb_hubad.png"
+    },
+    {
+      "id": "ceb_fc_08",
+      "trigger_words": [
+        "palit",
+        "mopalit"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "False Cognates",
+      "title": "Palit",
+      "description": "False Cognate: In Tagalog, 'palit' means to exchange or swap. In Cebuano, it means 'to buy'.",
+      "image_url": "/assets/ceb_palit.png"
+    },
+    {
+      "id": "ceb_fc_09",
+      "trigger_words": [
+        "lagot",
+        "nalagot"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "False Cognates",
+      "title": "Lagot",
+      "description": "False Cognate: In Tagalog, it means 'you are in trouble' (Lagot ka!). In Cebuano, it means 'angry' or 'annoyed' (Nalagot ko).",
+      "image_url": "/assets/ceb_lagot.png"
+    },
+    {
+      "id": "ceb_fc_10",
+      "trigger_words": [
+        "usa",
+        "ka usa"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "False Cognates",
+      "title": "Usa",
+      "description": "False Cognate: In Tagalog, 'usa' is a deer. In Cebuano, it is the number 'one'.",
+      "image_url": "/assets/ceb_usa.png"
+    },
+    {
+      "id": "ceb_exp_04",
+      "trigger_words": [
+        "giatay",
+        "atay"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Expressions",
+      "title": "Giatay",
+      "description": "Expression: A highly common expletive or expression of intense frustration/surprise. Literally translates to a chicken liver disease.",
+      "image_url": "/assets/ceb_giatay.png"
+    },
+    {
+      "id": "ceb_exp_05",
+      "trigger_words": [
+        "simbako",
+        "simbako palayo"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Expressions",
+      "title": "Simbako",
+      "description": "Expression: 'God forbid' or 'Knock on wood'. Used to ward off bad luck when someone says something negative.",
+      "image_url": "/assets/ceb_simbako.png"
+    },
+    {
+      "id": "ceb_exp_06",
+      "trigger_words": [
+        "kuan"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Expressions",
+      "title": "Kuan",
+      "description": "Expression: The ultimate Cebuano placeholder word. Used when the speaker forgets a noun, verb, or adjective, similar to 'whatchamacallit'.",
+      "image_url": "/assets/ceb_kuan.png"
+    },
+    {
+      "id": "ceb_exp_07",
+      "trigger_words": [
+        "hasol",
+        "hasola"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Expressions",
+      "title": "Hasola",
+      "description": "Expression: Derived from the English 'hassle'. Used constantly to describe a deeply inconvenient or annoying situation.",
+      "image_url": "/assets/ceb_hasol.png"
+    },
+    {
+      "id": "ceb_exp_08",
+      "trigger_words": [
+        "pag sure",
+        "pag sure oy",
+        "pag sure uroy"
+      ],
+      "language": "Cebuano/Bisaya",
+      "category": "Expressions",
+      "title": "Pag Sure Oy",
+      "description": "Expression: Bislish street phrase meaning 'Are you kidding me?', 'Be serious', or 'Come on!'.",
+      "image_url": "/assets/ceb_pagsure.png"
+    },
+    {
+      "id": "hil_fc_01",
+      "trigger_words": [
+        "bakal"
+      ],
+      "language": "Hiligaynon",
+      "category": "False Cognates",
+      "title": "Bakal",
+      "description": "In Tagalog, it means 'iron' or 'metal'. In Hiligaynon, it means 'to buy'.",
+      "image_url": "/assets/hil_bakal.png"
+    },
+    {
+      "id": "hil_fc_02",
+      "trigger_words": [
+        "sira"
+      ],
+      "language": "Hiligaynon",
+      "category": "False Cognates",
+      "title": "Sira",
+      "description": "In Tagalog, 'sira' means broken. In Hiligaynon, it means 'to close' (the door/window).",
+      "image_url": "/assets/hil_sira.png"
+    },
+    {
+      "id": "hil_fc_03",
+      "trigger_words": [
+        "pata"
+      ],
+      "language": "Hiligaynon",
+      "category": "False Cognates",
+      "title": "Pata",
+      "description": "In Tagalog, 'pata' is pork hock/leg. In Hiligaynon, 'pata' means feeling extremely tired or exhausted.",
+      "image_url": "/assets/hil_pata.png"
+    },
+    {
+      "id": "hil_fc_04",
+      "trigger_words": [
+        "tulog"
+      ],
+      "language": "Hiligaynon",
+      "category": "False Cognates",
+      "title": "Tulog vs. Tolog",
+      "description": "Similar to Tagalog, but in Ilonggo syntax, context determines if it means 'asleep' or 'sleeping late'.",
+      "image_url": "/assets/hil_tulog.png"
+    },
+    {
+      "id": "hil_idm_01",
+      "trigger_words": [
+        "gindakop sang kamingaw"
+      ],
+      "language": "Hiligaynon",
+      "category": "Idioms",
+      "title": "Gindakop sang kamingaw",
+      "description": "Literally 'caught by loneliness'. Deep Ilonggo idiom for severe homesickness.",
+      "image_url": "/assets/hil_kamingaw.png"
+    },
+    {
+      "id": "hil_idm_02",
+      "trigger_words": [
+        "nagapanago ang adlaw"
+      ],
+      "language": "Hiligaynon",
+      "category": "Idioms",
+      "title": "Nagapanago ang adlaw",
+      "description": "Literally 'the sun is hiding'. Used to describe overcast, gloomy weather.",
+      "image_url": "/assets/hil_adlaw.png"
+    },
+    {
+      "id": "hil_idm_03",
+      "trigger_words": [
+        "gintuka sang manok"
+      ],
+      "language": "Hiligaynon",
+      "category": "Idioms",
+      "title": "Gintuka sang manok",
+      "description": "Literally 'pecked by a chicken'. Used to describe someone who acts crazy or irrational.",
+      "image_url": "/assets/hil_manok.png"
+    },
+    {
+      "id": "hil_pol_01",
+      "trigger_words": [
+        "toto"
+      ],
+      "language": "Hiligaynon",
+      "category": "Honorifics",
+      "title": "Toto",
+      "description": "Affectionate honorific for a younger male. A cultural cornerstone of Panay politeness.",
+      "image_url": "/assets/hil_toto.png"
+    },
+    {
+      "id": "hil_pol_02",
+      "trigger_words": [
+        "inday"
+      ],
+      "language": "Hiligaynon",
+      "category": "Honorifics",
+      "title": "Inday",
+      "description": "Affectionate honorific for a younger female, showing endearment beyond the English 'girl'.",
+      "image_url": "/assets/hil_inday.png"
+    },
+    {
+      "id": "hil_pol_03",
+      "trigger_words": [
+        "palangga",
+        "langga"
+      ],
+      "language": "Hiligaynon",
+      "category": "Honorifics",
+      "title": "Palangga",
+      "description": "A term of deep endearment used for loved ones, mapping to 'darling' or 'beloved'.",
+      "image_url": "/assets/hil_palangga.png"
+    },
+    {
+      "id": "hil_exp_01",
+      "trigger_words": [
+        "baw",
+        "abaw"
+      ],
+      "language": "Hiligaynon",
+      "category": "Expressions",
+      "title": "Baw / Ay Abaw",
+      "description": "An expression of surprise, amazement, or sometimes dismay. Similar to 'Wow' or 'Oh my'.",
+      "image_url": "/assets/hil_baw.png"
+    },
+    {
+      "id": "hil_exp_02",
+      "trigger_words": [
+        "te"
+      ],
+      "language": "Hiligaynon",
+      "category": "Expressions",
+      "title": "Te",
+      "description": "A conversational filler meaning 'So', 'Therefore', or 'Well...'. Highly contextual.",
+      "image_url": "/assets/hil_te.png"
+    },
+    {
+      "id": "hil_exp_03",
+      "trigger_words": [
+        "tikalon"
+      ],
+      "language": "Hiligaynon",
+      "category": "Expressions",
+      "title": "Tikalon",
+      "description": "Street slang for someone who is extremely boastful or arrogant.",
+      "image_url": "/assets/hil_tikalon.png"
+    },
+    {
+      "id": "hil_cul_01",
+      "trigger_words": [
+        "batchoy"
+      ],
+      "language": "Hiligaynon",
+      "category": "Expressions",
+      "title": "La Paz Batchoy",
+      "description": "Untranslatable culinary culture. A famous noodle soup from Iloilo.",
+      "image_url": "/assets/hil_batchoy.png"
+    },
+    {
+      "id": "hil_cul_02",
+      "trigger_words": [
+        "kansi"
+      ],
+      "language": "Hiligaynon",
+      "category": "Expressions",
+      "title": "Kansi",
+      "description": "An Ilonggo sour soup. Replaces generic English terms like 'stew' with strict cultural accuracy.",
+      "image_url": "/assets/hil_kansi.png"
+    },
+    {
+      "id": "hil_idm_04",
+      "trigger_words": [
+        "wala untat nga baba"
+      ],
+      "language": "Hiligaynon",
+      "category": "Idioms",
+      "title": "Wala Untat nga Baba",
+      "description": "Idiomatic Patch: 'Non-stop mouth'. Used to describe an incessant gossiper or someone who talks too much.",
+      "image_url": "/assets/hil_baba.png"
+    },
+    {
+      "id": "hil_idm_05",
+      "trigger_words": [
+        "gapangita bato ipukpok sa ulo"
+      ],
+      "language": "Hiligaynon",
+      "category": "Idioms",
+      "title": "Gapangita bato ipukpok sa ulo",
+      "description": "Idiomatic Patch: 'Looking for a stone to hit one's head'. Creating unnecessary problems for oneself.",
+      "image_url": "/assets/hil_bato.png"
+    },
+    {
+      "id": "hil_idm_06",
+      "trigger_words": [
+        "naga-init ang ulo",
+        "nagainit ang ulo"
+      ],
+      "language": "Hiligaynon",
+      "category": "Idioms",
+      "title": "Naga-init ang Ulo",
+      "description": "Idiomatic Patch: 'Head is heating up'. The universal Visayan idiom for losing one's temper.",
+      "image_url": "/assets/hil_init.png"
+    },
+    {
+      "id": "hil_idm_07",
+      "trigger_words": [
+        "galupad ang utok",
+        "nagalele ang utok"
+      ],
+      "language": "Hiligaynon",
+      "category": "Idioms",
+      "title": "Galupad ang Utok",
+      "description": "Idiomatic Patch: 'Flying brain'. Used to describe someone daydreaming or not paying attention.",
+      "image_url": "/assets/hil_utok.png"
+    },
+    {
+      "id": "hil_idm_08",
+      "trigger_words": [
+        "balhas sang imol"
+      ],
+      "language": "Hiligaynon",
+      "category": "Idioms",
+      "title": "Balhas sang Imol",
+      "description": "Idiomatic Patch: 'Sweat of the poor'. Represents extremely hard, exhausting physical labor.",
+      "image_url": "/assets/hil_balhas.png"
+    },
+    {
+      "id": "hil_idm_09",
+      "trigger_words": [
+        "basa nga idik"
+      ],
+      "language": "Hiligaynon",
+      "category": "Idioms",
+      "title": "Basa nga Idik",
+      "description": "Idiomatic Patch: 'Wet piglet'. Used to describe someone who is completely drenched in sweat or rain.",
+      "image_url": "/assets/hil_idik.png"
+    },
+    {
+      "id": "hil_idm_10",
+      "trigger_words": [
+        "malapad ang papel"
+      ],
+      "language": "Hiligaynon",
+      "category": "Idioms",
+      "title": "Malapad ang Papel",
+      "description": "Idiomatic Patch: 'Wide paper'. Means someone has strong influence or connections in high places.",
+      "image_url": "/assets/hil_papel.png"
+    },
+    {
+      "id": "hil_idm_11",
+      "trigger_words": [
+        "gindakop sang katulog"
+      ],
+      "language": "Hiligaynon",
+      "category": "Idioms",
+      "title": "Gindakop sang Katulog",
+      "description": "Idiomatic Patch: 'Caught by sleep'. Accidentally falling asleep due to extreme exhaustion.",
+      "image_url": "/assets/hil_katulog.png"
+    },
+    {
+      "id": "hil_idm_12",
+      "trigger_words": [
+        "hugas kamot",
+        "nanghugas kamot"
+      ],
+      "language": "Hiligaynon",
+      "category": "Idioms",
+      "title": "Hugas Kamot",
+      "description": "Idiomatic Patch: 'Washing hands'. Refusing to take accountability for a mistake.",
+      "image_url": "/assets/hil_hugas.png"
+    },
+    {
+      "id": "hil_idm_13",
+      "trigger_words": [
+        "buhi ang dugo"
+      ],
+      "language": "Hiligaynon",
+      "category": "Idioms",
+      "title": "Buhi ang Dugo",
+      "description": "Idiomatic Patch: 'Blood is alive'. Feeling suddenly energized or excited.",
+      "image_url": "/assets/hil_dugo.png"
+    },
+    {
+      "id": "hil_idm_14",
+      "trigger_words": [
+        "kigol sang baso"
+      ],
+      "language": "Hiligaynon",
+      "category": "Idioms",
+      "title": "Kigol sang Baso",
+      "description": "Idiomatic Patch: 'Bottom of the glass'. Describes incredibly thick eyeglasses.",
+      "image_url": "/assets/hil_baso.png"
+    },
+    {
+      "id": "hil_idm_15",
+      "trigger_words": [
+        "nagapangita sang gamo"
+      ],
+      "language": "Hiligaynon",
+      "category": "Idioms",
+      "title": "Nagapangita sang Gamo",
+      "description": "Idiomatic Patch: Actively looking for a fight or looking to start an argument.",
+      "image_url": "/assets/hil_gamo.png"
+    },
+    {
+      "id": "hil_pol_04",
+      "trigger_words": [
+        "nonoy",
+        "noy"
+      ],
+      "language": "Hiligaynon",
+      "category": "Honorifics",
+      "title": "Nonoy / Noy",
+      "description": "Politeness Gap: Affectionate term for a young boy, often carried into adulthood by family.",
+      "image_url": "/assets/hil_nonoy.png"
+    },
+    {
+      "id": "hil_pol_05",
+      "trigger_words": [
+        "nene",
+        "neneng"
+      ],
+      "language": "Hiligaynon",
+      "category": "Honorifics",
+      "title": "Nene / Neneng",
+      "description": "Politeness Gap: Affectionate term for a young girl in the community.",
+      "image_url": "/assets/hil_neneng.png"
+    },
+    {
+      "id": "hil_pol_06",
+      "trigger_words": [
+        "manong",
+        "nong"
+      ],
+      "language": "Hiligaynon",
+      "category": "Honorifics",
+      "title": "Manong / Nong",
+      "description": "Politeness Gap: Respectful address for an older male, bridging the English gap of 'Sir/Mister'.",
+      "image_url": "/assets/hil_manong.png"
+    },
+    {
+      "id": "hil_pol_07",
+      "trigger_words": [
+        "manang",
+        "nang"
+      ],
+      "language": "Hiligaynon",
+      "category": "Honorifics",
+      "title": "Manang / Nang",
+      "description": "Politeness Gap: Respectful address for an older female.",
+      "image_url": "/assets/hil_manang.png"
+    },
+    {
+      "id": "hil_pol_08",
+      "trigger_words": [
+        "tay",
+        "tatay"
+      ],
+      "language": "Hiligaynon",
+      "category": "Honorifics",
+      "title": "Tay / Tatay",
+      "description": "Politeness Gap: Broad honorific for any elderly man.",
+      "image_url": "/assets/hil_tatay.png"
+    },
+    {
+      "id": "hil_pol_09",
+      "trigger_words": [
+        "nay",
+        "nanay"
+      ],
+      "language": "Hiligaynon",
+      "category": "Honorifics",
+      "title": "Nay / Nanay",
+      "description": "Politeness Gap: Broad honorific for any elderly woman.",
+      "image_url": "/assets/hil_nanay.png"
+    },
+    {
+      "id": "hil_pol_10",
+      "trigger_words": [
+        "tiyo",
+        "tiya"
+      ],
+      "language": "Hiligaynon",
+      "category": "Honorifics",
+      "title": "Tiyo / Tiya",
+      "description": "Politeness Gap: Uncle/Aunt, used formally for middle-aged community members.",
+      "image_url": "/assets/hil_tiyo.png"
+    },
+    {
+      "id": "hil_pol_11",
+      "trigger_words": [
+        "pare",
+        "kumpare"
+      ],
+      "language": "Hiligaynon",
+      "category": "Honorifics",
+      "title": "Pare / Kumpare",
+      "description": "Politeness Gap: Close male friend or co-sponsor in religious rites.",
+      "image_url": "/assets/hil_pare.png"
+    },
+    {
+      "id": "hil_pol_12",
+      "trigger_words": [
+        "mare",
+        "kumare"
+      ],
+      "language": "Hiligaynon",
+      "category": "Honorifics",
+      "title": "Mare / Kumare",
+      "description": "Politeness Gap: Close female friend or co-sponsor.",
+      "image_url": "/assets/hil_mare.png"
+    },
+    {
+      "id": "hil_pol_13",
+      "trigger_words": [
+        "mig",
+        "migo"
+      ],
+      "language": "Hiligaynon",
+      "category": "Honorifics",
+      "title": "Mig / Migo",
+      "description": "Politeness Gap: Friendly, casual term for a male acquaintance.",
+      "image_url": "/assets/hil_migo.png"
+    },
+    {
+      "id": "hil_pol_14",
+      "trigger_words": [
+        "miga"
+      ],
+      "language": "Hiligaynon",
+      "category": "Honorifics",
+      "title": "Miga",
+      "description": "Politeness Gap: Friendly, casual term for a female acquaintance.",
+      "image_url": "/assets/hil_miga.png"
+    },
+    {
+      "id": "hil_pol_15",
+      "trigger_words": [
+        "boss"
+      ],
+      "language": "Hiligaynon",
+      "category": "Honorifics",
+      "title": "Boss",
+      "description": "Politeness Gap: English loanword adopted natively as a respectful street-greeting.",
+      "image_url": "/assets/hil_boss.png"
+    },
+    {
+      "id": "hil_fc_05",
+      "trigger_words": [
+        "sabot"
+      ],
+      "language": "Hiligaynon",
+      "category": "False Cognates",
+      "title": "Sabot",
+      "description": "False Cognate: In Cebuano, 'sabot' means to understand. In Hiligaynon, it refers to pubic hair. Critical ML patch.",
+      "image_url": "/assets/hil_sabot.png"
+    },
+    {
+      "id": "hil_fc_06",
+      "trigger_words": [
+        "pating"
+      ],
+      "language": "Hiligaynon",
+      "category": "False Cognates",
+      "title": "Pating",
+      "description": "False Cognate: In Tagalog, it means shark. In Hiligaynon, it is a pigeon/dove.",
+      "image_url": "/assets/hil_pating.png"
+    },
+    {
+      "id": "hil_fc_07",
+      "trigger_words": [
+        "libang"
+      ],
+      "language": "Hiligaynon",
+      "category": "False Cognates",
+      "title": "Libang",
+      "description": "False Cognate: Like Cebuano, means 'defecate', completely contradicting Tagalog 'entertainment'.",
+      "image_url": "/assets/hil_libang.png"
+    },
+    {
+      "id": "hil_fc_08",
+      "trigger_words": [
+        "basa"
+      ],
+      "language": "Hiligaynon",
+      "category": "False Cognates",
+      "title": "Basa",
+      "description": "False Cognate Context: Can mean 'wet' or 'read' depending strictly on sentence structure.",
+      "image_url": "/assets/hil_basa.png"
+    },
+    {
+      "id": "hil_fc_09",
+      "trigger_words": [
+        "sugid"
+      ],
+      "language": "Hiligaynon",
+      "category": "False Cognates",
+      "title": "Sugid",
+      "description": "False Cognate: In some Visayan dialects it implies a story, in Hiligaynon it strictly means 'to confess' or 'tattle'.",
+      "image_url": "/assets/hil_sugid.png"
+    },
+    {
+      "id": "hil_fc_10",
+      "trigger_words": [
+        "utong"
+      ],
+      "language": "Hiligaynon",
+      "category": "False Cognates",
+      "title": "Utong",
+      "description": "False Cognate: In Tagalog, it refers to a body part. In Hiligaynon, it means to hold one's breath.",
+      "image_url": "/assets/hil_utong.png"
+    },
+    {
+      "id": "hil_exp_04",
+      "trigger_words": [
+        "ahay"
+      ],
+      "language": "Hiligaynon",
+      "category": "Expressions",
+      "title": "Ahay",
+      "description": "Expression: Untranslatable sigh denoting sympathy, pity, or sadness.",
+      "image_url": "/assets/hil_ahay.png"
+    },
+    {
+      "id": "hil_exp_05",
+      "trigger_words": [
+        "ambot"
+      ],
+      "language": "Hiligaynon",
+      "category": "Expressions",
+      "title": "Ambot",
+      "description": "Expression: 'I don't know'. Culturally heavier than the English equivalent, often showing mild annoyance.",
+      "image_url": "/assets/hil_ambot.png"
+    },
+    {
+      "id": "hil_exp_06",
+      "trigger_words": [
+        "gali"
+      ],
+      "language": "Hiligaynon",
+      "category": "Expressions",
+      "title": "Gali",
+      "description": "Expression: A particle expressing sudden realization, similar to 'Oh, I see!'.",
+      "image_url": "/assets/hil_gali.png"
+    },
+    {
+      "id": "hil_exp_07",
+      "trigger_words": [
+        "haw"
+      ],
+      "language": "Hiligaynon",
+      "category": "Expressions",
+      "title": "Haw",
+      "description": "Expression: Interrogative particle attached to the end of sentences for emphasis ('Why is that so?').",
+      "image_url": "/assets/hil_haw.png"
+    },
+    {
+      "id": "hil_exp_08",
+      "trigger_words": [
+        "mu"
+      ],
+      "language": "Hiligaynon",
+      "category": "Expressions",
+      "title": "Mu / Amo",
+      "description": "Expression: Assent filler meaning 'Yes, exactly' or 'That is correct'.",
+      "image_url": "/assets/hil_mu.png"
+    },
+    {
+      "id": "es_fc_01",
+      "trigger_words": [
+        "embarazada"
+      ],
+      "language": "Spanish",
+      "category": "False Cognates",
+      "title": "Embarazada",
+      "description": "False Cognate: Sounds like 'embarrassed' in English, but actually means 'pregnant'.",
+      "image_url": "/assets/es_embarazada.png"
+    },
+    {
+      "id": "es_fc_02",
+      "trigger_words": [
+        "constipado"
+      ],
+      "language": "Spanish",
+      "category": "False Cognates",
+      "title": "Constipado",
+      "description": "False Cognate: Sounds like 'constipated' in English, but actually means having a cold or being congested.",
+      "image_url": "/assets/es_constipado.png"
+    },
+    {
+      "id": "es_fc_03",
+      "trigger_words": [
+        "asistir"
+      ],
+      "language": "Spanish",
+      "category": "False Cognates",
+      "title": "Asistir",
+      "description": "False Cognate: Sounds like 'assist', but actually means 'to attend' (a meeting or event).",
+      "image_url": "/assets/es_asistir.png"
+    },
+    {
+      "id": "es_fc_04",
+      "trigger_words": [
+        "éxito"
+      ],
+      "language": "Spanish",
+      "category": "False Cognates",
+      "title": "Éxito",
+      "description": "False Cognate: Sounds like 'exit', but actually means 'success'.",
+      "image_url": "/assets/es_exito.png"
+    },
+    {
+      "id": "es_idm_01",
+      "trigger_words": [
+        "tomar el pelo"
+      ],
+      "language": "Spanish",
+      "category": "Idioms",
+      "title": "Tomar el Pelo",
+      "description": "Literally 'to take the hair'. An idiom that means to tease someone or pull their leg.",
+      "image_url": "/assets/es_pelo.png"
+    },
+    {
+      "id": "es_idm_02",
+      "trigger_words": [
+        "estar en las nubes"
+      ],
+      "language": "Spanish",
+      "category": "Idioms",
+      "title": "Estar en las nubes",
+      "description": "Literally 'to be in the clouds'. Means to be daydreaming or distracted.",
+      "image_url": "/assets/es_nubes.png"
+    },
+    {
+      "id": "es_idm_03",
+      "trigger_words": [
+        "tirar la casa por la ventana"
+      ],
+      "language": "Spanish",
+      "category": "Idioms",
+      "title": "Tirar la casa por la ventana",
+      "description": "Literally 'throw the house through the window'. Means to spare no expense or throw a massive party.",
+      "image_url": "/assets/es_casa.png"
+    },
+    {
+      "id": "es_pol_01",
+      "trigger_words": [
+        "don",
+        "doña"
+      ],
+      "language": "Spanish",
+      "category": "Honorifics",
+      "title": "Don / Doña",
+      "description": "A formal prefix of respect used before a person's first name, bridging a deep cultural politeness gap.",
+      "image_url": "/assets/es_don.png"
+    },
+    {
+      "id": "es_pol_02",
+      "trigger_words": [
+        "usted"
+      ],
+      "language": "Spanish",
+      "category": "Honorifics",
+      "title": "Usted",
+      "description": "The formal 'You'. Essential for sociolinguistic politeness when addressing authority.",
+      "image_url": "/assets/es_usted.png"
+    },
+    {
+      "id": "es_pol_03",
+      "trigger_words": [
+        "caballero"
+      ],
+      "language": "Spanish",
+      "category": "Honorifics",
+      "title": "Caballero",
+      "description": "Used formally to address a gentleman, carrying more chivalrous weight than the English 'Sir'.",
+      "image_url": "/assets/es_caballero.png"
+    },
+    {
+      "id": "es_exp_01",
+      "trigger_words": [
+        "vale"
+      ],
+      "language": "Spanish",
+      "category": "Expressions",
+      "title": "Vale",
+      "description": "Slang/Filler used heavily in Spain meaning 'okay', 'alright', or 'sounds good'.",
+      "image_url": "/assets/es_vale.png"
+    },
+    {
+      "id": "es_exp_02",
+      "trigger_words": [
+        "hombre"
+      ],
+      "language": "Spanish",
+      "category": "Expressions",
+      "title": "Hombre",
+      "description": "Literally 'man', but used as an interjection to show surprise, agreement, or emphasis ('Oh man!').",
+      "image_url": "/assets/es_hombre.png"
+    },
+    {
+      "id": "es_exp_03",
+      "trigger_words": [
+        "guay"
+      ],
+      "language": "Spanish",
+      "category": "Expressions",
+      "title": "Guay",
+      "description": "Colloquial slang meaning 'cool' or 'awesome'.",
+      "image_url": "/assets/es_guay.png"
+    },
+    {
+      "id": "es_cul_01",
+      "trigger_words": [
+        "siesta"
+      ],
+      "language": "Spanish",
+      "category": "Expressions",
+      "title": "Siesta",
+      "description": "A cultural midday nap or rest period. A localized concept globally recognized.",
+      "image_url": "/assets/es_siesta.png"
+    },
+    {
+      "id": "es_cul_02",
+      "trigger_words": [
+        "tapas"
+      ],
+      "language": "Spanish",
+      "category": "Expressions",
+      "title": "Tapas",
+      "description": "Small cultural appetizers or snacks served with drinks. Replaces generic English 'food'.",
+      "image_url": "/assets/es_tapas.png"
+    },
+    {
+      "id": "es_idm_04",
+      "trigger_words": [
+        "dar a luz"
+      ],
+      "language": "Spanish",
+      "category": "Idioms",
+      "title": "Dar a luz",
+      "description": "Idiomatic Patch: Literally 'give to light'. Translates strictly to giving birth.",
+      "image_url": "/assets/es_luz.png"
+    },
+    {
+      "id": "es_idm_05",
+      "trigger_words": [
+        "costar un ojo de la cara"
+      ],
+      "language": "Spanish",
+      "category": "Idioms",
+      "title": "Costar un ojo de la cara",
+      "description": "Idiomatic Patch: 'Cost an eye from the face'. Means something is incredibly expensive.",
+      "image_url": "/assets/es_ojo.png"
+    },
+    {
+      "id": "es_idm_06",
+      "trigger_words": [
+        "pan comido"
+      ],
+      "language": "Spanish",
+      "category": "Idioms",
+      "title": "Pan comido",
+      "description": "Idiomatic Patch: 'Eaten bread'. Maps to the English 'piece of cake' or very easy.",
+      "image_url": "/assets/es_pan.png"
+    },
+    {
+      "id": "es_idm_07",
+      "trigger_words": [
+        "meter la pata"
+      ],
+      "language": "Spanish",
+      "category": "Idioms",
+      "title": "Meter la pata",
+      "description": "Idiomatic Patch: 'Put the leg in'. Means to make a huge mistake or say the wrong thing.",
+      "image_url": "/assets/es_pata.png"
+    },
+    {
+      "id": "es_idm_08",
+      "trigger_words": [
+        "hacer la vista gorda"
+      ],
+      "language": "Spanish",
+      "category": "Idioms",
+      "title": "Hacer la vista gorda",
+      "description": "Idiomatic Patch: 'Make the fat view'. Means to intentionally turn a blind eye to a rule being broken.",
+      "image_url": "/assets/es_gorda.png"
+    },
+    {
+      "id": "es_idm_09",
+      "trigger_words": [
+        "ponerse las pilas"
+      ],
+      "language": "Spanish",
+      "category": "Idioms",
+      "title": "Ponerse las pilas",
+      "description": "Idiomatic Patch: 'Put in your batteries'. Means to wake up, focus, and get to work.",
+      "image_url": "/assets/es_pilas.png"
+    },
+    {
+      "id": "es_idm_10",
+      "trigger_words": [
+        "ser la oveja negra"
+      ],
+      "language": "Spanish",
+      "category": "Idioms",
+      "title": "Ser la oveja negra",
+      "description": "Idiomatic Patch: 'To be the black sheep'. Cross-cultural idiom for the outcast of a family.",
+      "image_url": "/assets/es_oveja.png"
+    },
+    {
+      "id": "es_idm_11",
+      "trigger_words": [
+        "hablar por los codos"
+      ],
+      "language": "Spanish",
+      "category": "Idioms",
+      "title": "Hablar por los codos",
+      "description": "Idiomatic Patch: 'Talk through the elbows'. Describes a person who talks excessively.",
+      "image_url": "/assets/es_codos.png"
+    },
+    {
+      "id": "es_idm_12",
+      "trigger_words": [
+        "irse por las ramas"
+      ],
+      "language": "Spanish",
+      "category": "Idioms",
+      "title": "Irse por las ramas",
+      "description": "Idiomatic Patch: 'Go through the branches'. Means to digress or beat around the bush.",
+      "image_url": "/assets/es_ramas.png"
+    },
+    {
+      "id": "es_idm_13",
+      "trigger_words": [
+        "quedarse de piedra"
+      ],
+      "language": "Spanish",
+      "category": "Idioms",
+      "title": "Quedarse de piedra",
+      "description": "Idiomatic Patch: 'To stay of stone'. To be utterly shocked or stunned into silence.",
+      "image_url": "/assets/es_piedra.png"
+    },
+    {
+      "id": "es_idm_14",
+      "trigger_words": [
+        "llamar al pan, pan"
+      ],
+      "language": "Spanish",
+      "category": "Idioms",
+      "title": "Llamar al pan, pan",
+      "description": "Idiomatic Patch: 'Call bread bread'. To speak bluntly and tell the truth (call a spade a spade).",
+      "image_url": "/assets/es_verdad.png"
+    },
+    {
+      "id": "es_idm_15",
+      "trigger_words": [
+        "estar hasta las narices"
+      ],
+      "language": "Spanish",
+      "category": "Idioms",
+      "title": "Estar hasta las narices",
+      "description": "Idiomatic Patch: 'To be up to the noses'. Means to be completely fed up or sick of something.",
+      "image_url": "/assets/es_narices.png"
+    },
+    {
+      "id": "es_pol_04",
+      "trigger_words": [
+        "señor"
+      ],
+      "language": "Spanish",
+      "category": "Honorifics",
+      "title": "Señor",
+      "description": "Politeness Gap: Standard formal address for an older or authoritative male.",
+      "image_url": "/assets/es_senor.png"
+    },
+    {
+      "id": "es_pol_05",
+      "trigger_words": [
+        "señora"
+      ],
+      "language": "Spanish",
+      "category": "Honorifics",
+      "title": "Señora",
+      "description": "Politeness Gap: Standard formal address for an older or married female.",
+      "image_url": "/assets/es_senora.png"
+    },
+    {
+      "id": "es_pol_06",
+      "trigger_words": [
+        "señorita"
+      ],
+      "language": "Spanish",
+      "category": "Honorifics",
+      "title": "Señorita",
+      "description": "Politeness Gap: Formal and polite address for an unmarried younger woman.",
+      "image_url": "/assets/es_senorita.png"
+    },
+    {
+      "id": "es_pol_07",
+      "trigger_words": [
+        "jefe"
+      ],
+      "language": "Spanish",
+      "category": "Honorifics",
+      "title": "Jefe",
+      "description": "Politeness Gap: Boss. Used socially to show respect to a manager or leader.",
+      "image_url": "/assets/es_jefe.png"
+    },
+    {
+      "id": "es_pol_08",
+      "trigger_words": [
+        "patrón"
+      ],
+      "language": "Spanish",
+      "category": "Honorifics",
+      "title": "Patrón",
+      "description": "Politeness Gap: Heavy sociolinguistic title for a land-owner or senior boss.",
+      "image_url": "/assets/es_patron.png"
+    },
+    {
+      "id": "es_pol_09",
+      "trigger_words": [
+        "maestro"
+      ],
+      "language": "Spanish",
+      "category": "Honorifics",
+      "title": "Maestro",
+      "description": "Politeness Gap: Teacher or master, heavily used in trade to respect expertise.",
+      "image_url": "/assets/es_maestro.png"
+    },
+    {
+      "id": "es_pol_10",
+      "trigger_words": [
+        "padre"
+      ],
+      "language": "Spanish",
+      "category": "Honorifics",
+      "title": "Padre",
+      "description": "Politeness Gap: Father, but heavily embedded as a religious/respectful title.",
+      "image_url": "/assets/es_padre.png"
+    },
+    {
+      "id": "es_pol_11",
+      "trigger_words": [
+        "madre"
+      ],
+      "language": "Spanish",
+      "category": "Honorifics",
+      "title": "Madre",
+      "description": "Politeness Gap: Mother, carrying deep cultural and religious reverence.",
+      "image_url": "/assets/es_madre.png"
+    },
+    {
+      "id": "es_pol_12",
+      "trigger_words": [
+        "tío"
+      ],
+      "language": "Spanish",
+      "category": "Honorifics",
+      "title": "Tío",
+      "description": "Politeness Gap: Uncle, but in Spain it serves as the universal slang for 'guy' or 'dude'.",
+      "image_url": "/assets/es_tio.png"
+    },
+    {
+      "id": "es_pol_13",
+      "trigger_words": [
+        "tía"
+      ],
+      "language": "Spanish",
+      "category": "Honorifics",
+      "title": "Tía",
+      "description": "Politeness Gap: Aunt, but heavily used as slang for 'girl' or 'woman'.",
+      "image_url": "/assets/es_tia.png"
+    },
+    {
+      "id": "es_pol_14",
+      "trigger_words": [
+        "colega"
+      ],
+      "language": "Spanish",
+      "category": "Honorifics",
+      "title": "Colega",
+      "description": "Politeness Gap: Colleague or friend, showing peer-to-peer respect.",
+      "image_url": "/assets/es_colega.png"
+    },
+    {
+      "id": "es_pol_15",
+      "trigger_words": [
+        "su majestad"
+      ],
+      "language": "Spanish",
+      "category": "Honorifics",
+      "title": "Su Majestad",
+      "description": "Politeness Gap: Your Majesty. A legacy honorific required by the NLLB base models for historical texts.",
+      "image_url": "/assets/es_majestad.png"
+    },
+    {
+      "id": "es_fc_05",
+      "trigger_words": [
+        "actualmente"
+      ],
+      "language": "Spanish",
+      "category": "False Cognates",
+      "title": "Actualmente",
+      "description": "False Cognate: Looks like 'actually', but means 'currently' or 'nowadays'.",
+      "image_url": "/assets/es_actualmente.png"
+    },
+    {
+      "id": "es_fc_06",
+      "trigger_words": [
+        "carpeta"
+      ],
+      "language": "Spanish",
+      "category": "False Cognates",
+      "title": "Carpeta",
+      "description": "False Cognate: Looks like 'carpet', but means a 'folder' or 'file'.",
+      "image_url": "/assets/es_carpeta.png"
+    },
+    {
+      "id": "es_fc_07",
+      "trigger_words": [
+        "fábrica"
+      ],
+      "language": "Spanish",
+      "category": "False Cognates",
+      "title": "Fábrica",
+      "description": "False Cognate: Looks like 'fabric', but means a 'factory'.",
+      "image_url": "/assets/es_fabrica.png"
+    },
+    {
+      "id": "es_fc_08",
+      "trigger_words": [
+        "recordar"
+      ],
+      "language": "Spanish",
+      "category": "False Cognates",
+      "title": "Recordar",
+      "description": "False Cognate: Looks like 'record' (audio/video), but means 'to remember'.",
+      "image_url": "/assets/es_recordar.png"
+    },
+    {
+      "id": "es_fc_09",
+      "trigger_words": [
+        "sopa"
+      ],
+      "language": "Spanish",
+      "category": "False Cognates",
+      "title": "Sopa",
+      "description": "False Cognate: Looks like 'soap', but is actually 'soup'. AI must catch this to prevent bizarre translations.",
+      "image_url": "/assets/es_sopa.png"
+    },
+    {
+      "id": "es_fc_10",
+      "trigger_words": [
+        "largo"
+      ],
+      "language": "Spanish",
+      "category": "False Cognates",
+      "title": "Largo",
+      "description": "False Cognate: Looks like 'large', but actually means 'long' in length.",
+      "image_url": "/assets/es_largo.png"
+    },
+    {
+      "id": "es_exp_04",
+      "trigger_words": [
+        "venga"
+      ],
+      "language": "Spanish",
+      "category": "Expressions",
+      "title": "Venga",
+      "description": "Expression: Filler word meaning 'come on', 'alright', or 'hurry up'.",
+      "image_url": "/assets/es_venga.png"
+    },
+    {
+      "id": "es_exp_05",
+      "trigger_words": [
+        "madre mía"
+      ],
+      "language": "Spanish",
+      "category": "Expressions",
+      "title": "Madre mía",
+      "description": "Expression: 'My mother'. Intense expression of surprise or shock, like 'Oh my God!'.",
+      "image_url": "/assets/es_madremia.png"
+    },
+    {
+      "id": "es_exp_06",
+      "trigger_words": [
+        "chaval"
+      ],
+      "language": "Spanish",
+      "category": "Expressions",
+      "title": "Chaval",
+      "description": "Expression: Common slang for a kid, youth, or young person.",
+      "image_url": "/assets/es_chaval.png"
+    },
+    {
+      "id": "es_exp_07",
+      "trigger_words": [
+        "fiesta"
+      ],
+      "language": "Spanish",
+      "category": "Expressions",
+      "title": "Fiesta",
+      "description": "Expression/Culture: The untranslatable cultural weight of a Spanish party or celebration.",
+      "image_url": "/assets/es_fiesta.png"
+    },
+    {
+      "id": "es_exp_08",
+      "trigger_words": [
+        "olé"
+      ],
+      "language": "Spanish",
+      "category": "Expressions",
+      "title": "Olé",
+      "description": "Expression: Classic exclamation of approval or encouragement.",
+      "image_url": "/assets/es_ole.png"
+    }
+  ]
+}

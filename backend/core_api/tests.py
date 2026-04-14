@@ -470,8 +470,9 @@ class WikiVozViewTests(TestCase):
         CulturalTerm.objects.create(
             term='Vinta',
             definition='Traditional outrigger boat.',
-            language='Zamboanga',
-            category='culture',
+            language='Chavacano',
+            category='Expressions',
+            trigger_words=['vinta'],
         )
 
     def test_search_returns_results(self):
@@ -489,6 +490,54 @@ class WikiVozViewTests(TestCase):
         resp = self.client_api.get('/api/wiki/', {'q': 'nonexistent'})
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(len(resp.data['results']), 0)
+
+    def test_create_with_post(self):
+        payload = {
+            'term': 'Pag Sure Oy',
+            'definition': 'Cebuano expression for disbelief.',
+            'trigger_words': ['pag sure oy', 'pag sure'],
+            'language': 'Cebuano/Bisaya',
+            'category': 'Expressions',
+        }
+        resp = self.client_api.post('/api/wiki/', payload, format='json')
+        self.assertEqual(resp.status_code, 201)
+        self.assertTrue(CulturalTerm.objects.filter(term='Pag Sure Oy').exists())
+
+    def test_update_with_post_and_id(self):
+        row = CulturalTerm.objects.create(
+            term='Curacha',
+            definition='Initial definition.',
+            trigger_words=['curacha'],
+            language='Chavacano',
+            category='Expressions',
+        )
+
+        payload = {
+            'id': row.id,
+            'term': 'Curacha',
+            'definition': 'Updated definition for smoke regression.',
+            'trigger_words': ['curacha', 'crawfish dance'],
+            'language': 'Chavacano',
+            'category': 'Expressions',
+        }
+
+        resp = self.client_api.post('/api/wiki/', payload, format='json')
+        self.assertEqual(resp.status_code, 200)
+        row.refresh_from_db()
+        self.assertEqual(row.definition, 'Updated definition for smoke regression.')
+        self.assertEqual(row.trigger_words, ['curacha', 'crawfish dance'])
+
+    def test_delete_with_query_id(self):
+        row = CulturalTerm.objects.create(
+            term='Satti',
+            definition='Spicy skewers with sauce.',
+            trigger_words=['satti'],
+            language='Chavacano',
+            category='Expressions',
+        )
+        resp = self.client_api.delete(f'/api/wiki/?id={row.id}')
+        self.assertEqual(resp.status_code, 204)
+        self.assertFalse(CulturalTerm.objects.filter(pk=row.id).exists())
 
 
 class HealthCheckViewTests(TestCase):
@@ -740,14 +789,16 @@ class WikiVozPhraseInterceptorTests(TestCase):
         CulturalTerm.objects.create(
             term='siyempre',
             definition='Single-word term',
-            language='cbk',
-            category='expression',
+            trigger_words=['siyempre'],
+            language='Chavacano',
+            category='Expressions',
         )
         CulturalTerm.objects.create(
             term='siyempre mabulig',
             definition='Longest phrase term',
-            language='cbk',
-            category='expression',
+            trigger_words=['siyempre mabulig'],
+            language='Chavacano',
+            category='Expressions',
         )
 
     @patch('core_api.views.nllb_translate')
@@ -817,6 +868,45 @@ class ApiKeyProtectionTests(TestCase):
                 'target_lang': 'en',
             }, format='json')
 
+        self.assertEqual(resp.status_code, 401)
+
+    @override_settings(PUENTE_API_KEY='unit-test-key')
+    def test_wiki_post_requires_api_key_when_configured(self):
+        resp = self.client_api.post('/api/wiki/', {
+            'term': 'Puhon',
+            'definition': 'God willing.',
+            'trigger_words': ['puhon'],
+            'language': 'Cebuano/Bisaya',
+            'category': 'Expressions',
+        }, format='json')
+        self.assertEqual(resp.status_code, 401)
+
+    @override_settings(PUENTE_API_KEY='unit-test-key')
+    def test_wiki_post_accepts_valid_api_key(self):
+        resp = self.client_api.post(
+            '/api/wiki/',
+            {
+                'term': 'Puhon',
+                'definition': 'God willing.',
+                'trigger_words': ['puhon'],
+                'language': 'Cebuano/Bisaya',
+                'category': 'Expressions',
+            },
+            format='json',
+            HTTP_X_API_KEY='unit-test-key',
+        )
+        self.assertIn(resp.status_code, {200, 201})
+
+    @override_settings(PUENTE_API_KEY='unit-test-key')
+    def test_wiki_delete_requires_api_key_when_configured(self):
+        row = CulturalTerm.objects.create(
+            term='Test Delete',
+            definition='Delete me.',
+            trigger_words=['test delete'],
+            language='Spanish',
+            category='Expressions',
+        )
+        resp = self.client_api.delete(f'/api/wiki/?id={row.id}')
         self.assertEqual(resp.status_code, 401)
         self.assertIn('error', resp.data)
 

@@ -25,7 +25,7 @@ from django.db.models import Q
 from django.db.models.functions import Lower, Trim
 from django.http import HttpResponse
 from rest_framework.decorators import api_view
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -43,6 +43,10 @@ from .serializers import (
     TranslationLogListSerializer,
     TextToSpeechRequestSerializer,
     TranslateRequestSerializer,
+    WIKI_ALLOWED_CATEGORIES,
+    WIKI_ALLOWED_LANGUAGES,
+    WIKI_CATEGORY_ALIASES,
+    WIKI_LANGUAGE_ALIASES,
 )
 
 logger = logging.getLogger(__name__)
@@ -193,7 +197,11 @@ def _get_cultural_term_candidates(source_lang, target_lang):
     scan_lang = source_lang if source_lang != 'auto' else target_lang
     scan_lang = (scan_lang or '').strip().casefold()
 
-    base_qs = CulturalTerm.objects.only(
+    allowed_category_filter = Q()
+    for category in WIKI_ALLOWED_CATEGORIES:
+        allowed_category_filter |= Q(category__iexact=category)
+
+    base_qs = CulturalTerm.objects.filter(allowed_category_filter).only(
         'id', 'term', 'definition', 'image_url', 'language', 'category',
     )
 
@@ -905,24 +913,157 @@ class BackTranslationVerifyView(APIView):
 
 
 # ═══════════════════════════════════════════════════════════════
-# Wiki-Voz Search View
+# Wiki-Voz CRUD ViewSet
 # ═══════════════════════════════════════════════════════════════
-class WikiVozView(APIView):
+class WikiVozViewSet(viewsets.ModelViewSet):
     """
-    GET /api/wiki/?q=<term>
-    Returns matching CulturalTerm entries from SQLite.
-    Without query, returns all entries (for frontend term-map loading).
+    Wiki-Voz CRUD bridge.
+
+    Supported methods:
+      - GET    /api/wiki/
+      - POST   /api/wiki/
+      - DELETE /api/wiki/?id=<pk>  (and /api/wiki/<pk>/ for compatibility)
     """
 
-    def get(self, request):
-        query = request.query_params.get('q', '').strip()
+    serializer_class = CulturalTermSerializer
+    queryset = CulturalTerm.objects.all().order_by('term')
+    http_method_names = ['get', 'post', 'delete', 'head', 'options']
+
+    @staticmethod
+    def _build_allowed_scope_filter():
+        language_filter = Q()
+        for language in WIKI_ALLOWED_LANGUAGES:
+            language_filter |= Q(language__iexact=language)
+
+        category_filter = Q()
+        for category in WIKI_ALLOWED_CATEGORIES:
+            category_filter |= Q(category__iexact=category)
+
+        return language_filter & category_filter
+
+    def get_queryset(self):
+        queryset = CulturalTerm.objects.filter(
+            self._build_allowed_scope_filter(),
+        ).order_by('term')
+
+        query = (self.request.query_params.get('q') or '').strip()
+        language = (self.request.query_params.get('language') or '').strip()
+        category = (self.request.query_params.get('category') or '').strip()
+
         if query:
-            terms = CulturalTerm.objects.filter(term__icontains=query).order_by('term')[:20]
+            queryset = queryset.filter(
+                Q(term__icontains=query) | Q(definition__icontains=query),
+            )
+
+        if language:
+            normalized_language = WIKI_LANGUAGE_ALIASES.get(language.casefold(), language)
+            if normalized_language in WIKI_ALLOWED_LANGUAGES:
+                queryset = queryset.filter(language__iexact=normalized_language)
+
+        if category:
+            normalized_category = WIKI_CATEGORY_ALIASES.get(category.casefold(), category)
+            if normalized_category in WIKI_ALLOWED_CATEGORIES:
+                queryset = queryset.filter(category__iexact=normalized_category)
+
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({
+            'count': len(serializer.data),
+            'results': serializer.data,
+        })
+
+    def create(self, request, *args, **kwargs):
+        auth_error = _require_api_key_or_401(request)
+        if auth_error:
+            return auth_error
+        raw_id = request.data.get('id')
+        existing_by_id = None
+
+        if raw_id not in (None, ''):
+            try:
+                lookup_id = int(str(raw_id).strip())
+            except (TypeError, ValueError):
+                return _build_error_response(
+                    code='validation.wiki.id_invalid',
+                    message='id must be an integer when provided.',
+                    http_status=status.HTTP_400_BAD_REQUEST,
+                    retryable=False,
+                )
+
+            existing_by_id = CulturalTerm.objects.filter(pk=lookup_id).first()
+            if not existing_by_id:
+                return _build_error_response(
+                    code='wiki.not_found',
+                    message='Cannot update: wiki entry id does not exist.',
+                    http_status=status.HTTP_404_NOT_FOUND,
+                    retryable=False,
+                )
+
+            serializer = self.get_serializer(existing_by_id, data=request.data)
         else:
-            # Return ALL terms so frontend can build dynamic CULTURAL_TERMS_MAP
-            terms = CulturalTerm.objects.order_by('term')[:100]
-        serializer = CulturalTermSerializer(terms, many=True)
-        return Response({'results': serializer.data})
+            serializer = self.get_serializer(data=request.data)
+
+        serializer.is_valid(raise_exception=True)
+        validated = dict(serializer.validated_data)
+
+        if existing_by_id is not None:
+            obj, was_created = CulturalTerm.objects.update_or_create(
+                pk=existing_by_id.pk,
+                defaults=validated,
+            )
+        else:
+            lookup_term = validated.get('term')
+            lookup_language = validated.get('language')
+            obj, was_created = CulturalTerm.objects.update_or_create(
+                term=lookup_term,
+                language=lookup_language,
+                defaults=validated,
+            )
+
+        response_payload = self.get_serializer(obj).data
+        return Response(
+            response_payload,
+            status=status.HTTP_201_CREATED if was_created else status.HTTP_200_OK,
+        )
+
+    def destroy(self, request, *args, **kwargs):
+        auth_error = _require_api_key_or_401(request)
+        if auth_error:
+            return auth_error
+
+        lookup_id = kwargs.get('pk') or request.query_params.get('id')
+        if not lookup_id:
+            return _build_error_response(
+                code='validation.wiki.delete_id_required',
+                message='DELETE /api/wiki/ requires an id query parameter, e.g. /api/wiki/?id=12',
+                http_status=status.HTTP_400_BAD_REQUEST,
+                retryable=False,
+            )
+
+        try:
+            normalized_pk = int(str(lookup_id).strip())
+        except (TypeError, ValueError):
+            return _build_error_response(
+                code='validation.wiki.delete_id_invalid',
+                message='Wiki entry id must be an integer.',
+                http_status=status.HTTP_400_BAD_REQUEST,
+                retryable=False,
+            )
+
+        instance = CulturalTerm.objects.filter(pk=normalized_pk).first()
+        if not instance:
+            return _build_error_response(
+                code='wiki.not_found',
+                message='Wiki entry not found.',
+                http_status=status.HTTP_404_NOT_FOUND,
+                retryable=False,
+            )
+
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 # ═══════════════════════════════════════════════════════════════

@@ -1,146 +1,82 @@
 /**
  * DatabaseAdminScreen.jsx — God Mode database operations panel.
  *
- * Mock CRUD surface for CulturalTerm management.
- * Uses local state mutations for UI workflow validation.
+ * Live CRUD surface for CulturalTerm management via /api/wiki/.
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import axios from 'axios'
 import { Database, FileUp, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
-import { WIKI_VOZ_ENTRIES } from '../../data/wikiVozData'
-
-const LANGUAGE_OPTIONS = [
-  { value: 'cbk', label: 'Chavacano (cbk)' },
-  { value: 'ceb', label: 'Cebuano/Bisaya (ceb)' },
-  { value: 'hil', label: 'Hiligaynon (hil)' },
-  { value: 'es', label: 'Spanish (es)' },
-  { value: 'tl', label: 'Tagalog (tl)' },
-]
-
-const CATEGORY_OPTIONS = [
-  'food',
-  'culture',
-  'heritage',
-  'expression',
-  'lifestyle',
-  'honorifics',
-  'idioms',
-  'historical',
-  'mythology-folklore',
-  'festival',
-  'family',
-  'craft',
-  'place',
-]
+import {
+  CATEGORY_OPTIONS,
+  LANGUAGE_LABEL_BY_CODE,
+  LANGUAGE_OPTIONS,
+  mapWikiVozArrayToAdminRecords,
+  parseCsvTextToWikiVozArray,
+  parseJsonTextToWikiVozArray,
+  toTriggerWordsArray,
+} from '../../lib/dbAdminImport'
+import { withApiKeyHeaders } from '../../lib/apiAuth'
 
 const DEFAULT_FORM = {
   term: '',
-  language: 'cbk',
-  category: 'culture',
+  language: 'Chavacano',
+  category: 'Idioms',
+  triggerWords: '',
   definition: '',
+}
+
+const ADMIN_BATCH_SIZE = 20
+
+function extractApiMessage(error, fallbackMessage) {
+  const payload = error?.response?.data
+  if (payload && typeof payload === 'object') {
+    const direct = String(payload.error || '').trim()
+    if (direct) return direct
+
+    const details = payload.details
+    if (details && typeof details === 'object') {
+      const flattened = Object.values(details)
+        .flat()
+        .map((entry) => String(entry || '').trim())
+        .filter(Boolean)
+        .join(' ')
+      if (flattened) return flattened
+    }
+  }
+
+  return fallbackMessage
 }
 
 function normalizeText(value) {
   return String(value || '').trim().toLowerCase()
 }
 
-function inferLanguageCode(languageValue) {
-  const normalized = normalizeText(languageValue)
-
-  if (normalized.includes('chavacano') || normalized === 'cbk') return 'cbk'
-  if (normalized.includes('hiligaynon') || normalized.includes('ilonggo') || normalized === 'hil') return 'hil'
-  if (normalized.includes('cebuano') || normalized.includes('bisaya') || normalized === 'ceb') return 'ceb'
-  if (normalized.includes('tagalog') || normalized.includes('filipino') || normalized === 'tl') return 'tl'
-  if (normalized.includes('spanish') || normalized === 'es') return 'es'
-
-  return 'cbk'
-}
-
-function mapApiRecord(entry, index) {
-  return {
-    id: String(entry.id || `api-${index}`),
-    term: entry.term || '',
-    language: inferLanguageCode(entry.language),
-    category: String(entry.category || 'culture').trim().toLowerCase(),
-    definition: entry.definition || '',
-    updatedAt: new Date().toISOString(),
-    source: 'api',
-  }
-}
-
-function mapFallbackRecord(entry, index) {
-  return {
-    id: String(entry.id || `fallback-${index}`),
-    term: entry.term || '',
-    language: inferLanguageCode(entry.language),
-    category: String(entry.category || 'culture').trim().toLowerCase(),
-    definition: entry.definition || '',
-    updatedAt: new Date().toISOString(),
-    source: 'fallback',
-  }
-}
-
-function parseCsvRows(csvText) {
-  const lines = String(csvText || '')
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean)
-
-  if (lines.length === 0) {
-    return []
-  }
-
-  const header = lines[0].split(',').map((cell) => normalizeText(cell))
-  const termIndex = header.indexOf('term')
-  const languageIndex = header.indexOf('language')
-  const categoryIndex = header.indexOf('category')
-  const definitionIndex = header.indexOf('definition')
-
-  if (termIndex < 0 || definitionIndex < 0) {
-    return []
-  }
-
-  const dataRows = []
-
-  for (let i = 1; i < lines.length; i += 1) {
-    const columns = lines[i].split(',').map((cell) => cell.trim())
-    const term = columns[termIndex] || ''
-    const definition = columns[definitionIndex] || ''
-
-    if (!term || !definition) {
-      continue
-    }
-
-    dataRows.push({
-      term,
-      definition,
-      language: inferLanguageCode(columns[languageIndex] || 'cbk'),
-      category: normalizeText(columns[categoryIndex] || 'culture') || 'culture',
-    })
-  }
-
-  return dataRows
-}
-
-function formatTimestamp(isoValue) {
-  if (!isoValue) return '-'
-
-  try {
-    return new Date(isoValue).toLocaleString()
-  } catch {
-    return '-'
-  }
+function isEditableTarget(target) {
+  return target instanceof HTMLElement && (
+    target.tagName === 'INPUT'
+    || target.tagName === 'TEXTAREA'
+    || target.tagName === 'SELECT'
+    || target.isContentEditable
+  )
 }
 
 export default function DatabaseAdminScreen({ apiUrl, notify }) {
+  const rootRef = useRef(null)
   const fileInputRef = useRef(null)
+  const appendTimerRef = useRef(null)
 
   const [records, setRecords] = useState([])
   const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [deletingId, setDeletingId] = useState(null)
+  const [importing, setImporting] = useState(false)
   const [notice, setNotice] = useState('')
   const [query, setQuery] = useState('')
   const [languageFilter, setLanguageFilter] = useState('all')
+  const [categoryFilter, setCategoryFilter] = useState('all')
+  const [visibleCount, setVisibleCount] = useState(ADMIN_BATCH_SIZE)
+  const [isAppending, setIsAppending] = useState(false)
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingRecordId, setEditingRecordId] = useState(null)
@@ -154,46 +90,60 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
     return notify
   }, [notify])
 
+  const fetchWikiRecords = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) {
+      setLoading(true)
+    }
+    setNotice('')
+
+    try {
+      const { data } = await axios.get(`${apiUrl}/wiki/`, {
+        timeout: 8000,
+        headers: withApiKeyHeaders(),
+      })
+
+      const payloadRows = Array.isArray(data?.results)
+        ? data.results
+        : (Array.isArray(data?.wiki_voz_entries) ? data.wiki_voz_entries : [])
+
+      const mapped = mapWikiVozArrayToAdminRecords(payloadRows, 'api')
+      setRecords(mapped)
+
+      if (mapped.length === 0) {
+        setNotice('No wiki records found in the database yet.')
+      }
+      return mapped
+    } catch (error) {
+      setRecords([])
+      const message = extractApiMessage(error, 'Failed to load wiki records from API.')
+      setNotice(message)
+      emitToast({
+        title: 'Wiki fetch failed',
+        message,
+        variant: 'error',
+        durationMs: 4200,
+      })
+      return []
+    } finally {
+      if (!silent) {
+        setLoading(false)
+      }
+    }
+  }, [apiUrl, emitToast])
+
   useEffect(() => {
     let cancelled = false
 
-    const hydrateRecords = async () => {
-      setLoading(true)
-      setNotice('')
-
-      try {
-        const { data } = await axios.get(`${apiUrl}/wiki/`, { timeout: 8000 })
-        if (cancelled) return
-
-        const mapped = (data?.results || []).map((entry, index) => mapApiRecord(entry, index))
-        setRecords(mapped)
-
-        if (mapped.length === 0) {
-          setNotice('No API rows returned. Use + Add New Term or Import CSV to seed records.')
-        }
-      } catch {
-        if (cancelled) return
-
-        const fallback = WIKI_VOZ_ENTRIES.slice(0, 60).map((entry, index) => mapFallbackRecord(entry, index))
-        setRecords(fallback)
-        setNotice('API unavailable. Loaded offline fallback records for admin workflow.')
-        emitToast({
-          title: 'API fallback loaded',
-          message: 'Database admin is running in offline fallback mode.',
-          variant: 'warning',
-          durationMs: 4200,
-        })
-      } finally {
-        if (!cancelled) setLoading(false)
+    fetchWikiRecords().catch(() => {
+      if (!cancelled) {
+        setLoading(false)
       }
-    }
-
-    hydrateRecords()
+    })
 
     return () => {
       cancelled = true
     }
-  }, [apiUrl, emitToast])
+  }, [fetchWikiRecords])
 
   useEffect(() => {
     if (!notice) return undefined
@@ -207,8 +157,9 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
 
     return records.filter((record) => {
       const matchesLanguage = languageFilter === 'all' || record.language === languageFilter
+      const matchesCategory = categoryFilter === 'all' || record.category === categoryFilter
 
-      if (!matchesLanguage) {
+      if (!matchesLanguage || !matchesCategory) {
         return false
       }
 
@@ -221,9 +172,37 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
         record.definition,
         record.language,
         record.category,
+        (record.trigger_words || []).join(' '),
       ].some((field) => normalizeText(field).includes(normalizedQuery))
     })
-  }, [languageFilter, query, records])
+  }, [categoryFilter, languageFilter, query, records])
+
+  useEffect(() => {
+    setVisibleCount(ADMIN_BATCH_SIZE)
+  }, [query, languageFilter, categoryFilter])
+
+  useEffect(() => {
+    setVisibleCount((previous) => {
+      if (filteredRecords.length === 0) {
+        return ADMIN_BATCH_SIZE
+      }
+
+      return Math.max(ADMIN_BATCH_SIZE, Math.min(previous, filteredRecords.length))
+    })
+  }, [filteredRecords.length])
+
+  const visibleRecords = useMemo(
+    () => filteredRecords.slice(0, visibleCount),
+    [filteredRecords, visibleCount],
+  )
+
+  const hasMoreRecords = visibleRecords.length < filteredRecords.length
+  const visibleRangeStart = filteredRecords.length === 0 ? 0 : 1
+  const visibleRangeEnd = visibleRecords.length
+
+  const categoryFilterOptions = useMemo(() => (
+    CATEGORY_OPTIONS.filter((category) => records.some((record) => record.category === category))
+  ), [records])
 
   const openCreateModal = () => {
     setEditingRecordId(null)
@@ -237,6 +216,7 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
       term: record.term,
       language: record.language,
       category: record.category,
+      triggerWords: (record.trigger_words || []).join(', '),
       definition: record.definition,
     })
     setIsModalOpen(true)
@@ -248,120 +228,279 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
     setForm(DEFAULT_FORM)
   }
 
-  const handleSaveRecord = () => {
+  const handleSaveRecord = async () => {
     const nextTerm = form.term.trim()
+    const nextTriggerWords = toTriggerWordsArray(form.triggerWords)
     const nextDefinition = form.definition.trim()
 
-    if (!nextTerm || !nextDefinition) {
-      setNotice('Term and definition are required before saving.')
+    if (!nextTerm || !nextDefinition || nextTriggerWords.length === 0) {
+      setNotice('Term, trigger words, and definition are required before saving.')
       emitToast({
         title: 'Validation required',
-        message: 'Term and definition are required before saving.',
+        message: 'Term, trigger words, and definition are required before saving.',
         variant: 'warning',
         durationMs: 3600,
       })
       return
     }
 
-    if (editingRecordId) {
-      setRecords((previous) => previous.map((record) => (
-        record.id === editingRecordId
-          ? {
-              ...record,
-              term: nextTerm,
-              language: form.language,
-              category: form.category,
-              definition: nextDefinition,
-              updatedAt: new Date().toISOString(),
-              source: 'local-edit',
-            }
-          : record
-      )))
-      setNotice('Record updated (mock local state).')
-      emitToast({ title: 'Record updated', message: `${nextTerm} was updated locally.`, variant: 'success', durationMs: 3200 })
-    } else {
-      const newRecord = {
-        id: `local-${Date.now()}`,
+    setSubmitting(true)
+
+    try {
+      const payload = {
         term: nextTerm,
+        definition: nextDefinition,
+        trigger_words: nextTriggerWords,
         language: form.language,
         category: form.category,
-        definition: nextDefinition,
-        updatedAt: new Date().toISOString(),
-        source: 'local-new',
       }
 
-      setRecords((previous) => [newRecord, ...previous])
-      setNotice('New record created (mock local state).')
-      emitToast({ title: 'Record created', message: `${nextTerm} was added locally.`, variant: 'success', durationMs: 3200 })
-    }
+      if (editingRecordId !== null && editingRecordId !== undefined) {
+        payload.id = editingRecordId
+      }
 
-    closeModal()
+      const { data } = await axios.post(`${apiUrl}/wiki/`, payload, {
+        timeout: 10000,
+        headers: withApiKeyHeaders(),
+      })
+
+      const mapped = mapWikiVozArrayToAdminRecords([data], 'api-write')[0]
+
+      if (mapped) {
+        setRecords((previous) => {
+          const filtered = previous.filter((record) => String(record.id) !== String(mapped.id))
+          return [mapped, ...filtered]
+        })
+      } else {
+        await fetchWikiRecords({ silent: true })
+      }
+
+      setNotice(editingRecordId ? 'Record updated in database.' : 'New record added to database.')
+      emitToast({
+        title: editingRecordId ? 'Record updated' : 'Record created',
+        message: `${nextTerm} synced to SQLite via API.`,
+        variant: 'success',
+        durationMs: 3200,
+      })
+      closeModal()
+    } catch (error) {
+      const message = extractApiMessage(
+        error,
+        editingRecordId
+          ? 'Failed to update record via API.'
+          : 'Failed to create record via API.',
+      )
+      setNotice(message)
+      emitToast({
+        title: 'Save failed',
+        message,
+        variant: 'error',
+        durationMs: 4200,
+      })
+    } finally {
+      setSubmitting(false)
+    }
   }
 
-  const handleDeleteRecord = (recordId) => {
-    setRecords((previous) => previous.filter((record) => record.id !== recordId))
-    setNotice('Record removed from local table.')
-    emitToast({ title: 'Record removed', message: 'The selected row was removed from local state.', variant: 'info', durationMs: 3200 })
+  const handleDeleteRecord = async (recordId) => {
+    setDeletingId(recordId)
+    try {
+      await axios.delete(`${apiUrl}/wiki/`, {
+        timeout: 10000,
+        headers: withApiKeyHeaders(),
+        params: { id: recordId },
+      })
+
+      setRecords((previous) => previous.filter((record) => String(record.id) !== String(recordId)))
+      setNotice('Record deleted from database.')
+      emitToast({
+        title: 'Record deleted',
+        message: 'The selected wiki term was removed from SQLite.',
+        variant: 'info',
+        durationMs: 3200,
+      })
+    } catch (error) {
+      const message = extractApiMessage(error, 'Failed to delete wiki record.')
+      setNotice(message)
+      emitToast({
+        title: 'Delete failed',
+        message,
+        variant: 'error',
+        durationMs: 4200,
+      })
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   const handleImportClick = () => {
     fileInputRef.current?.click()
   }
 
-  const handleImportCsv = async (event) => {
+  const handleImportFile = async (event) => {
     const file = event.target.files?.[0]
     if (!file) {
       return
     }
 
     try {
-      const csvText = await file.text()
-      const rows = parseCsvRows(csvText)
+      setImporting(true)
+      const importText = await file.text()
+      const filename = String(file.name || '').toLowerCase()
+      const isJson = filename.endsWith('.json') || file.type.includes('json')
+      const parsedRows = isJson
+        ? parseJsonTextToWikiVozArray(importText)
+        : parseCsvTextToWikiVozArray(importText)
+      const imported = mapWikiVozArrayToAdminRecords(parsedRows, isJson ? 'json-import' : 'csv-import')
 
-      if (rows.length === 0) {
-        setNotice('CSV import failed: expected columns term, definition, language, category.')
+      if (imported.length === 0) {
+        setNotice('Import failed: expected id, trigger_words, language, category, title, description.')
         emitToast({
           title: 'Import failed',
-          message: 'Expected CSV columns: term, definition, language, category.',
+          message: 'Expected schema: id, trigger_words, language, category, title, description.',
           variant: 'error',
           durationMs: 4600,
         })
         return
       }
 
-      const imported = rows.map((row, index) => ({
-        id: `import-${Date.now()}-${index}`,
-        term: row.term,
-        language: row.language,
-        category: row.category,
-        definition: row.definition,
-        updatedAt: new Date().toISOString(),
-        source: 'csv-import',
-      }))
+      let successCount = 0
+      let failureCount = 0
 
-      setRecords((previous) => [...imported, ...previous])
-      setNotice(`Imported ${imported.length} rows from CSV (mock ingest).`)
+      for (const row of imported) {
+        const payload = {
+          term: row.term,
+          definition: row.definition,
+          trigger_words: row.trigger_words,
+          language: row.language,
+          category: row.category,
+        }
+
+        try {
+          await axios.post(`${apiUrl}/wiki/`, payload, {
+            timeout: 10000,
+            headers: withApiKeyHeaders(),
+          })
+          successCount += 1
+        } catch {
+          failureCount += 1
+        }
+      }
+
+      await fetchWikiRecords({ silent: true })
+      setNotice(`Imported ${successCount}/${imported.length} rows into SQLite.`)
       emitToast({
         title: 'Import complete',
-        message: `Imported ${imported.length} rows into local table state.`,
-        variant: 'success',
-        durationMs: 3600,
+        message: failureCount > 0
+          ? `${successCount} imported, ${failureCount} failed.`
+          : `Imported ${successCount} ${isJson ? 'JSON' : 'CSV'} records into SQLite.`,
+        variant: failureCount > 0 ? 'warning' : 'success',
+        durationMs: 4200,
       })
     } catch {
-      setNotice('CSV import failed in this browser context.')
+      setNotice('Import failed in this browser context.')
       emitToast({
         title: 'Import failed',
-        message: 'CSV import failed in this browser context.',
+        message: 'Import failed in this browser context.',
         variant: 'error',
         durationMs: 4200,
       })
     } finally {
+      setImporting(false)
       event.target.value = ''
     }
   }
 
+  const clearAppendTimer = useCallback(() => {
+    if (appendTimerRef.current) {
+      window.clearTimeout(appendTimerRef.current)
+      appendTimerRef.current = null
+    }
+  }, [])
+
+  const runAppendTransition = useCallback((computeNextVisibleCount) => {
+    clearAppendTimer()
+    setIsAppending(true)
+    setVisibleCount((previous) => computeNextVisibleCount(previous))
+    appendTimerRef.current = window.setTimeout(() => {
+      setIsAppending(false)
+      appendTimerRef.current = null
+    }, 260)
+  }, [clearAppendTimer])
+
+  const handleShowMore = useCallback(() => {
+    if (!hasMoreRecords) {
+      return
+    }
+
+    runAppendTransition((previous) => Math.min(filteredRecords.length, previous + ADMIN_BATCH_SIZE))
+  }, [filteredRecords.length, hasMoreRecords, runAppendTransition])
+
+  const handleShowAll = useCallback(() => {
+    if (!hasMoreRecords) {
+      return
+    }
+
+    runAppendTransition(() => filteredRecords.length)
+  }, [filteredRecords.length, hasMoreRecords, runAppendTransition])
+
+  const handleResetToFirstBatch = useCallback(() => {
+    clearAppendTimer()
+    setIsAppending(false)
+    setVisibleCount(ADMIN_BATCH_SIZE)
+  }, [clearAppendTimer])
+
+  useEffect(() => {
+    return () => {
+      clearAppendTimer()
+    }
+  }, [clearAppendTimer])
+
+  useEffect(() => {
+    const handlePaginationShortcuts = (event) => {
+      if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) {
+        return
+      }
+
+      if (isEditableTarget(event.target)) {
+        return
+      }
+
+      if (isModalOpen) {
+        return
+      }
+
+      const rootElement = rootRef.current
+      if (!rootElement || rootElement.offsetParent === null) {
+        return
+      }
+
+      if ((event.key === ']' || event.key === 'ArrowRight') && hasMoreRecords) {
+        event.preventDefault()
+        handleShowMore()
+        return
+      }
+
+      if (event.key === 'End' && hasMoreRecords) {
+        event.preventDefault()
+        handleShowAll()
+        return
+      }
+
+      if (event.key === 'Home' && visibleRecords.length > ADMIN_BATCH_SIZE) {
+        event.preventDefault()
+        handleResetToFirstBatch()
+      }
+    }
+
+    window.addEventListener('keydown', handlePaginationShortcuts)
+    return () => {
+      window.removeEventListener('keydown', handlePaginationShortcuts)
+    }
+  }, [handleResetToFirstBatch, handleShowAll, handleShowMore, hasMoreRecords, isModalOpen, visibleRecords.length])
+
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6">
+    <div ref={rootRef} className="mx-auto w-full max-w-7xl space-y-6">
       <header className="a26-surface relative overflow-hidden p-5 md:p-6">
         <div className="pointer-events-none absolute -right-12 top-2 h-32 w-32 rounded-full bg-accent-magenta/10 blur-3xl" />
 
@@ -369,24 +508,26 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
           <div>
             <p className="a26-subtitle">God Mode</p>
             <h2 className="a26-hero-title mt-1 font-semibold text-text-primary">Database Admin</h2>
-            <p className="mt-1 text-sm text-text-secondary">Mock CRUD console for CulturalTerm records.</p>
+            <p className="mt-1 text-sm text-text-secondary">ML sociolinguistic interceptor patches for strict linguistic gap coverage.</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={handleImportClick}
+              disabled={importing}
               className="a26-button-ghost inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold"
             >
               <FileUp className="h-4 w-4" />
-              📤 Import CSV
+              {importing ? 'Importing...' : 'Import CSV / JSON'}
             </button>
 
             <button
               onClick={openCreateModal}
+              disabled={submitting}
               className="a26-button-primary inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold"
             >
               <Plus className="h-4 w-4" />
-              + Add New Term
+              Add New Term
             </button>
           </div>
         </div>
@@ -394,9 +535,9 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
         <input
           ref={fileInputRef}
           type="file"
-          accept=".csv,text/csv"
+          accept=".csv,.json,text/csv,application/json"
           className="hidden"
-          onChange={handleImportCsv}
+          onChange={handleImportFile}
         />
       </header>
 
@@ -407,7 +548,7 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search term, definition, category..."
+              placeholder="Search term, trigger words, definition, category..."
               className="w-full rounded-xl border border-border-subtle bg-bg-elevated/60 py-2.5 pl-9 pr-3 text-sm text-text-primary placeholder-text-secondary/60 transition-all duration-300 focus:border-accent-magenta/70 focus:outline-none"
             />
           </div>
@@ -422,6 +563,17 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
               <option key={option.value} value={option.value}>{option.label}</option>
             ))}
           </select>
+
+          <select
+            value={categoryFilter}
+            onChange={(event) => setCategoryFilter(event.target.value)}
+            className="rounded-xl border border-border-subtle bg-bg-elevated/60 px-3 py-2.5 text-sm text-text-primary transition-all duration-300 focus:border-accent-magenta/70 focus:outline-none"
+          >
+            <option value="all">All Categories</option>
+            {categoryFilterOptions.map((category) => (
+              <option key={category} value={category}>{category}</option>
+            ))}
+          </select>
         </div>
 
         {notice && (
@@ -430,7 +582,17 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
           </div>
         )}
 
-        <div className="overflow-hidden rounded-2xl border border-border-subtle/80">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border-subtle/75 bg-bg-card/55 px-3 py-2 text-sm text-text-secondary">
+          <span>
+            Showing {visibleRangeStart}-{visibleRangeEnd} of {filteredRecords.length} filtered records
+          </span>
+          <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide">
+            <span className="a26-chip">{records.length} total</span>
+            <span className="a26-chip">Batch {ADMIN_BATCH_SIZE}</span>
+          </div>
+        </div>
+
+        <div className={`overflow-hidden rounded-2xl border border-border-subtle/80 ${isAppending ? 'a26-list-appending' : ''}`} aria-busy={isAppending}>
           <div className="max-h-[430px] overflow-auto">
             <table className="min-w-full divide-y divide-border-subtle text-sm">
               <thead className="sticky top-0 z-10 bg-bg-elevated/95 backdrop-blur-sm">
@@ -438,8 +600,8 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
                   <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Term</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Language</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Category</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Trigger Words</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Definition</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Updated</th>
                   <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Actions</th>
                 </tr>
               </thead>
@@ -447,22 +609,33 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
               <tbody className="divide-y divide-border-subtle bg-bg-card">
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="px-3 py-6 text-center text-text-secondary">Loading records…</td>
+                    <td colSpan={6} className="px-3 py-6 text-center text-text-secondary">Loading records from API...</td>
                   </tr>
                 ) : filteredRecords.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-3 py-6 text-center text-text-secondary">No records match the current filters.</td>
+                    <td colSpan={6} className="px-3 py-6 text-center text-text-secondary">No wiki records match the current filters.</td>
                   </tr>
                 ) : (
-                  filteredRecords.map((record) => (
+                  visibleRecords.map((record) => (
                     <tr key={record.id} className="transition-colors duration-200 hover:bg-bg-elevated/55">
                       <td className="px-3 py-2 font-semibold text-text-primary">{record.term}</td>
-                      <td className="px-3 py-2 text-text-secondary">{record.language}</td>
+                      <td className="px-3 py-2 text-text-secondary">{LANGUAGE_LABEL_BY_CODE[record.language] || record.language}</td>
                       <td className="px-3 py-2 text-text-secondary">{record.category}</td>
+                      <td className="max-w-[280px] px-3 py-2 text-text-secondary">
+                        <div className="flex flex-wrap gap-1">
+                          {(record.trigger_words || []).map((triggerWord) => (
+                            <span
+                              key={`${record.id}-${triggerWord}`}
+                              className="rounded-full border border-border-subtle bg-bg-elevated/70 px-2 py-0.5 text-xs"
+                            >
+                              {triggerWord}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
                       <td className="max-w-[360px] px-3 py-2 text-text-secondary">
                         <p className="line-clamp-2">{record.definition}</p>
                       </td>
-                      <td className="px-3 py-2 text-xs text-text-secondary">{formatTimestamp(record.updatedAt)}</td>
                       <td className="px-3 py-2">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
@@ -474,6 +647,7 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
                           </button>
                           <button
                             onClick={() => handleDeleteRecord(record.id)}
+                            disabled={deletingId === record.id}
                             className="rounded-xl border border-border-subtle p-1.5 text-text-secondary transition-all duration-200 hover:border-status-danger-border hover:text-status-danger-text active:scale-[0.98]"
                             title="Delete record"
                           >
@@ -488,6 +662,59 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
             </table>
           </div>
         </div>
+
+        {!loading && filteredRecords.length > 0 ? (
+          <div className="mt-3 flex flex-col gap-2 rounded-xl border border-border-subtle/75 bg-bg-card/45 px-3 py-2.5 text-sm text-text-secondary sm:flex-row sm:items-center sm:justify-between">
+            <span className="text-xs sm:text-sm" aria-live="polite">
+              Displaying {visibleRangeStart}-{visibleRangeEnd} of {filteredRecords.length} records
+            </span>
+
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <span className="a26-pagination-hint">
+                Shortcuts: ] / Right Arrow = +20, End = all, Home = first 20
+              </span>
+
+              {hasMoreRecords ? (
+                <button
+                  type="button"
+                  onClick={handleShowMore}
+                  disabled={isAppending}
+                  className="a26-button-primary px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide disabled:cursor-not-allowed disabled:opacity-60"
+                  aria-keyshortcuts="] ArrowRight"
+                  title="Shortcut: ] or Right Arrow"
+                >
+                  {isAppending ? 'Loading...' : 'Show 20 More'}
+                </button>
+              ) : null}
+
+              {hasMoreRecords ? (
+                <button
+                  type="button"
+                  onClick={handleShowAll}
+                  disabled={isAppending}
+                  className="a26-button-ghost px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide disabled:cursor-not-allowed disabled:opacity-60"
+                  aria-keyshortcuts="End"
+                  title="Shortcut: End"
+                >
+                  Show All
+                </button>
+              ) : null}
+
+              {visibleRecords.length > ADMIN_BATCH_SIZE ? (
+                <button
+                  type="button"
+                  onClick={handleResetToFirstBatch}
+                  disabled={isAppending}
+                  className="a26-button-ghost px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide disabled:cursor-not-allowed disabled:opacity-60"
+                  aria-keyshortcuts="Home"
+                  title="Shortcut: Home"
+                >
+                  Reset To First 20
+                </button>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
       </section>
 
       {isModalOpen && (
@@ -499,7 +726,7 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
               <div className="inline-flex items-center gap-2">
                 <Database className="h-4 w-4 text-accent-magenta" />
                 <h3 className="text-lg font-semibold text-text-primary">
-                  {editingRecordId ? 'Edit CulturalTerm' : 'Add CulturalTerm'}
+                  {editingRecordId ? 'Edit Wiki Term' : 'Add Wiki Term'}
                 </h3>
               </div>
 
@@ -513,12 +740,12 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
 
             <div className="space-y-3">
               <div>
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary">Term</label>
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary">Term / Title</label>
                 <input
                   value={form.term}
                   onChange={(event) => setForm((previous) => ({ ...previous, term: event.target.value }))}
                   className="w-full rounded-xl border border-border-subtle bg-bg-elevated/60 px-3 py-2 text-sm text-text-primary focus:border-accent-magenta/70 focus:outline-none"
-                  placeholder="Enter term"
+                  placeholder="Enter linguistic gap term"
                 />
               </div>
 
@@ -551,13 +778,23 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary">Definition</label>
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary">Trigger Words</label>
+                <input
+                  value={form.triggerWords}
+                  onChange={(event) => setForm((previous) => ({ ...previous, triggerWords: event.target.value }))}
+                  className="w-full rounded-xl border border-border-subtle bg-bg-elevated/60 px-3 py-2 text-sm text-text-primary focus:border-accent-magenta/70 focus:outline-none"
+                  placeholder="Comma-separated triggers, e.g. rompe cabeza, rompecabeza"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary">Definition / Sociolinguistic Patch</label>
                 <textarea
                   value={form.definition}
                   onChange={(event) => setForm((previous) => ({ ...previous, definition: event.target.value }))}
                   rows={4}
                   className="w-full rounded-xl border border-border-subtle bg-bg-elevated/60 px-3 py-2 text-sm text-text-primary focus:border-accent-magenta/70 focus:outline-none"
-                  placeholder="Describe the term context and sociolinguistic meaning"
+                  placeholder="Describe the strict sociolinguistic correction to apply"
                 />
               </div>
             </div>
@@ -565,15 +802,17 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
             <div className="mt-4 flex items-center justify-end gap-2">
               <button
                 onClick={closeModal}
+                disabled={submitting}
                 className="a26-button-ghost px-3 py-2 text-sm font-semibold"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveRecord}
+                disabled={submitting}
                 className="a26-button-primary px-3 py-2 text-sm font-semibold"
               >
-                Save
+                {submitting ? 'Saving...' : 'Save'}
               </button>
             </div>
           </div>

@@ -6,17 +6,25 @@ The frontend is a React 19 + Vite 7 progressive web app that talks to the Django
 
 | Dependency | Required | Notes |
 |---|---:|---|
-| Node.js | 18+ | Needed for Vite and the React toolchain |
+| Node.js | 20+ | Needed for Vite and the React toolchain |
 | npm | 9+ | Comes with Node.js |
 | Python | No | Backend only |
+
+Local fallback supported by launcher:
+
+- If system Node/npm is missing, place a local runtime at `.tools/node/bin` (used automatically by `run_project.sh`).
 
 ## Runtime dependencies (`dependencies`)
 
 | Package | Purpose |
 |---|---|
 | `axios` | HTTP client for `/api/translate/`, `/api/wiki/`, `/api/health/`, and `/api/tts/` |
+| `echarts` | High-performance charting engine for telemetry and evaluation visualizations |
+| `echarts-for-react` | React wrapper for ECharts components |
+| `lucide-react` | Icon set used across UI panels and controls |
 | `react` | UI runtime |
 | `react-dom` | Browser renderer |
+| `react-is` | React runtime compatibility helpers used by charting/tooling integrations |
 
 ## Development/build dependencies (`devDependencies`)
 
@@ -32,10 +40,12 @@ The frontend is a React 19 + Vite 7 progressive web app that talks to the Django
 | `globals` | Shared ESLint globals |
 | `tailwindcss` | Utility CSS framework |
 | `@tailwindcss/vite` | Tailwind integration for Vite |
-| `postcss` | CSS transform pipeline |
-| `autoprefixer` | Vendor prefixing |
 | `@types/react` | React types for tooling |
 | `@types/react-dom` | React DOM types for tooling |
+
+Compatibility note:
+
+- `vite-plugin-pwa` is pinned to the Vite 7-compatible line (`^1.2.0`).
 
 ## Frontend features that depend on the backend
 

@@ -7,6 +7,49 @@ from .languages import SOURCE_LANGUAGE_CODES, TARGET_LANGUAGE_CODES
 from .models import CulturalTerm, TranslationLog
 
 
+WIKI_ALLOWED_LANGUAGES = (
+    'Chavacano',
+    'Cebuano/Bisaya',
+    'Hiligaynon',
+    'Spanish',
+)
+
+WIKI_ALLOWED_CATEGORIES = (
+    'Idioms',
+    'False Cognates',
+    'Honorifics',
+    'Expressions',
+)
+
+WIKI_CATEGORY_ALIASES = {
+    'idiom': 'Idioms',
+    'idioms': 'Idioms',
+    'false cognate': 'False Cognates',
+    'false cognates': 'False Cognates',
+    'honorific': 'Honorifics',
+    'honorifics': 'Honorifics',
+    'expression': 'Expressions',
+    'expressions': 'Expressions',
+    'culture': 'Expressions',
+}
+
+WIKI_LANGUAGE_ALIASES = {
+    'cbk': 'Chavacano',
+    'chavacano': 'Chavacano',
+    'chavacano (zamboanga)': 'Chavacano',
+    'zamboanga': 'Chavacano',
+    'ceb': 'Cebuano/Bisaya',
+    'cebuano': 'Cebuano/Bisaya',
+    'bisaya': 'Cebuano/Bisaya',
+    'cebuano/bisaya': 'Cebuano/Bisaya',
+    'hil': 'Hiligaynon',
+    'hiligaynon': 'Hiligaynon',
+    'ilonggo': 'Hiligaynon',
+    'es': 'Spanish',
+    'spanish': 'Spanish',
+}
+
+
 # BTVL is used for semantic verification checks in the thesis workflow.
 # Keep this narrow and explicit to avoid unsupported reverse-target tests.
 BTVL_TARGET_LANGUAGE_CODES = ('en', 'es', 'tl')
@@ -89,10 +132,82 @@ class TextToSpeechRequestSerializer(serializers.Serializer):
 class CulturalTermSerializer(serializers.ModelSerializer):
     """Serializes CulturalTerm model for Wiki-Voz responses."""
 
+    trigger_words = serializers.ListField(
+        child=serializers.CharField(max_length=200),
+        required=False,
+        allow_empty=False,
+    )
+
     class Meta:
         model = CulturalTerm
-        fields = ['id', 'term', 'definition', 'image_url', 'language', 'category', 'created_at']
-        read_only_fields = ['id', 'created_at']
+        fields = [
+            'id',
+            'term',
+            'definition',
+            'trigger_words',
+            'image_url',
+            'language',
+            'category',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def validate_term(self, value):
+        normalized = _normalize_text_input(value)
+        if not normalized:
+            raise serializers.ValidationError('Term is required.')
+        return normalized
+
+    def validate_definition(self, value):
+        normalized = _normalize_text_input(value)
+        if not normalized:
+            raise serializers.ValidationError('Definition is required.')
+        return normalized
+
+    def validate_category(self, value):
+        normalized = _normalize_text_input(value)
+        canonical = WIKI_CATEGORY_ALIASES.get(normalized.casefold(), normalized)
+        if canonical not in WIKI_ALLOWED_CATEGORIES:
+            raise serializers.ValidationError(
+                f'Category must be one of: {", ".join(WIKI_ALLOWED_CATEGORIES)}.'
+            )
+        return canonical
+
+    def validate_language(self, value):
+        normalized = _normalize_text_input(value)
+        canonical = WIKI_LANGUAGE_ALIASES.get(normalized.casefold(), normalized)
+        if canonical not in WIKI_ALLOWED_LANGUAGES:
+            raise serializers.ValidationError(
+                f'Language must be one of: {", ".join(WIKI_ALLOWED_LANGUAGES)}.'
+            )
+        return canonical
+
+    def validate_trigger_words(self, value):
+        cleaned = []
+        seen = set()
+        for item in value or []:
+            normalized = _normalize_text_input(item)
+            if not normalized:
+                continue
+            key = normalized.casefold()
+            if key in seen:
+                continue
+            seen.add(key)
+            cleaned.append(normalized)
+
+        if not cleaned:
+            raise serializers.ValidationError('At least one trigger word is required.')
+
+        return cleaned
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        if 'trigger_words' not in attrs:
+            fallback_term = attrs.get('term')
+            if fallback_term:
+                attrs['trigger_words'] = [fallback_term.casefold()]
+        return attrs
 
 
 class TranslationLogListSerializer(serializers.ModelSerializer):

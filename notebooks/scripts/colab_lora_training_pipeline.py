@@ -5,14 +5,14 @@ Why this version exists:
   training loops due to FUSE-backed reads.
 - GPU training is faster and more stable when datasets are staged to local SSD-like
   Colab storage (/content/data) before DataLoader access.
-- Checkpoints are continuously mirrored back to Drive so abrupt Colab runtime stops
-  do not erase progress.
+- Checkpoints are written directly to Drive at save intervals so abrupt Colab runtime
+    stops do not erase progress.
 
 This script enforces a strict runtime contract:
-1) Copy train/eval/test JSONL from Drive -> /content/data with SHA-256 verification.
-2) Train locally from /content/data only.
-3) Mirror local checkpoints to Drive periodically and on every save event.
-4) Use aggressive GPU cache cleanup hooks to reduce VRAM fragmentation on T4.
+1) Copy train/eval/test JSONL from source storage -> /content/data with SHA-256 verification.
+2) Train from /content/data using nested translation schema JSONL.
+3) Write checkpoints directly to artifact storage every configured save interval (default 500 steps).
+4) Export final LoRA adapter to artifact storage /models/lora_adapters.
 """
 
 from __future__ import annotations
@@ -21,12 +21,12 @@ import gc
 import importlib
 import json
 import os
+import re
 import shutil
 import sys
-import threading
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Dict
 
 import torch
 from peft import LoraConfig, TaskType, get_peft_model
@@ -36,14 +36,11 @@ from transformers import (
     DataCollatorForSeq2Seq,
     Seq2SeqTrainer,
     Seq2SeqTrainingArguments,
-    TrainerCallback,
 )
 
 from colab_drive_sync import (
-    copy_file_with_checksum,
     ensure_parent_dir,
     stage_split_jsonl,
-    sync_tree_with_checksums,
 )
 
 
@@ -115,6 +112,22 @@ def env_bool(key: str, default: bool) -> bool:
     return value.strip().casefold() in {'1', 'true', 'yes', 'y', 'on'}
 
 
+FLORES_TO_SCHEMA_KEY = {
+    'eng': 'en',
+    'spa': 'es',
+    'tgl': 'tl',
+    'cbk': 'cbk',
+    'ceb': 'ceb',
+    'hil': 'hil',
+}
+
+SCHEMA_KEY_RE = re.compile(r'^[a-z][a-z0-9]{1,11}$')
+
+
+def is_valid_schema_key(value: str) -> bool:
+    return bool(SCHEMA_KEY_RE.fullmatch(value))
+
+
 @dataclass
 class ColabConfig:
     # Dynamic paths
@@ -129,8 +142,8 @@ class ColabConfig:
     train_filename: str
     eval_filename: str
     test_filename: str
-    source_column: str
-    target_column: str
+    source_translation_key: str
+    target_translation_key: str
 
     # Model/language setup
     model_id: str
@@ -155,20 +168,31 @@ class ColabConfig:
     save_total_limit: int
     gradient_checkpointing: bool
 
-    # Reliability controls
-    drive_sync_interval_sec: int
-    drive_sync_step_interval: int
-
 
 def build_config() -> ColabConfig:
-    source_flores = env_str('PUENTE_SOURCE_FLORES', 'eng_Latn')
-    target_flores = env_str('PUENTE_TARGET_FLORES', 'cbk_Latn')
+    source_flores = env_str('PUENTE_SOURCE_FLORES', 'cbk_Latn')
+    target_flores = env_str('PUENTE_TARGET_FLORES', 'eng_Latn')
     source_tag = source_flores.split('_', 1)[0].casefold()
     target_tag = target_flores.split('_', 1)[0].casefold()
     dataset_tag = env_str('PUENTE_DATASET_TAG', '001_chavacano')
+    default_source_key = FLORES_TO_SCHEMA_KEY.get(source_tag, source_tag)
+    default_target_key = FLORES_TO_SCHEMA_KEY.get(target_tag, target_tag)
+    source_translation_key = env_str('PUENTE_SOURCE_TRANSLATION_KEY', default_source_key).casefold()
+    target_translation_key = env_str('PUENTE_TARGET_TRANSLATION_KEY', default_target_key).casefold()
+
+    if not is_valid_schema_key(source_translation_key):
+        raise ValueError(
+            'PUENTE_SOURCE_TRANSLATION_KEY must be a lowercase schema key like cbk, ceb, es, hil, or tl.'
+        )
+    if target_translation_key != 'en':
+        raise ValueError(
+            f'PUENTE_TARGET_TRANSLATION_KEY must be en for this sequential source-to-English pipeline, got {target_translation_key!r}.'
+        )
+
+    default_project_root = env_str('PUENTE_PROJECT_ROOT', '/content/drive/MyDrive/ProjectPuenteCloud')
 
     return ColabConfig(
-        drive_root=env_str('PUENTE_DRIVE_ROOT', '/content/drive/MyDrive/ProjectPuenteCloud'),
+        drive_root=env_str('PUENTE_DRIVE_ROOT', default_project_root),
         dataset_rel_dir=env_str('PUENTE_DATASET_REL_DIR', f'datasets/processed/{dataset_tag}'),
         local_data_dir=env_str('PUENTE_LOCAL_DATA_DIR', '/content/data'),
         local_output_root=env_str('PUENTE_LOCAL_OUTPUT_ROOT', '/content/outputs'),
@@ -177,8 +201,8 @@ def build_config() -> ColabConfig:
         train_filename=env_str('PUENTE_TRAIN_FILENAME', 'train.jsonl'),
         eval_filename=env_str('PUENTE_EVAL_FILENAME', 'eval.jsonl'),
         test_filename=env_str('PUENTE_TEST_FILENAME', 'test.jsonl'),
-        source_column=env_str('PUENTE_SOURCE_COLUMN', 'source_text'),
-        target_column=env_str('PUENTE_TARGET_COLUMN', 'target_text'),
+        source_translation_key=source_translation_key,
+        target_translation_key=target_translation_key,
         model_id=env_str('PUENTE_MODEL_ID', 'facebook/nllb-200-distilled-600M'),
         source_flores=source_flores,
         target_flores=target_flores,
@@ -193,11 +217,9 @@ def build_config() -> ColabConfig:
         num_epochs=env_float('PUENTE_EPOCHS', 3.0),
         logging_steps=env_int('PUENTE_LOGGING_STEPS', 20),
         eval_steps=env_int('PUENTE_EVAL_STEPS', 100),
-        save_steps=env_int('PUENTE_SAVE_STEPS', 100),
+        save_steps=env_int('PUENTE_SAVE_STEPS', 500),
         save_total_limit=env_int('PUENTE_SAVE_TOTAL_LIMIT', 3),
         gradient_checkpointing=env_bool('PUENTE_GRADIENT_CHECKPOINTING', True),
-        drive_sync_interval_sec=env_int('PUENTE_DRIVE_SYNC_INTERVAL_SEC', 120),
-        drive_sync_step_interval=env_int('PUENTE_DRIVE_SYNC_STEP_INTERVAL', 50),
     )
 
 
@@ -214,14 +236,18 @@ def gpu_gc(reason: str) -> None:
 
 def resolve_paths(cfg: ColabConfig) -> Dict[str, Path]:
     drive_root = Path(cfg.drive_root).expanduser().resolve()
+    artifact_root = Path(env_str('PUENTE_ARTIFACT_ROOT', cfg.drive_root)).expanduser().resolve()
     local_data_dir = Path(cfg.local_data_dir).expanduser().resolve()
     local_output_root = Path(cfg.local_output_root).expanduser().resolve() / cfg.run_name
+    drive_checkpoint_dir = (artifact_root / 'models' / 'checkpoints').resolve()
+    drive_lora_adapter_dir = (artifact_root / 'models' / 'lora_adapters' / cfg.run_name).resolve()
 
     drive_data_dir = drive_root / cfg.dataset_rel_dir
     drive_output_root = drive_root / cfg.drive_output_rel_dir / cfg.run_name
 
     paths = {
         'drive_root': drive_root,
+        'artifact_root': artifact_root,
         'drive_data_dir': drive_data_dir,
         'local_data_dir': local_data_dir,
         'local_output_root': local_output_root,
@@ -232,13 +258,9 @@ def resolve_paths(cfg: ColabConfig) -> Dict[str, Path]:
         'local_train_jsonl': local_data_dir / cfg.train_filename,
         'local_eval_jsonl': local_data_dir / cfg.eval_filename,
         'local_test_jsonl': local_data_dir / cfg.test_filename,
-        'local_trainer_dir': local_output_root / 'trainer_runs',
-        'drive_trainer_dir': drive_output_root / 'trainer_runs',
-        'local_adapter_dir': local_output_root / 'adapter',
-        'drive_adapter_dir': drive_output_root / 'adapter',
+        'checkpoint_output_dir': drive_checkpoint_dir,
+        'drive_lora_adapter_dir': drive_lora_adapter_dir,
     }
-    paths['local_adapter_zip'] = local_output_root / 'adapter.zip'
-    paths['drive_adapter_zip'] = drive_output_root / 'adapter.zip'
     paths['run_config_local'] = local_output_root / 'run_config.json'
     paths['run_config_drive'] = drive_output_root / 'run_config.json'
     paths['metrics_local'] = local_output_root / 'training_metrics.json'
@@ -247,7 +269,7 @@ def resolve_paths(cfg: ColabConfig) -> Dict[str, Path]:
 
 
 def stage_datasets_from_drive(paths: Dict[str, Path]) -> None:
-    print('[stage] copying datasets from Drive to local storage with checksums...')
+    print('[stage] copying datasets from source storage to local storage with checksums...')
     staged = stage_split_jsonl(
         drive_dataset_dir=paths['drive_data_dir'],
         local_data_dir=paths['local_data_dir'],
@@ -288,7 +310,8 @@ def preflight_validate_local_splits(paths: Dict[str, Path], cfg: ColabConfig) ->
 
     Strict checks:
     - train/eval/test must exist in /content/data (high-speed local storage).
-    - first JSONL record in each split must include source_text and target_text.
+    - first JSONL record in each split must include a translation object with
+            source language key (from PUENTE_SOURCE_TRANSLATION_KEY) and target key en.
     """
     expected_local_root = Path('/content/data').resolve()
     configured_root = Path(cfg.local_data_dir).expanduser().resolve()
@@ -310,61 +333,24 @@ def preflight_validate_local_splits(paths: Dict[str, Path], cfg: ColabConfig) ->
             )
 
         first_record = _read_first_json_line(split_path)
-        missing_keys = [
-            key for key in (cfg.source_column, cfg.target_column)
-            if key not in first_record
-        ]
-        if missing_keys:
+        translation_block = first_record.get('translation')
+        if not isinstance(translation_block, dict):
             raise ValueError(
                 f'Preflight failed: {split_name} split first record in {split_path} '
-                f'missing required keys: {missing_keys}'
+                'must contain a translation object.'
+            )
+
+        missing_translation_keys = [
+            key for key in (cfg.source_translation_key, cfg.target_translation_key)
+            if key not in translation_block
+        ]
+        if missing_translation_keys:
+            raise ValueError(
+                f'Preflight failed: {split_name} split first record in {split_path} '
+                f'missing required translation keys: {missing_translation_keys}'
             )
 
     print('[preflight] split files and schema keys validated successfully.')
-
-
-class CheckpointMirrorThread(threading.Thread):
-    def __init__(self, src_root: Path, dst_root: Path, interval_sec: int, stop_event: threading.Event):
-        super().__init__(daemon=True)
-        self.src_root = src_root
-        self.dst_root = dst_root
-        self.interval_sec = interval_sec
-        self.stop_event = stop_event
-
-    def run(self) -> None:
-        while not self.stop_event.wait(self.interval_sec):
-            try:
-                copied, skipped = sync_tree_with_checksums(self.src_root, self.dst_root)
-                if copied > 0:
-                    print(f'[sync-thread] checkpoints mirrored: copied={copied} skipped={skipped}')
-            except Exception as exc:
-                print(f'[sync-thread] warning: {exc}')
-
-
-class ReliabilityCallback(TrainerCallback):
-    """Sync checkpoints + aggressively clear GPU cache during long runs."""
-
-    def __init__(self, local_ckpt_dir: Path, drive_ckpt_dir: Path, sync_step_interval: int):
-        self.local_ckpt_dir = local_ckpt_dir
-        self.drive_ckpt_dir = drive_ckpt_dir
-        self.sync_step_interval = max(1, sync_step_interval)
-
-    def on_step_end(self, args, state, control, **kwargs):
-        if state.global_step > 0 and (state.global_step % self.sync_step_interval) == 0:
-            copied, skipped = sync_tree_with_checksums(self.local_ckpt_dir, self.drive_ckpt_dir)
-            print(f'[callback] periodic checkpoint sync: copied={copied} skipped={skipped}')
-            gpu_gc(f'step-{state.global_step}')
-        return control
-
-    def on_save(self, args, state, control, **kwargs):
-        copied, skipped = sync_tree_with_checksums(self.local_ckpt_dir, self.drive_ckpt_dir)
-        print(f'[callback] on_save sync: copied={copied} skipped={skipped}')
-        gpu_gc(f'on-save-{state.global_step}')
-        return control
-
-    def on_evaluate(self, args, state, control, **kwargs):
-        gpu_gc(f'on-evaluate-{state.global_step}')
-        return control
 
 
 def load_parallel_dataset(paths: Dict[str, Path]):
@@ -380,9 +366,10 @@ def load_parallel_dataset(paths: Dict[str, Path]):
 
 
 def build_training_args(cfg: ColabConfig, paths: Dict[str, Path]) -> Seq2SeqTrainingArguments:
-    paths['local_trainer_dir'].mkdir(parents=True, exist_ok=True)
+    checkpoint_output_dir = paths['checkpoint_output_dir']
+    checkpoint_output_dir.mkdir(parents=True, exist_ok=True)
     return Seq2SeqTrainingArguments(
-        output_dir=str(paths['local_trainer_dir']),
+        output_dir=str(checkpoint_output_dir),
         per_device_train_batch_size=cfg.batch_size_train,
         per_device_eval_batch_size=cfg.batch_size_eval,
         gradient_accumulation_steps=cfg.grad_accum_steps,
@@ -391,6 +378,7 @@ def build_training_args(cfg: ColabConfig, paths: Dict[str, Path]) -> Seq2SeqTrai
         logging_steps=cfg.logging_steps,
         evaluation_strategy='steps',
         eval_steps=cfg.eval_steps,
+        save_strategy='steps',
         save_steps=cfg.save_steps,
         save_total_limit=cfg.save_total_limit,
         predict_with_generate=False,
@@ -416,8 +404,8 @@ def main() -> None:
         'config': asdict(cfg),
         'paths': {key: str(value) for key, value in paths.items()},
         'notes': {
-            'io_strategy': 'datasets are copied from Drive to /content/data before training',
-            'reliability': 'checkpoints are mirrored to Drive periodically and on save',
+            'io_strategy': 'datasets are copied from source storage to /content/data before training',
+            'reliability': f'trainer checkpoints are written directly to artifact storage every {cfg.save_steps} steps',
         },
     }
     ensure_parent_dir(paths['run_config_local'])
@@ -457,15 +445,29 @@ def main() -> None:
 
     dataset = load_parallel_dataset(paths)
 
-    def preprocess_batch(examples):
+    def preprocess_function(example):
         tokenizer.src_lang = cfg.source_flores
+        tokenizer.tgt_lang = cfg.target_flores
+
+        translation_block = example.get('translation', {})
+        if not isinstance(translation_block, dict):
+            translation_block = {}
+
+        source_text = translation_block.get(cfg.source_translation_key)
+        target_text = translation_block.get(cfg.target_translation_key)
+        if not isinstance(source_text, str) or not isinstance(target_text, str):
+            raise ValueError(
+                f'Invalid translation payload. Expected translation["{cfg.source_translation_key}"] '
+                f'and translation["{cfg.target_translation_key}"] as strings.'
+            )
+
         inputs = tokenizer(
-            examples[cfg.source_column],
+            source_text,
             max_length=cfg.max_length,
             truncation=True,
         )
         labels = tokenizer(
-            text_target=examples[cfg.target_column],
+            text_target=target_text,
             max_length=cfg.max_length,
             truncation=True,
         )
@@ -473,41 +475,24 @@ def main() -> None:
         return inputs
 
     print('[data] tokenizing train/validation/test splits...')
-    tokenized = dataset.map(
-        preprocess_batch,
-        batched=True,
+    tokenized_datasets = dataset.map(
+        preprocess_function,
         remove_columns=dataset['train'].column_names,
     )
+    print("Schema mapping successful. First tokenized example:", tokenized_datasets["train"][0])
     gpu_gc('after-tokenization')
 
     data_collator = DataCollatorForSeq2Seq(tokenizer=tokenizer, model=model)
     training_args = build_training_args(cfg, paths)
 
-    callback = ReliabilityCallback(
-        local_ckpt_dir=paths['local_trainer_dir'],
-        drive_ckpt_dir=paths['drive_trainer_dir'],
-        sync_step_interval=cfg.drive_sync_step_interval,
-    )
-
     trainer = Seq2SeqTrainer(
         model=model,
         args=training_args,
-        train_dataset=tokenized['train'],
-        eval_dataset=tokenized['validation'],
+        train_dataset=tokenized_datasets['train'],
+        eval_dataset=tokenized_datasets['validation'],
         data_collator=data_collator,
         tokenizer=tokenizer,
-        callbacks=[callback],
     )
-
-    # Background thread gives extra resilience in case runtime dies between save steps.
-    stop_event = threading.Event()
-    sync_thread = CheckpointMirrorThread(
-        src_root=paths['local_trainer_dir'],
-        dst_root=paths['drive_trainer_dir'],
-        interval_sec=cfg.drive_sync_interval_sec,
-        stop_event=stop_event,
-    )
-    sync_thread.start()
 
     metrics: Dict[str, Dict] = {}
     try:
@@ -516,33 +501,30 @@ def main() -> None:
         metrics['train'] = train_result.metrics
 
         print('[eval] running holdout evaluation on test split...')
-        test_metrics = trainer.evaluate(eval_dataset=tokenized['test'], metric_key_prefix='test')
+        test_metrics = trainer.evaluate(eval_dataset=tokenized_datasets['test'], metric_key_prefix='test')
         metrics['test'] = test_metrics
 
     finally:
-        # Stop thread and run one final guaranteed checkpoint mirror.
-        stop_event.set()
-        sync_thread.join(timeout=5)
-        copied, skipped = sync_tree_with_checksums(paths['local_trainer_dir'], paths['drive_trainer_dir'])
-        print(f'[sync-final] checkpoints mirrored: copied={copied} skipped={skipped}')
         gpu_gc('after-train')
 
-    print('[export] saving adapter artifacts...')
-    paths['local_adapter_dir'].mkdir(parents=True, exist_ok=True)
-    model.save_pretrained(str(paths['local_adapter_dir']))
-    copied, skipped = sync_tree_with_checksums(paths['local_adapter_dir'], paths['drive_adapter_dir'])
-    print(f'[export] adapter mirrored: copied={copied} skipped={skipped}')
+    print('[export] saving final LoRA adapter to artifact storage...')
+    paths['drive_lora_adapter_dir'].mkdir(parents=True, exist_ok=True)
+    trainer.model.save_pretrained(str(paths['drive_lora_adapter_dir']))
 
-    if paths['local_adapter_zip'].exists():
-        paths['local_adapter_zip'].unlink()
+    local_adapter_backup = paths['local_output_root'] / 'adapter'
+    local_adapter_backup.mkdir(parents=True, exist_ok=True)
+    trainer.model.save_pretrained(str(local_adapter_backup))
+
+    adapter_zip_path = paths['local_output_root'] / 'adapter.zip'
+    if adapter_zip_path.exists():
+        adapter_zip_path.unlink()
     shutil.make_archive(
-        base_name=str(paths['local_adapter_zip'].with_suffix('')),
+        base_name=str(adapter_zip_path.with_suffix('')),
         format='zip',
-        root_dir=str(paths['local_adapter_dir']),
+        root_dir=str(local_adapter_backup),
     )
-    copy_file_with_checksum(paths['local_adapter_zip'], paths['drive_adapter_zip'])
 
-    # Persist metrics on both local and Drive paths for reproducibility.
+    # Persist metrics on both local and source-storage paths for reproducibility.
     ensure_parent_dir(paths['metrics_local'])
     paths['metrics_local'].write_text(json.dumps(metrics, indent=2), encoding='utf-8')
     ensure_parent_dir(paths['metrics_drive'])
@@ -550,7 +532,10 @@ def main() -> None:
 
     print('[done] Cloud training pipeline completed successfully.')
     print(f"[done] local output root: {paths['local_output_root']}")
-    print(f"[done] drive output root: {paths['drive_output_root']}")
+    print(f"[done] source output root: {paths['drive_output_root']}")
+    print(f"[done] artifact root: {paths['artifact_root']}")
+    print(f"[done] checkpoint output dir: {paths['checkpoint_output_dir']}")
+    print(f"[done] final LoRA adapter dir: {paths['drive_lora_adapter_dir']}")
 
 
 if __name__ == '__main__':
