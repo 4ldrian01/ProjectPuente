@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import gc
 import importlib
+import inspect
 import json
 import os
 import re
@@ -368,24 +369,34 @@ def load_parallel_dataset(paths: Dict[str, Path]):
 def build_training_args(cfg: ColabConfig, paths: Dict[str, Path]) -> Seq2SeqTrainingArguments:
     checkpoint_output_dir = paths['checkpoint_output_dir']
     checkpoint_output_dir.mkdir(parents=True, exist_ok=True)
-    return Seq2SeqTrainingArguments(
-        output_dir=str(checkpoint_output_dir),
-        per_device_train_batch_size=cfg.batch_size_train,
-        per_device_eval_batch_size=cfg.batch_size_eval,
-        gradient_accumulation_steps=cfg.grad_accum_steps,
-        learning_rate=cfg.learning_rate,
-        num_train_epochs=cfg.num_epochs,
-        logging_steps=cfg.logging_steps,
-        evaluation_strategy='steps',
-        eval_steps=cfg.eval_steps,
-        save_strategy='steps',
-        save_steps=cfg.save_steps,
-        save_total_limit=cfg.save_total_limit,
-        predict_with_generate=False,
-        fp16=torch.cuda.is_available(),
-        report_to='none',
-        save_safetensors=True,
-    )
+    args_kwargs = {
+        'output_dir': str(checkpoint_output_dir),
+        'per_device_train_batch_size': cfg.batch_size_train,
+        'per_device_eval_batch_size': cfg.batch_size_eval,
+        'gradient_accumulation_steps': cfg.grad_accum_steps,
+        'learning_rate': cfg.learning_rate,
+        'num_train_epochs': cfg.num_epochs,
+        'logging_steps': cfg.logging_steps,
+        'eval_steps': cfg.eval_steps,
+        'save_strategy': 'steps',
+        'save_steps': cfg.save_steps,
+        'save_total_limit': cfg.save_total_limit,
+        'predict_with_generate': False,
+        'fp16': torch.cuda.is_available(),
+        'report_to': 'none',
+        'save_safetensors': True,
+    }
+
+    # Transformers changed this arg name across versions.
+    init_params = inspect.signature(Seq2SeqTrainingArguments.__init__).parameters
+    if 'evaluation_strategy' in init_params:
+        args_kwargs['evaluation_strategy'] = 'steps'
+    elif 'eval_strategy' in init_params:
+        args_kwargs['eval_strategy'] = 'steps'
+    else:
+        args_kwargs['do_eval'] = True
+
+    return Seq2SeqTrainingArguments(**args_kwargs)
 
 
 def main() -> None:
