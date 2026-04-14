@@ -40,10 +40,26 @@ fi
 
 export PUENTE_DRIVE_ROOT="${PUENTE_DRIVE_ROOT:-${PUENTE_PROJECT_ROOT}}"
 export PUENTE_ARTIFACT_ROOT="${PUENTE_ARTIFACT_ROOT:-${PUENTE_DRIVE_ROOT}}"
-export PUENTE_DATASET_REL_DIR="${PUENTE_DATASET_REL_DIR:-datasets/processed/001_chavacano}"
 export PUENTE_LOCAL_DATA_DIR="${PUENTE_LOCAL_DATA_DIR:-/content/data}"
 export PUENTE_LOCAL_OUTPUT_ROOT="${PUENTE_LOCAL_OUTPUT_ROOT:-/content/outputs}"
 export PUENTE_DRIVE_OUTPUT_REL_DIR="${PUENTE_DRIVE_OUTPUT_REL_DIR:-outputs}"
+
+if [[ -z "${PUENTE_DATASET_REL_DIR:-}" ]]; then
+  dataset_candidates=(
+    "datasets/processed/80-10-10_split/01_chavacano"
+    "datasets/processed/01_chavacano"
+    "datasets/processed/001_chavacano"
+  )
+  for candidate in "${dataset_candidates[@]}"; do
+    candidate_root="${PUENTE_DRIVE_ROOT}/${candidate}"
+    if [[ -f "${candidate_root}/train.jsonl" ]] && [[ -f "${candidate_root}/eval.jsonl" ]] && [[ -f "${candidate_root}/test.jsonl" ]]; then
+      export PUENTE_DATASET_REL_DIR="${candidate}"
+      break
+    fi
+  done
+fi
+
+export PUENTE_DATASET_REL_DIR="${PUENTE_DATASET_REL_DIR:-datasets/processed/001_chavacano}"
 
 export PUENTE_MODEL_ID="${PUENTE_MODEL_ID:-facebook/nllb-200-distilled-600M}"
 export PUENTE_SOURCE_FLORES="${PUENTE_SOURCE_FLORES:-cbk_Latn}"
@@ -80,9 +96,18 @@ for split in train eval test; do
   split_path="${PUENTE_DRIVE_ROOT}/${PUENTE_DATASET_REL_DIR}/${split}.jsonl"
   if [[ ! -f "${split_path}" ]]; then
     echo "ERROR: Missing split file: ${split_path}"
+    if [[ -d "${PUENTE_DRIVE_ROOT}/datasets/processed" ]]; then
+      echo "Hint: set PUENTE_DATASET_REL_DIR to one of these detected split roots:"
+      find "${PUENTE_DRIVE_ROOT}/datasets/processed" -maxdepth 4 -type f -name 'train.jsonl' 2>/dev/null \
+        | sed "s#^${PUENTE_DRIVE_ROOT}/##" \
+        | sed 's#/train.jsonl$##' \
+        | sort -u
+    fi
     exit 1
   fi
 done
+
+echo "[data] Using dataset splits from: ${PUENTE_DRIVE_ROOT}/${PUENTE_DATASET_REL_DIR}"
 
 SCRIPT_DIR="${PUENTE_PROJECT_ROOT}/notebooks/scripts"
 REQ_FILE="${SCRIPT_DIR}/requirements_colab.txt"

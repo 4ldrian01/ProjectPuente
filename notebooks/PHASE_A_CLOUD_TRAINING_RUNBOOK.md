@@ -23,9 +23,13 @@ Colab Drive mount uses a network-backed FUSE layer. During tokenization, dataloa
 - Google Colab runtime is active.
 - Project root exists at either `/content/drive/MyDrive/ProjectPuenteCloud` (persistent) or `/content/ProjectPuente` (ephemeral).
 - Split files exist:
-  - `<project_root>/datasets/processed/001_chavacano/train.jsonl`
-  - `<project_root>/datasets/processed/001_chavacano/eval.jsonl`
-  - `<project_root>/datasets/processed/001_chavacano/test.jsonl`
+  - `<project_root>/datasets/processed/80-10-10_split/01_chavacano/train.jsonl`
+  - `<project_root>/datasets/processed/80-10-10_split/01_chavacano/eval.jsonl`
+  - `<project_root>/datasets/processed/80-10-10_split/01_chavacano/test.jsonl`
+
+Notes:
+- Launcher and pipeline now auto-detect known split roots when `PUENTE_DATASET_REL_DIR` is unset.
+- You can still override manually for other languages or custom dataset folders.
 
 ## Step 1: Start Colab Tunnel
 
@@ -88,7 +92,7 @@ export PUENTE_SOURCE_FLORES=cbk_Latn
 export PUENTE_TARGET_FLORES=eng_Latn
 export PUENTE_SOURCE_TRANSLATION_KEY=cbk
 export PUENTE_TARGET_TRANSLATION_KEY=en
-export PUENTE_DATASET_REL_DIR=datasets/processed/001_chavacano
+export PUENTE_DATASET_REL_DIR=datasets/processed/80-10-10_split/01_chavacano
 export PUENTE_RUN_NAME=lora-cbk-to-eng-cloud
 export PUENTE_EPOCHS=3
 export PUENTE_BATCH_SIZE_TRAIN=4
@@ -145,7 +149,7 @@ Ephemeral local runtime artifacts (not guaranteed after Colab reset):
 ## Troubleshooting Quick Checks
 
 1. If tunnel auth URL does not appear, re-run Cell 3 and re-auth.
-2. If split file errors appear, verify exact filenames in `datasets/processed/001_chavacano/`.
+2. If split file errors appear, verify exact filenames in the configured `PUENTE_DATASET_REL_DIR`.
 3. If Colab runtime disconnects, restart runtime, re-run tunnel cells, then relaunch training.
 4. If VRAM OOM occurs, lower `PUENTE_BATCH_SIZE_TRAIN` and/or increase `PUENTE_GRAD_ACCUM_STEPS`.
 

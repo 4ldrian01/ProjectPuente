@@ -161,6 +161,24 @@ def model_dtype_kwargs(dtype_value) -> Dict[str, torch.dtype]:
     return {'torch_dtype': dtype_value}
 
 
+def infer_default_dataset_rel_dir(project_root: str) -> str:
+    root = Path(project_root).expanduser()
+    candidates = (
+        'datasets/processed/80-10-10_split/01_chavacano',
+        'datasets/processed/01_chavacano',
+        'datasets/processed/001_chavacano',
+    )
+    required_files = ('train.jsonl', 'eval.jsonl', 'test.jsonl')
+
+    for rel_dir in candidates:
+        candidate_root = root / rel_dir
+        if all((candidate_root / filename).is_file() for filename in required_files):
+            return rel_dir
+
+    # Keep legacy default when candidate probes are unavailable.
+    return 'datasets/processed/001_chavacano'
+
+
 FLORES_TO_SCHEMA_KEY = {
     'eng': 'en',
     'spa': 'es',
@@ -223,7 +241,7 @@ def build_config() -> ColabConfig:
     target_flores = env_str('PUENTE_TARGET_FLORES', 'eng_Latn')
     source_tag = source_flores.split('_', 1)[0].casefold()
     target_tag = target_flores.split('_', 1)[0].casefold()
-    dataset_tag = env_str('PUENTE_DATASET_TAG', '001_chavacano')
+    dataset_tag = env_str('PUENTE_DATASET_TAG', '')
     default_source_key = FLORES_TO_SCHEMA_KEY.get(source_tag, source_tag)
     default_target_key = FLORES_TO_SCHEMA_KEY.get(target_tag, target_tag)
     source_translation_key = env_str('PUENTE_SOURCE_TRANSLATION_KEY', default_source_key).casefold()
@@ -239,10 +257,14 @@ def build_config() -> ColabConfig:
         )
 
     default_project_root = env_str('PUENTE_PROJECT_ROOT', '/content/drive/MyDrive/ProjectPuenteCloud')
+    if dataset_tag:
+        default_dataset_rel_dir = f'datasets/processed/{dataset_tag}'
+    else:
+        default_dataset_rel_dir = infer_default_dataset_rel_dir(default_project_root)
 
     return ColabConfig(
         drive_root=env_str('PUENTE_DRIVE_ROOT', default_project_root),
-        dataset_rel_dir=env_str('PUENTE_DATASET_REL_DIR', f'datasets/processed/{dataset_tag}'),
+        dataset_rel_dir=env_str('PUENTE_DATASET_REL_DIR', default_dataset_rel_dir),
         local_data_dir=env_str('PUENTE_LOCAL_DATA_DIR', '/content/data'),
         local_output_root=env_str('PUENTE_LOCAL_OUTPUT_ROOT', '/content/outputs'),
         drive_output_rel_dir=env_str('PUENTE_DRIVE_OUTPUT_REL_DIR', 'outputs'),
