@@ -150,15 +150,23 @@ def hf_auth_kwargs(from_pretrained_callable, token: Optional[str]) -> Dict[str, 
     return {'token': token}
 
 
-def model_dtype_kwargs(dtype_value) -> Dict[str, torch.dtype]:
-    try:
-        params = inspect.signature(AutoModelForSeq2SeqLM.from_pretrained).parameters
-    except Exception:
-        params = {}
+def load_model_with_dtype_fallback(model_id: str, dtype_value, auth_kwargs: Dict[str, str]):
+    """Load model while handling dtype kwarg differences across transformers versions."""
+    preferred_kwargs = {'dtype': dtype_value}
+    fallback_kwargs = {'torch_dtype': dtype_value}
 
-    if 'dtype' in params:
-        return {'dtype': dtype_value}
-    return {'torch_dtype': dtype_value}
+    try:
+        return AutoModelForSeq2SeqLM.from_pretrained(
+            model_id,
+            **preferred_kwargs,
+            **auth_kwargs,
+        )
+    except TypeError:
+        return AutoModelForSeq2SeqLM.from_pretrained(
+            model_id,
+            **fallback_kwargs,
+            **auth_kwargs,
+        )
 
 
 def infer_default_dataset_rel_dir(project_root: str) -> str:
@@ -590,10 +598,10 @@ def main() -> None:
         cfg.model_id,
         **hf_auth_kwargs(AutoTokenizer.from_pretrained, hf_token),
     )
-    base_model = AutoModelForSeq2SeqLM.from_pretrained(
-        cfg.model_id,
-        **model_dtype_kwargs(torch.float16 if torch.cuda.is_available() else torch.float32),
-        **hf_auth_kwargs(AutoModelForSeq2SeqLM.from_pretrained, hf_token),
+    base_model = load_model_with_dtype_fallback(
+        model_id=cfg.model_id,
+        dtype_value=torch.float16 if torch.cuda.is_available() else torch.float32,
+        auth_kwargs=hf_auth_kwargs(AutoModelForSeq2SeqLM.from_pretrained, hf_token),
     )
 
     print('[model] applying LoRA adapter configuration...')
