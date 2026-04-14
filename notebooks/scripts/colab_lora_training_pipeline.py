@@ -195,6 +195,47 @@ def is_valid_schema_key(value: str) -> bool:
     return bool(SCHEMA_KEY_RE.fullmatch(value))
 
 
+def _extract_source_target_text(record: Dict, cfg: ColabConfig) -> Optional[tuple[str, str]]:
+    """Extract a source/target text pair from supported dataset schemas.
+
+    Supported formats:
+    1) Nested translation contract:
+       {"translation": {"<source_key>": "...", "en": "..."}}
+    2) Flat paired text contract:
+       {"source_text": "...", "target_text": "..."}
+    3) Generic flat paired text contract:
+       {"source": "...", "target": "..."}
+    4) Flat language-key contract:
+       {"cbk": "...", "en": "..."}
+    """
+    if not isinstance(record, dict):
+        return None
+
+    translation_block = record.get('translation')
+    if isinstance(translation_block, dict):
+        source_text = translation_block.get(cfg.source_translation_key)
+        target_text = translation_block.get(cfg.target_translation_key)
+        if isinstance(source_text, str) and isinstance(target_text, str):
+            return source_text, target_text
+
+    source_text = record.get('source_text')
+    target_text = record.get('target_text')
+    if isinstance(source_text, str) and isinstance(target_text, str):
+        return source_text, target_text
+
+    source_text = record.get('source')
+    target_text = record.get('target')
+    if isinstance(source_text, str) and isinstance(target_text, str):
+        return source_text, target_text
+
+    source_text = record.get(cfg.source_translation_key)
+    target_text = record.get(cfg.target_translation_key)
+    if isinstance(source_text, str) and isinstance(target_text, str):
+        return source_text, target_text
+
+    return None
+
+
 @dataclass
 class ColabConfig:
     # Dynamic paths
@@ -381,8 +422,7 @@ def preflight_validate_local_splits(paths: Dict[str, Path], cfg: ColabConfig) ->
 
     Strict checks:
     - train/eval/test must exist in /content/data (high-speed local storage).
-    - first JSONL record in each split must include a translation object with
-            source language key (from PUENTE_SOURCE_TRANSLATION_KEY) and target key en.
+    - first JSONL record in each split must expose a valid source/target text pair.
     """
     expected_local_root = Path('/content/data').resolve()
     configured_root = Path(cfg.local_data_dir).expanduser().resolve()
@@ -404,24 +444,18 @@ def preflight_validate_local_splits(paths: Dict[str, Path], cfg: ColabConfig) ->
             )
 
         first_record = _read_first_json_line(split_path)
-        translation_block = first_record.get('translation')
-        if not isinstance(translation_block, dict):
+        extracted_pair = _extract_source_target_text(first_record, cfg)
+        if extracted_pair is None:
             raise ValueError(
                 f'Preflight failed: {split_name} split first record in {split_path} '
-                'must contain a translation object.'
+                'does not match any supported schema. Supported schemas include '
+                '{"translation": {"<source_key>": "...", "en": "..."}}, '
+                '{"source_text": "...", "target_text": "..."}, '
+                '{"source": "...", "target": "..."}, or '
+                f'flat language keys like {{"{cfg.source_translation_key}": "...", "{cfg.target_translation_key}": "..."}}.'
             )
 
-        missing_translation_keys = [
-            key for key in (cfg.source_translation_key, cfg.target_translation_key)
-            if key not in translation_block
-        ]
-        if missing_translation_keys:
-            raise ValueError(
-                f'Preflight failed: {split_name} split first record in {split_path} '
-                f'missing required translation keys: {missing_translation_keys}'
-            )
-
-    print('[preflight] split files and schema keys validated successfully.')
+    print('[preflight] split files and dataset schema validated successfully.')
 
 
 def load_parallel_dataset(paths: Dict[str, Path]):
@@ -540,17 +574,16 @@ def main() -> None:
         tokenizer.src_lang = cfg.source_flores
         tokenizer.tgt_lang = cfg.target_flores
 
-        translation_block = example.get('translation', {})
-        if not isinstance(translation_block, dict):
-            translation_block = {}
-
-        source_text = translation_block.get(cfg.source_translation_key)
-        target_text = translation_block.get(cfg.target_translation_key)
-        if not isinstance(source_text, str) or not isinstance(target_text, str):
+        extracted_pair = _extract_source_target_text(example, cfg)
+        if extracted_pair is None:
             raise ValueError(
-                f'Invalid translation payload. Expected translation["{cfg.source_translation_key}"] '
-                f'and translation["{cfg.target_translation_key}"] as strings.'
+                'Invalid translation payload. Expected one of the supported schemas: '
+                '{"translation": {"<source_key>": "...", "en": "..."}}, '
+                '{"source_text": "...", "target_text": "..."}, '
+                '{"source": "...", "target": "..."}, or '
+                f'flat language keys like {{"{cfg.source_translation_key}": "...", "{cfg.target_translation_key}": "..."}}.'
             )
+        source_text, target_text = extracted_pair
 
         inputs = tokenizer(
             source_text,

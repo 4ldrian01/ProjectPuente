@@ -71,7 +71,11 @@ python "${PUENTE_PROJECT_ROOT:-$PWD}"/notebooks/scripts/colab_lora_training_pipe
 This workflow:
 
 1. validates split JSONL presence
-2. validates translation schema keys (`translation.<source_key>` plus `translation.en`)
+2. validates dataset schema using one of these accepted contracts:
+  - `{"translation": {"<source_key>": "...", "en": "..."}}`
+  - `{"source_text": "...", "target_text": "..."}`
+  - `{"source": "...", "target": "..."}`
+  - `{"<source_key>": "...", "en": "..."}`
 3. executes checksum-safe staging to `/content/data`
 4. starts LoRA training
 5. writes checkpoints and final adapter artifacts to artifact storage
