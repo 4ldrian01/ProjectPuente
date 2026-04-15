@@ -44,6 +44,38 @@ export PUENTE_LOCAL_DATA_DIR="${PUENTE_LOCAL_DATA_DIR:-/content/data}"
 export PUENTE_LOCAL_OUTPUT_ROOT="${PUENTE_LOCAL_OUTPUT_ROOT:-/content/outputs}"
 export PUENTE_DRIVE_OUTPUT_REL_DIR="${PUENTE_DRIVE_OUTPUT_REL_DIR:-outputs}"
 
+detect_split_filenames() {
+  local dataset_root="$1"
+
+  if [[ -n "${PUENTE_TRAIN_FILENAME:-}" || -n "${PUENTE_EVAL_FILENAME:-}" || -n "${PUENTE_TEST_FILENAME:-}" ]]; then
+    export PUENTE_TRAIN_FILENAME="${PUENTE_TRAIN_FILENAME:-train.jsonl}"
+    export PUENTE_EVAL_FILENAME="${PUENTE_EVAL_FILENAME:-eval.jsonl}"
+    export PUENTE_TEST_FILENAME="${PUENTE_TEST_FILENAME:-test.jsonl}"
+    return
+  fi
+
+  local candidate_triplets=(
+    "train.jsonl eval.jsonl test.jsonl"
+    "cbk_en_train.jsonl cbk_en_val.jsonl cbk_en_test.jsonl"
+    "cbk_en_trial_train.jsonl cbk_en_trial_val.jsonl cbk_en_trial_test.jsonl"
+  )
+
+  local train_file eval_file test_file
+  for triplet in "${candidate_triplets[@]}"; do
+    read -r train_file eval_file test_file <<< "${triplet}"
+    if [[ -f "${dataset_root}/${train_file}" ]] && [[ -f "${dataset_root}/${eval_file}" ]] && [[ -f "${dataset_root}/${test_file}" ]]; then
+      export PUENTE_TRAIN_FILENAME="${train_file}"
+      export PUENTE_EVAL_FILENAME="${eval_file}"
+      export PUENTE_TEST_FILENAME="${test_file}"
+      return
+    fi
+  done
+
+  export PUENTE_TRAIN_FILENAME="train.jsonl"
+  export PUENTE_EVAL_FILENAME="eval.jsonl"
+  export PUENTE_TEST_FILENAME="test.jsonl"
+}
+
 if [[ -z "${PUENTE_DATASET_REL_DIR:-}" ]]; then
   dataset_candidates=(
     "datasets/processed/80-10-10_split/01_chavacano"
@@ -94,10 +126,21 @@ else
   echo "[auth] HF token not set; proceeding unauthenticated (may be rate-limited)."
 fi
 
+dataset_root="${PUENTE_DRIVE_ROOT}/${PUENTE_DATASET_REL_DIR}"
+detect_split_filenames "${dataset_root}"
+
+declare -A split_to_filename=(
+  [train]="${PUENTE_TRAIN_FILENAME}"
+  [eval]="${PUENTE_EVAL_FILENAME}"
+  [test]="${PUENTE_TEST_FILENAME}"
+)
+
 for split in train eval test; do
-  split_path="${PUENTE_DRIVE_ROOT}/${PUENTE_DATASET_REL_DIR}/${split}.jsonl"
+  split_filename="${split_to_filename[${split}]}"
+  split_path="${dataset_root}/${split_filename}"
   if [[ ! -f "${split_path}" ]]; then
     echo "ERROR: Missing split file: ${split_path}"
+    echo "Configured filenames: train=${PUENTE_TRAIN_FILENAME} eval=${PUENTE_EVAL_FILENAME} test=${PUENTE_TEST_FILENAME}"
     if [[ -d "${PUENTE_DRIVE_ROOT}/datasets/processed" ]]; then
       echo "Hint: set PUENTE_DATASET_REL_DIR to one of these detected split roots:"
       find "${PUENTE_DRIVE_ROOT}/datasets/processed" -maxdepth 4 -type f -name 'train.jsonl' 2>/dev/null \
@@ -105,11 +148,23 @@ for split in train eval test; do
         | sed 's#/train.jsonl$##' \
         | sort -u
     fi
+    if [[ -d "${dataset_root}" ]]; then
+      echo "Available JSONL files in ${dataset_root}:"
+      find "${dataset_root}" -maxdepth 1 -type f -name '*.jsonl' -printf '  %f\n' | sort
+    fi
     exit 1
   fi
 done
 
-echo "[data] Using dataset splits from: ${PUENTE_DRIVE_ROOT}/${PUENTE_DATASET_REL_DIR}"
+echo "[data] Using dataset splits from: ${dataset_root}"
+echo "[data] split filenames: train=${PUENTE_TRAIN_FILENAME} eval=${PUENTE_EVAL_FILENAME} test=${PUENTE_TEST_FILENAME}"
+for split in train eval test; do
+  split_filename="${split_to_filename[${split}]}"
+  split_path="${dataset_root}/${split_filename}"
+  split_rows="$(wc -l < "${split_path}")"
+  split_size="$(du -h "${split_path}" | awk '{print $1}')"
+  echo "[data] ${split}: ${split_filename} (${split_rows} rows, ${split_size})"
+done
 
 if [[ "${PUENTE_REQUIRE_GPU}" == "true" ]]; then
   python - <<'PY'

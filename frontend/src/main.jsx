@@ -1,3 +1,8 @@
+/**
+ * main.jsx — Frontend bootstrap entry point.
+ * Summary: Initializes React root, mounts application shell, and wires global runtime providers.
+ */
+
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'

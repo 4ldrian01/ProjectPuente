@@ -1,3 +1,8 @@
+/**
+ * GapAnalysisTerminal.jsx — Terminal-like execution trace panel.
+ * Summary: Streams sociolinguistic routing and intervention log lines for operator diagnostics.
+ */
+
 import { useEffect, useMemo, useRef } from 'react'
 import { TerminalSquare } from 'lucide-react'
 
@@ -45,7 +50,7 @@ export default function GapAnalysisTerminal({ logs = [], isFlushing = false, cla
     <section className={containerClassName}>
       <header className="flex items-center justify-between border-b border-slate-800 px-3 py-2">
         <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-300">
-          <TerminalSquare className="h-3.5 w-3.5" />
+          <TerminalSquare className="h-[0.875rem] w-[0.875rem]" />
           Gap Analysis Terminal
         </div>
 
@@ -54,8 +59,8 @@ export default function GapAnalysisTerminal({ logs = [], isFlushing = false, cla
           role="status"
           aria-label={isFlushing ? 'Terminal flushing' : 'Terminal stable'}
         >
-          <span className={`h-2.5 w-2.5 rounded-full bg-rose-400 ${isFlushing ? 'animate-pulse' : ''}`} />
-          <span className={`h-2.5 w-2.5 rounded-full bg-amber-300 ${isFlushing ? 'animate-pulse' : ''}`} />
+          <span className={`h-2.5 w-2.5 rounded-full bg-rose-400 ${isFlushing ? 'a26-animate-pulse' : ''}`} />
+          <span className={`h-2.5 w-2.5 rounded-full bg-amber-300 ${isFlushing ? 'a26-animate-pulse' : ''}`} />
           <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
         </div>
       </header>

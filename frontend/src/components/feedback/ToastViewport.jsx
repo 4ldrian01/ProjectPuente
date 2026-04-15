@@ -1,3 +1,8 @@
+/**
+ * ToastViewport.jsx — Notification stack renderer.
+ * Summary: Presents transient success/warning/error/info messages with accessible live-region semantics.
+ */
+
 import { AlertTriangle, CheckCircle2, Info, X, XCircle } from 'lucide-react'
 
 const TOAST_VARIANTS = {
@@ -41,7 +46,7 @@ export default function ToastViewport({ toasts, onDismiss }) {
   }
 
   return (
-    <div className="pointer-events-none fixed right-3 top-3 z-[80] flex w-[min(92vw,26rem)] flex-col gap-2 sm:right-4 sm:top-4">
+    <div className="pointer-events-none fixed right-3 top-3 z-[80] flex w-[min(92vw,26rem)] flex-col gap-2 sm:right-4 sm:top-4" aria-live="polite" aria-relevant="additions">
       {toasts.map((toast) => {
         const variant = resolveVariant(toast.variant)
         const IconGlyph = variant.icon
@@ -51,11 +56,11 @@ export default function ToastViewport({ toasts, onDismiss }) {
             key={toast.id}
             className={`pointer-events-auto relative overflow-hidden rounded-2xl border px-3 py-2.5 shadow-[var(--a26-shell-shadow)] backdrop-blur-md animate-fade-in ${variant.container}`}
             role="status"
-            aria-live="polite"
+            aria-atomic="true"
           >
             <div className="flex items-start gap-2.5">
               <span className={`mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border ${variant.iconWrap}`}>
-                <IconGlyph className="h-3.5 w-3.5" />
+                <IconGlyph className="h-[0.875rem] w-[0.875rem]" />
               </span>
 
               <div className="min-w-0 flex-1">
@@ -73,7 +78,7 @@ export default function ToastViewport({ toasts, onDismiss }) {
                 className="rounded-lg border border-border-subtle/55 bg-bg-card/40 p-1 text-text-secondary transition-all duration-200 hover:text-text-primary"
                 aria-label="Dismiss notification"
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="h-[0.875rem] w-[0.875rem]" />
               </button>
             </div>
 

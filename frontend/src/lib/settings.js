@@ -1,3 +1,8 @@
+/**
+ * settings.js — Frontend settings domain utilities.
+ * Summary: Sanitizes persisted preferences, emits sync events, and applies theme mode to the document root.
+ */
+
 export const SETTINGS_STORAGE_KEY = 'puente_settings'
 export const SETTINGS_UPDATED_EVENT = 'puente-settings-updated'
 

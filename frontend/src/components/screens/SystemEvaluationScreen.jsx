@@ -1,3 +1,9 @@
+/**
+ * SystemEvaluationScreen.jsx — Evaluation dashboard for model quality indicators.
+ * Summary: Renders KPI cards and charts for intercept concurrence and inference-time trend analysis.
+ */
+
+import { useMemo } from 'react'
 import { Activity, BrainCircuit, Gauge, ShieldCheck, Sparkles } from 'lucide-react'
 import * as echarts from 'echarts/core'
 import ReactEChartsCore from 'echarts-for-react/lib/core.js'
@@ -55,161 +61,161 @@ const LENGTH_INFERENCE_DATA = [
 
 const INTERCEPT_TOTAL = INTERCEPT_CONCURRENCE_DATA.reduce((sum, entry) => sum + entry.value, 0)
 
-const INTERCEPT_CHART_OPTION = {
-  animationDuration: 700,
-  animationEasing: 'cubicOut',
-  color: INTERCEPT_CONCURRENCE_DATA.map((entry) => entry.fill),
-  tooltip: {
-    trigger: 'item',
-    backgroundColor: '#111827',
-    borderColor: '#374151',
-    borderWidth: 1,
-    textStyle: {
-      color: '#f9fafb',
-      fontSize: 12,
-      fontWeight: 500,
-    },
-    formatter: (params) => `${params.name}<br/>Share: ${params.value}%`,
-  },
-  legend: {
-    bottom: 0,
-    icon: 'circle',
-    textStyle: {
-      color: '#9ca3af',
-      fontSize: 12,
-    },
-  },
-  series: [
-    {
-      name: 'Intercept Share',
-      type: 'pie',
-      radius: ['52%', '78%'],
-      center: ['50%', '43%'],
-      padAngle: 3,
-      avoidLabelOverlap: true,
-      itemStyle: {
-        borderColor: '#0f172a',
-        borderWidth: 2,
+export default function SystemEvaluationScreen() {
+  const interceptChartOption = useMemo(() => ({
+    animationDuration: 700,
+    animationEasing: 'cubicOut',
+    color: INTERCEPT_CONCURRENCE_DATA.map((entry) => entry.fill),
+    tooltip: {
+      trigger: 'item',
+      backgroundColor: '#111827',
+      borderColor: '#374151',
+      borderWidth: 1,
+      textStyle: {
+        color: '#f9fafb',
+        fontSize: 12,
+        fontWeight: 500,
       },
-      label: {
+      formatter: (params) => `${params.name}<br/>Share: ${params.value}%`,
+    },
+    legend: {
+      bottom: 0,
+      icon: 'circle',
+      textStyle: {
+        color: '#9ca3af',
+        fontSize: 12,
+      },
+    },
+    series: [
+      {
+        name: 'Intercept Share',
+        type: 'pie',
+        radius: ['52%', '78%'],
+        center: ['50%', '43%'],
+        padAngle: 3,
+        avoidLabelOverlap: true,
+        itemStyle: {
+          borderColor: '#0f172a',
+          borderWidth: 2,
+        },
+        label: {
+          show: false,
+        },
+        data: INTERCEPT_CONCURRENCE_DATA.map((entry) => ({
+          value: entry.value,
+          name: entry.name,
+        })),
+        emphasis: {
+          scale: true,
+          itemStyle: {
+            shadowBlur: 12,
+            shadowColor: 'rgba(0, 0, 0, 0.35)',
+          },
+        },
+      },
+    ],
+  }), [])
+
+  const lengthInferenceChartOption = useMemo(() => ({
+    animationDuration: 800,
+    animationEasing: 'quarticOut',
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: '#111827',
+      borderColor: '#374151',
+      borderWidth: 1,
+      textStyle: {
+        color: '#f9fafb',
+        fontSize: 12,
+        fontWeight: 500,
+      },
+      axisPointer: {
+        type: 'line',
+        lineStyle: {
+          color: '#d946ef',
+          width: 1,
+        },
+      },
+      formatter: (params) => {
+        const point = params?.[0]
+        if (!point) {
+          return ''
+        }
+
+        return `Length: ${point.axisValue} tokens<br/>Inference Time: ${point.data} ms`
+      },
+    },
+    grid: {
+      top: 12,
+      right: 20,
+      bottom: 52,
+      left: 46,
+    },
+    xAxis: {
+      type: 'category',
+      name: 'Length (tokens)',
+      nameLocation: 'middle',
+      nameGap: 30,
+      boundaryGap: false,
+      axisLine: {
+        lineStyle: {
+          color: '#374151',
+        },
+      },
+      axisTick: {
         show: false,
       },
-      data: INTERCEPT_CONCURRENCE_DATA.map((entry) => ({
-        value: entry.value,
-        name: entry.name,
-      })),
-      emphasis: {
-        scale: true,
-        itemStyle: {
-          shadowBlur: 12,
-          shadowColor: 'rgba(0, 0, 0, 0.35)',
+      axisLabel: {
+        color: '#9ca3af',
+        fontSize: 12,
+      },
+      data: LENGTH_INFERENCE_DATA.map((point) => point.lengthTokens),
+    },
+    yAxis: {
+      type: 'value',
+      name: 'Inference ms',
+      nameLocation: 'middle',
+      nameGap: 42,
+      axisLine: {
+        show: false,
+      },
+      axisTick: {
+        show: false,
+      },
+      axisLabel: {
+        color: '#9ca3af',
+        fontSize: 12,
+      },
+      splitLine: {
+        lineStyle: {
+          type: 'dashed',
+          color: 'rgba(107, 114, 128, 0.35)',
         },
       },
     },
-  ],
-}
+    series: [
+      {
+        type: 'line',
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 7,
+        lineStyle: {
+          color: '#d946ef',
+          width: 3,
+        },
+        itemStyle: {
+          color: '#111827',
+          borderColor: '#d946ef',
+          borderWidth: 2,
+        },
+        areaStyle: {
+          color: 'rgba(217, 70, 239, 0.14)',
+        },
+        data: LENGTH_INFERENCE_DATA.map((point) => point.inferenceMs),
+      },
+    ],
+  }), [])
 
-const LENGTH_INFERENCE_CHART_OPTION = {
-  animationDuration: 800,
-  animationEasing: 'quarticOut',
-  tooltip: {
-    trigger: 'axis',
-    backgroundColor: '#111827',
-    borderColor: '#374151',
-    borderWidth: 1,
-    textStyle: {
-      color: '#f9fafb',
-      fontSize: 12,
-      fontWeight: 500,
-    },
-    axisPointer: {
-      type: 'line',
-      lineStyle: {
-        color: '#d946ef',
-        width: 1,
-      },
-    },
-    formatter: (params) => {
-      const point = params?.[0]
-      if (!point) {
-        return ''
-      }
-
-      return `Length: ${point.axisValue} tokens<br/>Inference Time: ${point.data} ms`
-    },
-  },
-  grid: {
-    top: 12,
-    right: 20,
-    bottom: 52,
-    left: 46,
-  },
-  xAxis: {
-    type: 'category',
-    name: 'Length (tokens)',
-    nameLocation: 'middle',
-    nameGap: 30,
-    boundaryGap: false,
-    axisLine: {
-      lineStyle: {
-        color: '#374151',
-      },
-    },
-    axisTick: {
-      show: false,
-    },
-    axisLabel: {
-      color: '#9ca3af',
-      fontSize: 12,
-    },
-    data: LENGTH_INFERENCE_DATA.map((point) => point.lengthTokens),
-  },
-  yAxis: {
-    type: 'value',
-    name: 'Inference ms',
-    nameLocation: 'middle',
-    nameGap: 42,
-    axisLine: {
-      show: false,
-    },
-    axisTick: {
-      show: false,
-    },
-    axisLabel: {
-      color: '#9ca3af',
-      fontSize: 12,
-    },
-    splitLine: {
-      lineStyle: {
-        type: 'dashed',
-        color: 'rgba(107, 114, 128, 0.35)',
-      },
-    },
-  },
-  series: [
-    {
-      type: 'line',
-      smooth: true,
-      symbol: 'circle',
-      symbolSize: 7,
-      lineStyle: {
-        color: '#d946ef',
-        width: 3,
-      },
-      itemStyle: {
-        color: '#111827',
-        borderColor: '#d946ef',
-        borderWidth: 2,
-      },
-      areaStyle: {
-        color: 'rgba(217, 70, 239, 0.14)',
-      },
-      data: LENGTH_INFERENCE_DATA.map((point) => point.inferenceMs),
-    },
-  ],
-}
-
-export default function SystemEvaluationScreen() {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
       <header className="a26-surface relative overflow-hidden p-5 md:p-6">
@@ -227,9 +233,9 @@ export default function SystemEvaluationScreen() {
           </p>
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <span className="a26-chip"><Activity className="h-3.5 w-3.5" /> Live Dashboard</span>
-            <span className="a26-chip"><Gauge className="h-3.5 w-3.5" /> Edge Inference Signal</span>
-            <span className="a26-chip"><BrainCircuit className="h-3.5 w-3.5" /> Sociolinguistic Focus</span>
+            <span className="a26-chip"><Activity className="h-[0.875rem] w-[0.875rem]" /> Live Dashboard</span>
+            <span className="a26-chip"><Gauge className="h-[0.875rem] w-[0.875rem]" /> Edge Inference Signal</span>
+            <span className="a26-chip"><BrainCircuit className="h-[0.875rem] w-[0.875rem]" /> Sociolinguistic Focus</span>
           </div>
         </div>
       </header>
@@ -247,7 +253,7 @@ export default function SystemEvaluationScreen() {
               </div>
 
               <span className={`inline-flex h-10 w-10 items-center justify-center rounded-2xl border ${card.accent}`}>
-                <card.icon className="h-4.5 w-4.5" />
+                <card.icon className="h-[1.125rem] w-[1.125rem]" />
               </span>
             </div>
 
@@ -271,7 +277,7 @@ export default function SystemEvaluationScreen() {
           <div className="relative mt-4 h-[300px]">
             <ReactEChartsCore
               echarts={echarts}
-              option={INTERCEPT_CHART_OPTION}
+              option={interceptChartOption}
               style={{ height: '100%', width: '100%' }}
               opts={{ renderer: 'canvas' }}
             />
@@ -290,7 +296,7 @@ export default function SystemEvaluationScreen() {
           <div className="mt-4 h-[300px]">
             <ReactEChartsCore
               echarts={echarts}
-              option={LENGTH_INFERENCE_CHART_OPTION}
+              option={lengthInferenceChartOption}
               style={{ height: '100%', width: '100%' }}
               opts={{ renderer: 'canvas' }}
             />

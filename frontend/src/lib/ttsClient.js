@@ -1,3 +1,8 @@
+/**
+ * ttsClient.js — Text-to-speech client adapter.
+ * Summary: Calls backend Edge-TTS endpoints and manages cancellation-safe playback behavior.
+ */
+
 import axios from 'axios'
 import { withApiKeyHeaders } from './apiAuth'
 

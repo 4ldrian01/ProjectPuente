@@ -7,7 +7,7 @@
  * - Keeps connection status panel (Backend, NLLB-200, edge-tts)
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   CheckCircle2,
   Cpu,
@@ -99,7 +99,7 @@ function ConnectionRow({ icon, label, value, healthy, hint }) {
       <div className="flex items-center justify-between gap-3">
         <span className="inline-flex items-center gap-2 text-sm text-text-secondary">
           <span className={`inline-flex h-7 w-7 items-center justify-center rounded-xl border ${healthy ? 'border-status-success-border/45 bg-status-success-bg/60 text-status-success-text' : 'border-status-warning-border/45 bg-status-warning-bg/65 text-status-warning-text'}`}>
-            <IconGlyph className="h-3.5 w-3.5" />
+            <IconGlyph className="h-[0.875rem] w-[0.875rem]" />
           </span>
           {label}
         </span>
@@ -119,11 +119,11 @@ function ConnectionRow({ icon, label, value, healthy, hint }) {
 
 export default function SettingsScreen({ health, onRefreshHealth, onClose, activeTheme = 'dark' }) {
   const clientApiKeyConfigured = isClientApiKeyConfigured()
-  const saved = loadSettings()
+  const saved = useMemo(() => loadSettings(), [])
 
-  const [defaultSourceLang, setDefaultSourceLang] = useState(saved?.defaultSourceLang ?? 'auto')
-  const [defaultTargetLang, setDefaultTargetLang] = useState(saved?.defaultTargetLang ?? 'cbk')
-  const [theme, setTheme] = useState(saved?.theme ?? activeTheme)
+  const [defaultSourceLang, setDefaultSourceLang] = useState(saved.defaultSourceLang)
+  const [defaultTargetLang, setDefaultTargetLang] = useState(saved.defaultTargetLang)
+  const [theme, setTheme] = useState(saved.theme || activeTheme)
   const [mockVramAllocation, setMockVramAllocation] = useState(loadMockVramAllocation())
   const [, setTick] = useState(0)
 
@@ -269,9 +269,10 @@ export default function SettingsScreen({ health, onRefreshHealth, onClose, activ
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="a26-chip"><Gauge className="h-3.5 w-3.5" /> Health {healthScore}%</span>
+            <span className="a26-chip"><Gauge className="h-[0.875rem] w-[0.875rem]" /> Health {healthScore}%</span>
             {onClose && (
               <button
+                type="button"
                 onClick={onClose}
                 className="a26-button-ghost inline-flex items-center justify-center p-2"
                 aria-label="Close settings"
@@ -300,9 +301,12 @@ export default function SettingsScreen({ health, onRefreshHealth, onClose, activ
               <div className="flex items-center gap-2">
                 <span className={`text-xs font-semibold ${theme === 'light' ? 'text-accent-gold' : 'text-text-secondary'}`}>Light</span>
                 <button
+                  type="button"
                   onClick={handleThemeToggle}
                   className={`toggle-switch ${theme === 'dark' ? 'active bg-accent-magenta' : 'bg-bg-elevated'}`}
                   aria-label="Toggle theme"
+                  role="switch"
+                  aria-checked={theme === 'dark'}
                   title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
                 >
                   <div className="toggle-knob" />
@@ -366,6 +370,7 @@ export default function SettingsScreen({ health, onRefreshHealth, onClose, activ
             <div className="mt-3 flex flex-wrap items-center gap-2">
               {[55, 70, 85].map((preset) => (
                 <button
+                  type="button"
                   key={preset}
                   onClick={() => handleApplyVramPreset(preset)}
                   className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-all active:scale-[0.98] ${mockVramAllocation === preset ? 'border-accent-magenta/55 bg-accent-magenta/14 text-accent-magenta' : 'border-border-subtle/70 bg-bg-card text-text-secondary hover:text-text-primary'}`}
@@ -381,6 +386,7 @@ export default function SettingsScreen({ health, onRefreshHealth, onClose, activ
           </div>
 
           <button
+            type="button"
             onClick={handleResetDefaults}
             className="a26-button-ghost inline-flex items-center gap-2 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em]"
           >
@@ -401,7 +407,7 @@ export default function SettingsScreen({ health, onRefreshHealth, onClose, activ
             <div className="mt-1 flex items-end justify-between">
               <p className="text-3xl font-black text-text-primary">{healthScore}%</p>
               <span className={`inline-flex items-center gap-1 text-xs font-semibold ${healthScore >= 75 ? 'text-status-success-text' : 'text-status-warning-text'}`}>
-                <CheckCircle2 className="h-3.5 w-3.5" />
+                <CheckCircle2 className="h-[0.875rem] w-[0.875rem]" />
                 {healthyCount}/{connectionItems.length} checks healthy
               </span>
             </div>
@@ -419,6 +425,7 @@ export default function SettingsScreen({ health, onRefreshHealth, onClose, activ
           ))}
 
           <button
+            type="button"
             onClick={onRefreshHealth}
             disabled={health?.checking}
             className="a26-button-primary mt-2 inline-flex w-full items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"

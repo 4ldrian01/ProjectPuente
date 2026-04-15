@@ -115,8 +115,11 @@ export default function LanguageSelector({
       {/* ═══ MOBILE / TABLET — single transparent dropdown ═══ */}
       <div className="md:hidden relative">
         <button
+          type="button"
           onClick={() => setOpen(!open)}
           className="spring-nav-transition flex items-center gap-2 px-1 py-2 text-sm font-medium text-text-primary bg-transparent active:scale-[0.98]"
+          aria-haspopup="listbox"
+          aria-expanded={open}
         >
           <span>{selectedLabel}</span>
           <ChevronDownIcon
@@ -125,9 +128,10 @@ export default function LanguageSelector({
         </button>
 
         {open && (
-          <div className="animate-fade-in absolute top-full left-0 mt-1 rounded-lg shadow-xl z-40 min-w-45 border border-border-subtle bg-bg-card/95 backdrop-blur-sm py-1">
+          <div className="animate-fade-in absolute top-full left-0 z-40 mt-1 min-w-[11.25rem] rounded-lg border border-border-subtle bg-bg-card/95 py-1 shadow-xl backdrop-blur-sm" role="listbox">
             {allAvailable.map((lang) => (
               <button
+                type="button"
                 key={lang.code}
                 onClick={() => { onSelect(lang.code); setOpen(false) }}
                 className={`spring-nav-transition w-full px-4 py-2.5 text-left text-sm ${
@@ -135,6 +139,8 @@ export default function LanguageSelector({
                     ? activeRowClass
                     : 'text-text-primary hover:bg-bg-elevated/50 hover:pl-5'
                 }`}
+                role="option"
+                aria-selected={selected === lang.code}
               >
                 {lang.label}
               </button>
@@ -154,6 +160,7 @@ export default function LanguageSelector({
 
           return (
             <button
+              type="button"
               key={lang.code}
               onClick={() => onSelect(lang.code)}
               data-tab-key={lang.code}
@@ -183,6 +190,7 @@ export default function LanguageSelector({
         {dropdown.length > 0 && (
           <div className="relative">
             <button
+              type="button"
               onClick={() => setOpen(!open)}
               data-tab-key="__dropdown__"
               className={`spring-nav-transition px-3 py-2 text-sm font-medium whitespace-nowrap flex items-center gap-1 relative will-change-transform ${
@@ -190,17 +198,20 @@ export default function LanguageSelector({
                   ? `${activeTextClass} -translate-y-px`
                   : `${idleTextClass} hover:-translate-y-px`
               }`}
+              aria-haspopup="listbox"
+              aria-expanded={open}
             >
               {selectedInDropdown && <span>{getLang(selected)?.label}</span>}
               <ChevronDownIcon
-                className={`w-3.5 h-3.5 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+                className={`h-[0.875rem] w-[0.875rem] transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
               />
             </button>
 
             {open && (
-              <div className="animate-fade-in absolute top-full left-0 mt-1 rounded-lg shadow-xl z-40 min-w-40 border border-border-subtle bg-bg-card/95 backdrop-blur-sm py-1">
+              <div className="animate-fade-in absolute top-full left-0 z-40 mt-1 min-w-[10rem] rounded-lg border border-border-subtle bg-bg-card/95 py-1 shadow-xl backdrop-blur-sm" role="listbox">
                 {dropdown.map((lang) => (
                   <button
+                    type="button"
                     key={lang.code}
                     onClick={() => { onSelect(lang.code); setOpen(false) }}
                     className={`spring-nav-transition w-full px-4 py-2.5 text-left text-sm ${
@@ -208,6 +219,8 @@ export default function LanguageSelector({
                         ? activeRowClass
                         : 'text-text-primary hover:bg-bg-elevated/50 hover:pl-5'
                     }`}
+                    role="option"
+                    aria-selected={selected === lang.code}
                   >
                     {lang.label}
                   </button>

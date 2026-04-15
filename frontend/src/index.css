@@ -1,4 +1,10 @@
+/*
+ * index.css — Global design tokens and typography baseline.
+ * Summary: Defines theme variables, color contracts, font stacks, and root-level CSS behavior.
+ */
+
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap');
 
 @source "../index.html";
 @source "./**/*.{js,jsx,ts,tsx}";
@@ -41,6 +47,12 @@ body[data-theme='dark'] {
   --puente-scrollbar-thumb-hover: #444444;
   --puente-backdrop-fallback: rgba(18, 18, 18, 0.98);
   --puente-card-hover-shadow: 0 10px 26px rgba(0, 0, 0, 0.34);
+  --puente-focus-ring: rgba(217, 70, 239, 0.48);
+  --puente-focus-ring-outer: rgba(250, 204, 21, 0.2);
+
+  --puente-font-body: 'Manrope', 'Avenir Next', 'Segoe UI', sans-serif;
+  --puente-font-display: 'Outfit', 'Manrope', 'Avenir Next', sans-serif;
+  --puente-font-mono: 'JetBrains Mono', 'IBM Plex Mono', 'SFMono-Regular', Menlo, monospace;
 }
 
 :root[data-theme='light'],
@@ -80,6 +92,8 @@ body[data-theme='light'] {
   --puente-scrollbar-thumb-hover: #9ca8bf;
   --puente-backdrop-fallback: rgba(244, 246, 251, 0.95);
   --puente-card-hover-shadow: 0 10px 20px rgba(27, 37, 64, 0.12);
+  --puente-focus-ring: rgba(191, 47, 216, 0.4);
+  --puente-focus-ring-outer: rgba(200, 138, 0, 0.18);
 }
 
 @theme {
@@ -120,8 +134,41 @@ body,
   min-height: 100%;
 }
 
+html {
+  text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
 body {
+  margin: 0;
   background-color: var(--puente-bg-dark);
   color: var(--puente-text-primary);
+  font-family: var(--puente-font-body);
+  line-height: 1.58;
+  letter-spacing: 0.004em;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
   transition: background-color 220ms ease, color 220ms ease;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.a26-hero-title {
+  font-family: var(--puente-font-display);
+}
+
+code,
+kbd,
+pre,
+samp {
+  font-family: var(--puente-font-mono);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--puente-accent-magenta) 38%, transparent);
+  color: var(--puente-text-primary);
 }

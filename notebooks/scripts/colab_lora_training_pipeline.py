@@ -20,6 +20,7 @@ import gc
 import importlib
 import inspect
 import json
+import math
 import os
 import re
 import shutil
@@ -574,9 +575,39 @@ def sanitize_dataset_records(dataset, cfg: ColabConfig):
     return sanitized
 
 
-def build_training_args(cfg: ColabConfig, paths: Dict[str, Path]) -> Seq2SeqTrainingArguments:
+def estimate_training_plan(cfg: ColabConfig, train_rows: int) -> Dict[str, float]:
+    micro_batch = max(1, int(cfg.batch_size_train))
+    grad_accum_steps = max(1, int(cfg.grad_accum_steps))
+    effective_batch_size = micro_batch * grad_accum_steps
+    steps_per_epoch = max(1, math.ceil(train_rows / effective_batch_size))
+    total_optimizer_steps = max(1, math.ceil(steps_per_epoch * max(cfg.num_epochs, 0.0)))
+
+    return {
+        'train_rows': train_rows,
+        'effective_batch_size': effective_batch_size,
+        'steps_per_epoch': steps_per_epoch,
+        'total_optimizer_steps': total_optimizer_steps,
+        'num_epochs': cfg.num_epochs,
+    }
+
+
+def build_training_args(
+    cfg: ColabConfig,
+    paths: Dict[str, Path],
+    training_plan: Dict[str, float],
+) -> Seq2SeqTrainingArguments:
     checkpoint_output_dir = paths['checkpoint_output_dir']
     checkpoint_output_dir.mkdir(parents=True, exist_ok=True)
+
+    total_optimizer_steps = int(training_plan['total_optimizer_steps'])
+
+    # For short jobs, avoid intervals larger than run length so eval/checkpoints still occur.
+    eval_steps = max(1, min(cfg.eval_steps, total_optimizer_steps))
+    if cfg.save_steps <= total_optimizer_steps:
+        save_steps = max(1, cfg.save_steps)
+    else:
+        save_steps = max(1, total_optimizer_steps // 2)
+
     args_kwargs = {
         'output_dir': str(checkpoint_output_dir),
         'per_device_train_batch_size': cfg.batch_size_train,
@@ -585,9 +616,9 @@ def build_training_args(cfg: ColabConfig, paths: Dict[str, Path]) -> Seq2SeqTrai
         'learning_rate': cfg.learning_rate,
         'num_train_epochs': cfg.num_epochs,
         'logging_steps': cfg.logging_steps,
-        'eval_steps': cfg.eval_steps,
+        'eval_steps': eval_steps,
         'save_strategy': 'steps',
-        'save_steps': cfg.save_steps,
+        'save_steps': save_steps,
         'save_total_limit': cfg.save_total_limit,
         'predict_with_generate': False,
         'fp16': torch.cuda.is_available(),
@@ -688,6 +719,34 @@ def main() -> None:
     dataset = load_parallel_dataset(paths)
     dataset = sanitize_dataset_records(dataset, cfg)
 
+    train_rows = len(dataset['train'])
+    validation_rows = len(dataset['validation'])
+    test_rows = len(dataset['test'])
+    training_plan = estimate_training_plan(cfg, train_rows)
+
+    print(
+        '[plan] rows '
+        f"train={train_rows} validation={validation_rows} test={test_rows}"
+    )
+    print(
+        '[plan] optimizer schedule '
+        f"effective_batch={training_plan['effective_batch_size']} "
+        f"steps_per_epoch={training_plan['steps_per_epoch']} "
+        f"epochs={cfg.num_epochs} "
+        f"total_steps≈{training_plan['total_optimizer_steps']}"
+    )
+
+    effective_eval_steps = max(1, min(cfg.eval_steps, int(training_plan['total_optimizer_steps'])))
+    if cfg.save_steps <= int(training_plan['total_optimizer_steps']):
+        effective_save_steps = max(1, cfg.save_steps)
+    else:
+        effective_save_steps = max(1, int(training_plan['total_optimizer_steps']) // 2)
+    print(
+        '[plan] interval policy '
+        f"requested_eval_steps={cfg.eval_steps} effective_eval_steps={effective_eval_steps} "
+        f"requested_save_steps={cfg.save_steps} effective_save_steps={effective_save_steps}"
+    )
+
     def preprocess_function(example):
         tokenizer.src_lang = cfg.source_flores
         tokenizer.tgt_lang = cfg.target_flores
@@ -725,7 +784,7 @@ def main() -> None:
     gpu_gc('after-tokenization')
 
     data_collator = DataCollatorForSeq2Seq(tokenizer=tokenizer, model=model)
-    training_args = build_training_args(cfg, paths)
+    training_args = build_training_args(cfg, paths, training_plan)
 
     trainer = Seq2SeqTrainer(
         model=model,
@@ -736,7 +795,13 @@ def main() -> None:
         tokenizer=tokenizer,
     )
 
-    metrics: Dict[str, Dict] = {}
+    metrics: Dict[str, Dict] = {
+        'plan': {
+            **training_plan,
+            'effective_eval_steps': effective_eval_steps,
+            'effective_save_steps': effective_save_steps,
+        }
+    }
     try:
         print('[train] starting LoRA fine-tuning...')
         train_kwargs = {}

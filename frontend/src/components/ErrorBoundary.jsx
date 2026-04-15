@@ -1,3 +1,8 @@
+/**
+ * ErrorBoundary.jsx — Runtime fault boundary for React subtree isolation.
+ * Summary: Catches render/lifecycle errors and prevents full-app crashes with a safe fallback UI.
+ */
+
 import { Component } from 'react'
 
 export default class ErrorBoundary extends Component {

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * wikiVozData.js - Offline Wiki-Voz dataset for the frontend.
  *
  * Purpose:

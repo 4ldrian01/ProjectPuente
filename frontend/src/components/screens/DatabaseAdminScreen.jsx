@@ -513,6 +513,7 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
 
           <div className="flex flex-wrap items-center gap-2">
             <button
+              type="button"
               onClick={handleImportClick}
               disabled={importing}
               className="a26-button-ghost inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold"
@@ -522,6 +523,7 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
             </button>
 
             <button
+              type="button"
               onClick={openCreateModal}
               disabled={submitting}
               className="a26-button-primary inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold"
@@ -639,6 +641,7 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
                       <td className="px-3 py-2">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
+                            type="button"
                             onClick={() => openEditModal(record)}
                             className="rounded-xl border border-border-subtle p-1.5 text-text-secondary transition-all duration-200 hover:border-accent-magenta/55 hover:text-accent-magenta active:scale-[0.98]"
                             title="Edit record"
@@ -646,6 +649,7 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
                             <Pencil className="h-4 w-4" />
                           </button>
                           <button
+                            type="button"
                             onClick={() => handleDeleteRecord(record.id)}
                             disabled={deletingId === record.id}
                             className="rounded-xl border border-border-subtle p-1.5 text-text-secondary transition-all duration-200 hover:border-status-danger-border hover:text-status-danger-text active:scale-[0.98]"
@@ -731,6 +735,7 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
               </div>
 
               <button
+                type="button"
                 onClick={closeModal}
                 className="a26-button-ghost p-1"
               >
@@ -801,6 +806,7 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
 
             <div className="mt-4 flex items-center justify-end gap-2">
               <button
+                type="button"
                 onClick={closeModal}
                 disabled={submitting}
                 className="a26-button-ghost px-3 py-2 text-sm font-semibold"
@@ -808,6 +814,7 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleSaveRecord}
                 disabled={submitting}
                 className="a26-button-primary px-3 py-2 text-sm font-semibold"

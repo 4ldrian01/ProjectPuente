@@ -1,3 +1,8 @@
+/**
+ * apiAuth.js — Frontend API authentication helpers.
+ * Summary: Resolves client API key configuration and builds request headers for protected backend endpoints.
+ */
+
 const CLIENT_API_KEY = (import.meta.env.VITE_PUENTE_API_KEY || '').trim()
 
 export function isClientApiKeyConfigured() {

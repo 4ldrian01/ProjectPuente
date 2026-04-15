@@ -17,6 +17,12 @@
   --a26-shell-shadow-soft: 0 8px 22px rgba(0, 0, 0, 0.2);
   --a26-ambient-magenta: rgba(217, 70, 239, 0.2);
   --a26-ambient-gold: rgba(250, 204, 21, 0.12);
+  --a26-ambient-indigo: rgba(99, 102, 241, 0.16);
+  --a26-ambient-emerald: rgba(16, 185, 129, 0.12);
+  --a26-ambient-rose: rgba(244, 63, 94, 0.08);
+  --a26-primary-start: #c23ff1;
+  --a26-primary-mid: #f06a8f;
+  --a26-primary-end: #f5b323;
   --a26-grid-stroke: rgba(163, 163, 163, 0.09);
 }
 
@@ -28,6 +34,12 @@ body[data-theme='light'] {
   --a26-shell-shadow-soft: 0 7px 18px rgba(27, 37, 64, 0.11);
   --a26-ambient-magenta: rgba(191, 47, 216, 0.16);
   --a26-ambient-gold: rgba(200, 138, 0, 0.13);
+  --a26-ambient-indigo: rgba(79, 70, 229, 0.14);
+  --a26-ambient-emerald: rgba(5, 150, 105, 0.11);
+  --a26-ambient-rose: rgba(225, 29, 72, 0.07);
+  --a26-primary-start: #ad33d7;
+  --a26-primary-mid: #e65d85;
+  --a26-primary-end: #c18405;
   --a26-grid-stroke: rgba(95, 104, 122, 0.15);
 }
 
@@ -70,16 +82,38 @@ body[data-theme='light'] {
    ============================================ */
 .a26-ambient-canvas {
   background-image:
+    radial-gradient(125% 88% at 14% 8%, var(--a26-ambient-indigo) 0%, transparent 62%),
+    radial-gradient(104% 78% at 86% 0%, var(--a26-ambient-emerald) 0%, transparent 64%),
+    linear-gradient(120deg, rgba(255, 255, 255, 0.03) 0%, transparent 40%, rgba(255, 255, 255, 0.02) 74%, transparent 100%),
     linear-gradient(to right, var(--a26-grid-stroke) 1px, transparent 1px),
     linear-gradient(to bottom, var(--a26-grid-stroke) 1px, transparent 1px);
   background-size: 36px 36px;
-  mask-image: radial-gradient(circle at center, black 46%, transparent 100%);
-  opacity: 0.35;
+  mask-image: radial-gradient(circle at 50% 46%, black 44%, transparent 100%);
+  opacity: 0.46;
+}
+
+.a26-ambient-ribbons {
+  background:
+    conic-gradient(
+      from 205deg at 50% 50%,
+      transparent 0deg,
+      color-mix(in srgb, var(--a26-ambient-indigo) 70%, transparent) 64deg,
+      transparent 128deg,
+      color-mix(in srgb, var(--a26-ambient-rose) 72%, transparent) 214deg,
+      transparent 300deg,
+      color-mix(in srgb, var(--a26-ambient-emerald) 68%, transparent) 360deg
+    );
+  filter: blur(58px);
+  opacity: 0.42;
+  transform: translateZ(0);
 }
 
 .a26-surface {
   border: 1px solid color-mix(in srgb, var(--puente-border-subtle) 72%, transparent);
-  background: color-mix(in srgb, var(--puente-bg-card) 83%, transparent);
+  background:
+    radial-gradient(128% 120% at 4% 0%, color-mix(in srgb, var(--a26-ambient-magenta) 42%, transparent) 0%, transparent 56%),
+    radial-gradient(120% 110% at 100% 0%, color-mix(in srgb, var(--a26-ambient-gold) 38%, transparent) 0%, transparent 54%),
+    linear-gradient(144deg, color-mix(in srgb, var(--puente-bg-card) 94%, transparent) 0%, color-mix(in srgb, var(--puente-bg-elevated) 62%, transparent) 100%);
   border-radius: var(--a26-surface-radius);
   box-shadow: var(--a26-surface-shadow);
   backdrop-filter: blur(16px);
@@ -88,6 +122,10 @@ body[data-theme='light'] {
 
 .a26-surface:hover {
   border-color: color-mix(in srgb, var(--puente-accent-magenta) 28%, var(--puente-border-subtle));
+  background:
+    radial-gradient(128% 120% at 4% 0%, color-mix(in srgb, var(--a26-ambient-magenta) 48%, transparent) 0%, transparent 56%),
+    radial-gradient(120% 110% at 100% 0%, color-mix(in srgb, var(--a26-ambient-gold) 44%, transparent) 0%, transparent 54%),
+    linear-gradient(144deg, color-mix(in srgb, var(--puente-bg-card) 96%, transparent) 0%, color-mix(in srgb, var(--puente-bg-elevated) 66%, transparent) 100%);
   box-shadow: var(--a26-surface-shadow-hover);
   transform: translateY(-1px);
 }
@@ -112,7 +150,9 @@ body[data-theme='light'] {
   gap: 0.45rem;
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--puente-border-subtle) 74%, transparent);
-  background: color-mix(in srgb, var(--puente-bg-elevated) 88%, transparent);
+  background:
+    linear-gradient(112deg, color-mix(in srgb, var(--a26-ambient-indigo) 44%, transparent) 0%, color-mix(in srgb, var(--a26-ambient-emerald) 34%, transparent) 100%),
+    color-mix(in srgb, var(--puente-bg-elevated) 90%, transparent);
   padding: 0.32rem 0.72rem;
   font-size: 0.7rem;
   font-weight: 600;
@@ -137,10 +177,20 @@ body[data-theme='light'] {
   transform: scale(0.98);
 }
 
+.a26-button-ghost:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--puente-focus-ring), 0 0 0 4px var(--puente-focus-ring-outer);
+}
+
+.a26-button-ghost:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .a26-button-primary {
   border-radius: 0.9rem;
   border: 1px solid color-mix(in srgb, var(--puente-accent-magenta) 60%, transparent);
-  background: linear-gradient(135deg, color-mix(in srgb, var(--puente-accent-magenta) 92%, transparent), color-mix(in srgb, var(--puente-accent-gold) 34%, transparent));
+  background: linear-gradient(117deg, var(--a26-primary-start) 0%, var(--a26-primary-mid) 52%, var(--a26-primary-end) 100%);
   color: white;
   box-shadow: 0 8px 24px rgba(217, 70, 239, 0.25);
   transition: filter 220ms var(--spring-ease), transform 220ms var(--spring-ease), box-shadow 220ms var(--spring-ease);
@@ -153,6 +203,17 @@ body[data-theme='light'] {
 
 .a26-button-primary:active {
   transform: scale(0.98);
+}
+
+.a26-button-primary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--puente-focus-ring), 0 0 0 4px var(--puente-focus-ring-outer);
+}
+
+.a26-button-primary:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.12);
+  opacity: 0.58;
 }
 
 .a26-pagination-hint {
@@ -252,7 +313,7 @@ body[data-theme='light'] {
   animation: fadeIn 0.2s ease-out;
 }
 
-@keyframes pulse {
+@keyframes a26Pulse {
   0%, 100% {
     opacity: 1;
   }
@@ -261,8 +322,8 @@ body[data-theme='light'] {
   }
 }
 
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+.a26-animate-pulse {
+  animation: a26Pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 @keyframes toastProgress {
@@ -363,10 +424,7 @@ body[data-theme='light'] {
 /* ============================================
    FOCUS STATES
    ============================================ */
-button:focus-visible,
-input:focus-visible,
-textarea:focus-visible,
-select:focus-visible {
+:where(button, input, textarea, select, [role='button']):focus-visible {
   outline: 2px solid var(--puente-accent-magenta);
   outline-offset: 2px;
 }
@@ -455,7 +513,7 @@ select:focus-visible {
   .animate-slide-up,
   .animate-fade-in,
   .settings-panel,
-  .animate-pulse,
+  .a26-animate-pulse,
   .a26-list-appending {
     animation: none !important;
     transition-duration: 0.01ms !important;

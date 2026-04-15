@@ -125,6 +125,7 @@ export default function CulturalTermPopup({ entry, onClose, apiUrl, backendUp, t
               </div>
 
               <button
+                type="button"
                 onClick={onClose}
                 className="rounded-lg p-1 text-text-secondary transition-colors hover:bg-bg-elevated hover:text-text-primary"
                 aria-label="Close popup"
@@ -180,6 +181,7 @@ export default function CulturalTermPopup({ entry, onClose, apiUrl, backendUp, t
 
                   <div className="mt-4 border-t border-border-subtle/60 pt-3">
                     <button
+                      type="button"
                       onClick={handleSpeak}
                       disabled={!canUseTts}
                       title={canUseTts ? 'Listen with Edge TTS' : 'Backend Edge TTS is unavailable'}

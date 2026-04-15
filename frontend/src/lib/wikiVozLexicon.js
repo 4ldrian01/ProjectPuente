@@ -1,3 +1,8 @@
+/**
+ * wikiVozLexicon.js — Wiki-Voz lexicon matching hook and utilities.
+ * Summary: Loads lexical knowledge entries and resolves term-level matches against translated output.
+ */
+
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 export const DEFAULT_WIKI_VOZ_LEXICON_PATH = '/data/wiki_voz_kb.json'

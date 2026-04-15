@@ -15,204 +15,32 @@ import { CloseIcon, CopyIcon } from '../icons/NavIcons'
 import LanguageSelector from '../LanguageSelector'
 import CulturalTermPopup from '../CulturalTermPopup'
 import GapAnalysisTerminal from './GapAnalysisTerminal'
-import { loadSettings, SETTINGS_STORAGE_KEY, SETTINGS_UPDATED_EVENT } from '../../lib/settings'
+import { loadSettings } from '../../lib/settings'
 import { withApiKeyHeaders } from '../../lib/apiAuth'
+import { extractApiErrorMessage } from '../../lib/apiErrors'
 import { speakWithEdgeTts, stopEdgeTtsPlayback } from '../../lib/ttsClient'
 import { useWikiVozLexicon } from '../../lib/wikiVozLexicon'
-
-/* ── Language config (with Spanish baseline control variable) ── */
-const SOURCE_VISIBLE = ['auto', 'en', 'tl']
-const SOURCE_DROPDOWN = ['cbk', 'ceb', 'hil', 'es']
-const TARGET_VISIBLE = ['cbk', 'ceb', 'hil', 'es']
-const TARGET_DROPDOWN = ['en', 'tl']
-
-const LANGUAGE_LABELS = {
-  auto: 'Auto-Detect',
-  en: 'English',
-  tl: 'Tagalog',
-  cbk: 'Chavacano',
-  ceb: 'Cebuano/Bisaya',
-  hil: 'Hiligaynon',
-  es: 'Spanish',
-}
-
-const SOCIOLINGUISTIC_SAMPLE_CASES = [
-  {
-    label: 'Spanish Formal Baseline',
-    text: 'Buenos dias, podria usted traducir esta frase al Chavacano formal para una reunion academica?',
-    source: 'es',
-    target: 'cbk',
-    mode: 'formal',
-  },
-  {
-    label: 'Street Register Check',
-    text: 'Ta anda kita na plaza despues, man dale tu version casual para conversa de barangay.',
-    source: 'cbk',
-    target: 'en',
-    mode: 'street',
-  },
-  {
-    label: 'Cebuano to Hiligaynon Direct',
-    text: 'Maayong buntag, palihug hubara kini sa pormal nga Hiligaynon para sa report.',
-    source: 'ceb',
-    target: 'hil',
-    mode: 'formal',
-  },
-]
-
-const MOCK_LID_HINTS = [
-  {
-    code: 'es',
-    keywords: ['hola', 'buenos', 'gracias', 'por favor', 'usted', 'señor', 'mañana', 'podria'],
-  },
-  {
-    code: 'tl',
-    keywords: ['kamusta', 'salamat', 'opo', 'po', 'hindi', 'natin', 'kayo', 'pwede'],
-  },
-  {
-    code: 'cbk',
-    keywords: ['ta', 'man', 'kita', 'hende', 'nao', 'zamboanga', 'anda'],
-  },
-  {
-    code: 'ceb',
-    keywords: ['maayong', 'buntag', 'unsa', 'karon', 'nimo', 'dili', 'palihug', 'hubara'],
-  },
-  {
-    code: 'hil',
-    keywords: ['gid', 'subong', 'ano', 'wala', 'maayo', 'palihog'],
-  },
-  {
-    code: 'en',
-    keywords: ['please', 'translate', 'good morning', 'would you', 'could you', 'report'],
-  },
-]
-
-const CHAR_LIMIT = 250
-const SOURCE_PLACEHOLDER = 'Enter Word to translate...'
-const TELEMETRY_POLL_INTERVAL_MS = 4500
-const FALLBACK_GPU_TOTAL_GB = 4
-const FALLBACK_RAM_TOTAL_GB = 8
-
-function clampPercent(value) {
-  return Math.min(100, Math.max(0, Number(value) || 0))
-}
-
-function formatGb(value) {
-  return `${Number(value || 0).toFixed(2)} GB`
-}
-
-function estimateTokenCount(text) {
-  return Math.max(1, String(text || '').trim().split(/\s+/).filter(Boolean).length)
-}
-
-function detectMockLanguage(text) {
-  const normalized = String(text || '')
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-
-  if (!normalized || normalized.length < 8) {
-    return null
-  }
-
-  let bestMatch = { code: '', score: 0 }
-
-  for (const hint of MOCK_LID_HINTS) {
-    let score = 0
-    for (const keyword of hint.keywords) {
-      if (normalized.includes(keyword)) {
-        score += keyword.includes(' ') ? 2 : 1
-      }
-    }
-
-    if (score > bestMatch.score) {
-      bestMatch = { code: hint.code, score }
-    }
-  }
-
-  if (!bestMatch.code || bestMatch.score === 0) {
-    return null
-  }
-
-  const tokenCount = normalized.split(' ').filter(Boolean).length
-  const confidence = clampPercent(52 + bestMatch.score * 8 + Math.min(tokenCount, 12))
-
-  return {
-    code: bestMatch.code,
-    label: LANGUAGE_LABELS[bestMatch.code] || bestMatch.code.toUpperCase(),
-    confidence,
-  }
-}
-
-function flattenValidationErrors(errors) {
-  if (!errors || typeof errors !== 'object') {
-    return ''
-  }
-
-  return Object.values(errors)
-    .flat()
-    .map((value) => String(value || '').trim())
-    .filter(Boolean)
-    .join(' ')
-}
-
-function extractApiErrorMessage(payload, fallback = 'Request failed.') {
-  if (!payload || typeof payload !== 'object') {
-    return fallback
-  }
-
-  const directError = String(payload.error || '').trim()
-  if (directError) {
-    return directError
-  }
-
-  const detailError = String(payload.detail || '').trim()
-  if (detailError) {
-    return detailError
-  }
-
-  const validationError = flattenValidationErrors(payload.errors)
-  if (validationError) {
-    return validationError
-  }
-
-  return fallback
-}
-
-function escapeRegex(value) {
-  return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
-
-function normalizeWikiCardEntry(entry) {
-  if (!entry || typeof entry !== 'object') {
-    return null
-  }
-
-  const term = String(entry.term || entry.title || entry.matched_trigger || '').trim()
-  const definition = String(entry.definition || entry.description || '').trim()
-
-  if (!term || !definition) {
-    return null
-  }
-
-  return {
-    ...entry,
-    term,
-    definition,
-    image_url: entry.image_url || entry.imageUrl || '',
-  }
-}
-
-function buildWikiEntryKey(entry) {
-  if (!entry) {
-    return ''
-  }
-
-  return String(entry.id || `${entry.term}|${entry.language}|${entry.category}`)
-    .toLowerCase()
-    .trim()
-}
+import {
+  buildWikiEntryKey,
+  CHAR_LIMIT,
+  clampPercent,
+  detectMockLanguage,
+  escapeRegex,
+  FALLBACK_GPU_TOTAL_GB,
+  FALLBACK_RAM_TOTAL_GB,
+  formatGb,
+  estimateTokenCount,
+  LANGUAGE_LABELS,
+  normalizeWikiCardEntry,
+  SOCIOLINGUISTIC_SAMPLE_CASES,
+  SOURCE_DROPDOWN,
+  SOURCE_PLACEHOLDER,
+  SOURCE_VISIBLE,
+  TARGET_DROPDOWN,
+  TARGET_VISIBLE,
+  TELEMETRY_POLL_INTERVAL_MS,
+} from '../../lib/translateWorkbench'
+import { useSettingsSync } from '../../hooks/useSettingsSync'
 
 /* ── Component ───────────────────────────────────────────────── */
 export default function TranslateScreen({
@@ -512,41 +340,26 @@ export default function TranslateScreen({
     }
   }, [])
 
-  useEffect(() => {
-    const applyIncomingSettings = (nextSettings) => {
-      if (!nextSettings) return
-
-      if (
-        nextSettings.defaultSourceLang === sourceLang
-        && nextSettings.defaultTargetLang === targetLang
-      ) {
-        return
-      }
-
-      setSourceLang(nextSettings.defaultSourceLang)
-      setTargetLang(nextSettings.defaultTargetLang)
-      setSettingsNotice(
-        `Defaults updated: ${LANGUAGE_LABELS[nextSettings.defaultSourceLang]} -> ${LANGUAGE_LABELS[nextSettings.defaultTargetLang]}.`,
-      )
+  const handleLanguageDefaultsSync = useCallback((nextSettings) => {
+    if (!nextSettings) {
+      return
     }
 
-    const handleSettingsUpdated = (event) => {
-      applyIncomingSettings(event?.detail ?? loadSettings())
+    if (
+      nextSettings.defaultSourceLang === sourceLang
+      && nextSettings.defaultTargetLang === targetLang
+    ) {
+      return
     }
 
-    const handleStorage = (event) => {
-      if (event.key && event.key !== SETTINGS_STORAGE_KEY) return
-      applyIncomingSettings(loadSettings())
-    }
-
-    window.addEventListener(SETTINGS_UPDATED_EVENT, handleSettingsUpdated)
-    window.addEventListener('storage', handleStorage)
-
-    return () => {
-      window.removeEventListener(SETTINGS_UPDATED_EVENT, handleSettingsUpdated)
-      window.removeEventListener('storage', handleStorage)
-    }
+    setSourceLang(nextSettings.defaultSourceLang)
+    setTargetLang(nextSettings.defaultTargetLang)
+    setSettingsNotice(
+      `Defaults updated: ${LANGUAGE_LABELS[nextSettings.defaultSourceLang]} -> ${LANGUAGE_LABELS[nextSettings.defaultTargetLang]}.`,
+    )
   }, [sourceLang, targetLang])
+
+  useSettingsSync(handleLanguageDefaultsSync)
 
   useEffect(() => {
     if (!settingsNotice) return undefined
@@ -1079,7 +892,7 @@ export default function TranslateScreen({
       title="Swap languages"
       aria-label="Swap source and target languages"
     >
-      <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <svg className="h-[1.125rem] w-[1.125rem]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
       </svg>
     </button>
@@ -1211,6 +1024,7 @@ export default function TranslateScreen({
       <div className={`flex items-center border-t border-border-subtle/40 px-4 py-2 ${hasSourceChars ? 'justify-between' : 'justify-end'}`}>
         {hasSourceChars && (
           <button
+            type="button"
             onClick={() => handleSpeak(sourceText, effectiveSourceLang, 'source')}
             disabled={!canUseTts}
             className="a26-button-ghost px-2 py-1 text-[11px] font-medium disabled:cursor-not-allowed disabled:opacity-35"
@@ -1243,6 +1057,7 @@ export default function TranslateScreen({
     return (
       <div className="rounded-xl border border-status-warning-border/70 bg-status-warning-bg/80">
         <button
+          type="button"
           onClick={() => setLidExpanded((prev) => !prev)}
           className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm text-status-warning-text"
           aria-expanded={lidExpanded}
@@ -1258,12 +1073,14 @@ export default function TranslateScreen({
             <p>Mock pre-flight LID confidence: {preflightLid.confidence}%.</p>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <button
+                type="button"
                 onClick={handleAcceptDetectedLanguage}
                 className="rounded-md border border-status-warning-border/70 bg-status-warning-bg px-2.5 py-1 font-semibold text-status-warning-text hover:bg-status-warning-bg/80"
               >
                 Use {preflightLid.label}
               </button>
               <button
+                type="button"
                 onClick={() => setLidExpanded(false)}
                 className="rounded-md border border-border-subtle px-2.5 py-1 font-medium text-text-secondary hover:text-text-primary"
               >
@@ -1284,17 +1101,17 @@ export default function TranslateScreen({
         </div>
       </div>
 
-      <div className="flex-1 min-h-[9.75rem] px-4 pt-3 pb-1">
+      <div className="flex-1 min-h-[9.75rem] px-4 pt-3 pb-1" aria-busy={loading}>
         {loading ? (
           <div className="flex items-center gap-3 text-accent-magenta">
-            <svg className="h-4.5 w-4.5 animate-spin" viewBox="0 0 24 24" fill="none">
+            <svg className="h-[1.125rem] w-[1.125rem] animate-spin" viewBox="0 0 24 24" fill="none">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
             <span className="text-sm">Translating...</span>
           </div>
         ) : translatedText ? (
-          <div className="wrap-break-word text-base leading-relaxed text-text-primary" aria-readonly="true">
+          <div className="break-words text-base leading-relaxed text-text-primary" aria-readonly="true">
             {renderHighlightedText()}
           </div>
         ) : (
@@ -1317,6 +1134,7 @@ export default function TranslateScreen({
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border-subtle/50 px-4 py-2">
         <div className="flex flex-wrap items-center gap-1.5">
           <button
+            type="button"
             onClick={handleVerifyBackTranslation}
             disabled={!canVerifyBtvl}
             className={actionButtonClass}
@@ -1326,6 +1144,7 @@ export default function TranslateScreen({
           </button>
 
           <button
+            type="button"
             onClick={() => handleSpeak(translatedText, targetLang, 'target')}
             disabled={!hasTranslatedText || !canUseTts}
             className={actionButtonClass}
@@ -1335,6 +1154,7 @@ export default function TranslateScreen({
           </button>
 
           <button
+            type="button"
             onClick={handleExportMock}
             disabled={!canExport}
             className={actionButtonClass}
@@ -1350,6 +1170,7 @@ export default function TranslateScreen({
         <div className="flex items-center gap-2">
           {hasTranslatedText && (
             <button
+              type="button"
               onClick={handleCopyTranslation}
               title={copied ? 'Copied' : 'Copy translation'}
               className={`rounded-xl p-1.5 transition-all duration-200 active:scale-[0.98] ${

@@ -391,6 +391,7 @@ export default function WikiVozScreen({ apiUrl, backendUp, ttsAvailable, notify 
 
           {searchQuery && (
             <button
+              type="button"
               onClick={() => {
                 setSearchQuery('')
                 setSearchValidationMessage('')
@@ -417,6 +418,7 @@ export default function WikiVozScreen({ apiUrl, backendUp, ttsAvailable, notify 
             <div className="flex flex-wrap gap-2">
               {languageOptions.map((option) => (
                 <button
+                  type="button"
                   key={option.key}
                   onClick={() => handleLanguageChange(option.key)}
                   className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide transition-all duration-200 active:scale-[0.98] ${
@@ -436,6 +438,7 @@ export default function WikiVozScreen({ apiUrl, backendUp, ttsAvailable, notify 
             <div className="flex flex-wrap gap-2">
               {categoryOptions.map((option) => (
                 <button
+                  type="button"
                   key={option.key}
                   onClick={() => handleCategoryChange(option.key)}
                   className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide transition-all duration-200 active:scale-[0.98] ${
@@ -467,7 +470,7 @@ export default function WikiVozScreen({ apiUrl, backendUp, ttsAvailable, notify 
         </span>
       </div>
 
-      <div className={`rounded-2xl border border-border-subtle/70 bg-bg-card/20 p-3 ${isAppending ? 'a26-list-appending' : ''}`} aria-busy={isAppending}>
+      <div className={`rounded-2xl border border-border-subtle/70 bg-bg-card/20 p-3 ${isAppending ? 'a26-list-appending' : ''}`} aria-busy={loading || isAppending}>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {visibleEntries.map((entry) => (
             <article

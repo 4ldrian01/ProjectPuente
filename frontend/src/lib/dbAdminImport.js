@@ -1,3 +1,8 @@
+/**
+ * dbAdminImport.js — Database admin import transformation utilities.
+ * Summary: Validates and maps CSV/JSON inputs into normalized Wiki-Voz admin records and option sets.
+ */
+
 const LANGUAGE_OPTION_ROWS = [
   ['Chavacano', 'Chavacano'],
   ['Cebuano/Bisaya', 'Cebuano/Bisaya'],

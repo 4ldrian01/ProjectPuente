@@ -13,8 +13,6 @@ import './App.css'
 import {
   applyThemeToDocument,
   loadSettings,
-  SETTINGS_STORAGE_KEY,
-  SETTINGS_UPDATED_EVENT,
 } from './lib/settings'
 import { isClientApiKeyConfigured, withApiKeyHeaders } from './lib/apiAuth'
 import {
@@ -27,48 +25,25 @@ import {
   PROJECTPUENTE_LOCAL_HOST,
   resolveReachableApiUrl,
 } from './lib/apiRuntime'
+import { extractApiErrorMessage } from './lib/apiErrors'
+import {
+  NAV_SCREEN_ORDER,
+  NAV_SCREEN_SET,
+  NAV_STATE_STORAGE_KEY,
+  loadNavigationState,
+  normalizePathname,
+  resolvePathFromScreen,
+  resolveScreenFromPath,
+} from './lib/appNavigation'
+import { useSettingsSync } from './hooks/useSettingsSync'
+import { useToastQueue } from './hooks/useToastQueue'
+import { useBackendHealth } from './hooks/useBackendHealth'
 import ToastViewport from './components/feedback/ToastViewport'
 
 // Enterprise layout components
 import GlobalHeader from './components/layout/GlobalHeader'
 import SidebarNav from './components/layout/SidebarNav'
-
-// Screen components
-import TranslateScreen from './components/screens/TranslateScreen'
-import WikiVozScreen from './components/screens/WikiVozScreen'
-import SettingsScreen from './components/screens/SettingsScreen'
-import SystemEvaluationScreen from './components/screens/SystemEvaluationScreen'
-import DatabaseAdminScreen from './components/screens/DatabaseAdminScreen'
-import ActivityLogsScreen from './components/screens/ActivityLogsScreen'
-
-const NAV_STATE_STORAGE_KEY = 'puente-nav-state-v1'
-const NAV_SCREEN_ORDER = [
-  'translate',
-  'wiki-voz',
-  'activity-logs',
-  'evaluation',
-  'db-admin',
-  'settings',
-]
-const NAV_SCREEN_SET = new Set(NAV_SCREEN_ORDER)
-const SCREEN_TO_PATH = {
-  translate: '/translate',
-  'wiki-voz': '/wiki-voz',
-  'activity-logs': '/activity-logs',
-  evaluation: '/evaluation',
-  'db-admin': '/admin',
-  settings: '/settings',
-}
-
-const PATH_TO_SCREEN = {
-  '/translate': 'translate',
-  '/wiki-voz': 'wiki-voz',
-  '/activity-logs': 'activity-logs',
-  '/evaluation': 'evaluation',
-  '/admin': 'db-admin',
-  '/db-admin': 'db-admin',
-  '/settings': 'settings',
-}
+import AppScreenStack from './components/layout/AppScreenStack'
 
 const DEFAULT_TRANSLATION_META = {
   routeStrategy: 'direct',
@@ -78,95 +53,8 @@ const DEFAULT_TRANSLATION_META = {
   isCached: false,
 }
 
-function normalizePathname(pathname) {
-  const rawPath = String(pathname || '/').trim().toLowerCase()
-  const withoutQueryHash = rawPath.split('?')[0].split('#')[0]
-  const withLeadingSlash = withoutQueryHash.startsWith('/') ? withoutQueryHash : `/${withoutQueryHash}`
-  const deduped = withLeadingSlash.replace(/\/{2,}/g, '/')
-
-  if (deduped.length > 1 && deduped.endsWith('/')) {
-    return deduped.slice(0, -1)
-  }
-
-  return deduped || '/'
-}
-
-function resolveScreenFromPath(pathname) {
-  const normalizedPath = normalizePathname(pathname)
-
-  if (normalizedPath === '/') {
-    return 'translate'
-  }
-
-  return PATH_TO_SCREEN[normalizedPath] ?? null
-}
-
-function resolvePathFromScreen(screen) {
-  return SCREEN_TO_PATH[screen] || SCREEN_TO_PATH.translate
-}
-
-function flattenValidationErrors(errors) {
-  if (!errors || typeof errors !== 'object') {
-    return ''
-  }
-
-  return Object.values(errors)
-    .flat()
-    .map((entry) => String(entry || '').trim())
-    .filter(Boolean)
-    .join(' ')
-}
-
-function extractApiErrorMessage(payload, fallback = 'Connection failed. Is the backend running?') {
-  if (!payload || typeof payload !== 'object') {
-    return fallback
-  }
-
-  const directError = String(payload.error || '').trim()
-  if (directError) {
-    return directError
-  }
-
-  const detailError = String(payload.detail || '').trim()
-  if (detailError) {
-    return detailError
-  }
-
-  const validationError = flattenValidationErrors(payload.errors)
-  if (validationError) {
-    return validationError
-  }
-
-  return fallback
-}
-
-function loadNavigationState() {
-  const defaults = {
-    activeScreen: 'translate',
-    isSidebarCollapsed: false,
-  }
-
-  if (typeof window === 'undefined') {
-    return defaults
-  }
-
-  try {
-    const raw = window.localStorage.getItem(NAV_STATE_STORAGE_KEY)
-    const parsed = raw ? JSON.parse(raw) : null
-    const pathScreen = resolveScreenFromPath(window.location.pathname)
-    const activeScreen = pathScreen || defaults.activeScreen
-
-    return {
-      activeScreen,
-      isSidebarCollapsed: Boolean(parsed?.isSidebarCollapsed),
-    }
-  } catch {
-    return defaults
-  }
-}
-
 function App() {
-  const initialSettings = loadSettings()
+  const initialSettings = useMemo(() => loadSettings(), [])
   const initialNavigationState = useMemo(() => loadNavigationState(), [])
   const clientApiKeyConfigured = isClientApiKeyConfigured()
 
@@ -183,9 +71,7 @@ function App() {
   const [pwaOnline, setPwaOnline] = useState(
     typeof navigator === 'undefined' ? true : navigator.onLine,
   )
-  const [latencyMs, setLatencyMs] = useState(null)
   const [apiUrl, setApiUrl] = useState(() => getPreferredApiUrl(getRuntimeHost()))
-  const [toasts, setToasts] = useState([])
 
   // Translation state
   const [translatedText, setTranslatedText] = useState('')
@@ -193,22 +79,11 @@ function App() {
   const [error, setError] = useState('')
   const [wikiData, setWikiData] = useState(null)
   const [translationMeta, setTranslationMeta] = useState(DEFAULT_TRANSLATION_META)
-
-  // Health check state
-  const [health, setHealth] = useState({
-    checking: true,
-    backendUp: false,
-    nllbLoaded: false,
-    loraAdapters: [],
-    apiKeyRequired: false,
-    ttsAvailable: false,
-    ttsEngine: 'unavailable',
-    engine: 'unknown',
-  })
+  const { toasts, showToast, dismissToast } = useToastQueue()
+  const { health, latencyMs, refreshHealth } = useBackendHealth(apiUrl)
 
   const requestVersionRef = useRef(0)
   const abortRef = useRef(null)
-  const toastTimersRef = useRef(new Map())
 
   useEffect(() => {
     setMountedScreens((previous) => {
@@ -236,46 +111,6 @@ function App() {
       window.history.replaceState({}, '', canonicalPath)
     }
   }, [activeScreen])
-
-  const dismissToast = useCallback((toastId) => {
-    setToasts((previous) => previous.filter((toast) => toast.id !== toastId))
-
-    const timerId = toastTimersRef.current.get(toastId)
-    if (timerId) {
-      clearTimeout(timerId)
-      toastTimersRef.current.delete(toastId)
-    }
-  }, [])
-
-  const showToast = useCallback(({ title = '', message = '', variant = 'info', durationMs = 4200 }) => {
-    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-
-    setToasts((previous) => ([
-      ...previous.slice(-3),
-      {
-        id,
-        title,
-        message,
-        variant,
-        durationMs,
-      },
-    ]))
-
-    const timerId = window.setTimeout(() => {
-      dismissToast(id)
-    }, durationMs)
-
-    toastTimersRef.current.set(id, timerId)
-  }, [dismissToast])
-
-  useEffect(() => {
-    const toastTimers = toastTimersRef.current
-
-    return () => {
-      toastTimers.forEach((timerId) => clearTimeout(timerId))
-      toastTimers.clear()
-    }
-  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -352,48 +187,6 @@ function App() {
       controller.abort()
     }
   }, [showToast])
-
-  const refreshHealth = useCallback(async () => {
-    const startedAt = typeof performance !== 'undefined' ? performance.now() : Date.now()
-    setHealth((prev) => ({ ...prev, checking: true }))
-
-    try {
-      const { data } = await axios.get(`${apiUrl}/health/`, { timeout: 10000 })
-      const completedAt = typeof performance !== 'undefined' ? performance.now() : Date.now()
-      setLatencyMs(Math.max(0, completedAt - startedAt))
-
-      setHealth({
-        checking: false,
-        backendUp: true,
-        nllbLoaded: Boolean(data.nllb_loaded),
-        loraAdapters: data.lora_adapters || [],
-        apiKeyRequired: Boolean(data.api_key_required),
-        ttsAvailable: Boolean(data.tts_available),
-        ttsEngine: data.tts_engine || 'unavailable',
-        engine: data.engine || 'unknown',
-        _lastChecked: Date.now(),
-      })
-    } catch {
-      setLatencyMs(null)
-      setHealth({
-        checking: false,
-        backendUp: false,
-        nllbLoaded: false,
-        loraAdapters: [],
-        apiKeyRequired: false,
-        ttsAvailable: false,
-        ttsEngine: 'offline',
-        engine: 'offline',
-        _lastChecked: Date.now(),
-      })
-    }
-  }, [apiUrl])
-
-  useEffect(() => {
-    refreshHealth()
-    const interval = setInterval(refreshHealth, 30000)
-    return () => clearInterval(interval)
-  }, [refreshHealth])
 
   useEffect(() => {
     return () => {
@@ -547,31 +340,18 @@ function App() {
     return () => window.removeEventListener('keydown', handleShortcut)
   }, [navigateToScreen])
 
-  useEffect(() => {
-    const syncTheme = (nextSettings) => {
-      if (!nextSettings?.theme) return
-      if (nextSettings.theme !== theme) {
-        setTheme(nextSettings.theme)
-      }
+  const handleThemeSync = useCallback((nextSettings) => {
+    const nextTheme = nextSettings?.theme
+    if (!nextTheme) {
+      return
     }
 
-    const handleSettingsUpdated = (event) => {
-      syncTheme(event?.detail ?? loadSettings())
-    }
+    setTheme((previousTheme) => (
+      previousTheme === nextTheme ? previousTheme : nextTheme
+    ))
+  }, [])
 
-    const handleStorage = (event) => {
-      if (event.key && event.key !== SETTINGS_STORAGE_KEY) return
-      syncTheme(loadSettings())
-    }
-
-    window.addEventListener(SETTINGS_UPDATED_EVENT, handleSettingsUpdated)
-    window.addEventListener('storage', handleStorage)
-
-    return () => {
-      window.removeEventListener(SETTINGS_UPDATED_EVENT, handleSettingsUpdated)
-      window.removeEventListener('storage', handleStorage)
-    }
-  }, [theme])
+  useSettingsSync(handleThemeSync)
 
   const handleTranslate = useCallback(async (payload, options = { trigger: 'manual' }) => {
     if (!payload?.text?.trim()) {
@@ -637,7 +417,7 @@ function App() {
         return
       }
 
-      const message = extractApiErrorMessage(err.response?.data)
+      const message = extractApiErrorMessage(err.response?.data, 'Connection failed. Is the backend running?')
       setError(message)
       setTranslationMeta(DEFAULT_TRANSLATION_META)
 
@@ -672,8 +452,10 @@ function App() {
     <div className="relative isolate flex min-h-screen bg-bg-dark text-text-primary transition-colors duration-300">
       {/* Ambient scene layers keep the shell visually alive without competing with content. */}
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        <div className="a26-ambient-ribbons absolute inset-[8%_-12%_-20%_-12%]" />
         <div className="absolute -top-28 left-[18%] h-72 w-72 rounded-full blur-3xl" style={{ backgroundColor: 'var(--a26-ambient-magenta)' }} />
         <div className="absolute right-[8%] top-16 h-64 w-64 rounded-full blur-3xl" style={{ backgroundColor: 'var(--a26-ambient-gold)' }} />
+        <div className="absolute -bottom-20 left-[44%] h-64 w-64 rounded-full blur-3xl" style={{ backgroundColor: 'var(--a26-ambient-indigo)' }} />
         <div className="a26-ambient-canvas absolute inset-0" />
       </div>
 
@@ -717,85 +499,22 @@ function App() {
 
         {/* Wide-screen readability is preserved by constraining content width and increasing horizontal breathing room. */}
         <main className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5 lg:px-8 lg:py-6">
-          <div className="mx-auto w-full max-w-7xl">
-            <div
-              className={`${activeScreen === 'translate' ? 'flex' : 'hidden'} min-h-[calc(100vh-8rem)] flex-col`}
-              aria-hidden={activeScreen !== 'translate'}
-            >
-              <TranslateScreen
-                onTranslate={handleTranslate}
-                translatedText={translatedText}
-                loading={loading}
-                error={error}
-                apiReady={health.backendUp && health.nllbLoaded && (!health.apiKeyRequired || clientApiKeyConfigured)}
-                wikiData={wikiData}
-                apiUrl={apiUrl}
-                backendUp={health.backendUp}
-                ttsAvailable={health.ttsAvailable}
-                loraAdapters={health.loraAdapters}
-                nllbLoaded={health.nllbLoaded}
-                apiKeyRequired={health.apiKeyRequired}
-                clientApiKeyConfigured={clientApiKeyConfigured}
-                translationEngine={health.engine}
-                translationMeta={translationMeta}
-                notify={showToast}
-              />
-            </div>
-
-            {mountedScreens['wiki-voz'] ? (
-              <div
-                className={`${activeScreen === 'wiki-voz' ? 'flex' : 'hidden'} screen-transition-in min-h-[calc(100vh-8rem)] flex-col`}
-                aria-hidden={activeScreen !== 'wiki-voz'}
-              >
-                <WikiVozScreen
-                  apiUrl={apiUrl}
-                  backendUp={health.backendUp}
-                  ttsAvailable={health.ttsAvailable}
-                  notify={showToast}
-                />
-              </div>
-            ) : null}
-
-            {mountedScreens['activity-logs'] ? (
-              <div
-                className={`${activeScreen === 'activity-logs' ? 'flex' : 'hidden'} screen-transition-in min-h-[calc(100vh-8rem)] flex-col`}
-                aria-hidden={activeScreen !== 'activity-logs'}
-              >
-                <ActivityLogsScreen apiUrl={apiUrl} backendUp={health.backendUp} notify={showToast} />
-              </div>
-            ) : null}
-
-            {mountedScreens.evaluation ? (
-              <div
-                className={`${activeScreen === 'evaluation' ? 'flex' : 'hidden'} screen-transition-in min-h-[calc(100vh-8rem)] flex-col`}
-                aria-hidden={activeScreen !== 'evaluation'}
-              >
-                <SystemEvaluationScreen />
-              </div>
-            ) : null}
-
-            {mountedScreens['db-admin'] ? (
-              <div
-                className={`${activeScreen === 'db-admin' ? 'flex' : 'hidden'} screen-transition-in min-h-[calc(100vh-8rem)] flex-col`}
-                aria-hidden={activeScreen !== 'db-admin'}
-              >
-                <DatabaseAdminScreen apiUrl={apiUrl} notify={showToast} />
-              </div>
-            ) : null}
-
-            {mountedScreens.settings ? (
-              <div
-                className={`${activeScreen === 'settings' ? 'flex' : 'hidden'} screen-transition-in min-h-[calc(100vh-8rem)] flex-col`}
-                aria-hidden={activeScreen !== 'settings'}
-              >
-                <SettingsScreen
-                  health={health}
-                  onRefreshHealth={refreshHealth}
-                  activeTheme={theme}
-                />
-              </div>
-            ) : null}
-          </div>
+          <AppScreenStack
+            activeScreen={activeScreen}
+            mountedScreens={mountedScreens}
+            onTranslate={handleTranslate}
+            translatedText={translatedText}
+            loading={loading}
+            error={error}
+            wikiData={wikiData}
+            apiUrl={apiUrl}
+            health={health}
+            clientApiKeyConfigured={clientApiKeyConfigured}
+            translationMeta={translationMeta}
+            theme={theme}
+            onRefreshHealth={refreshHealth}
+            notify={showToast}
+          />
         </main>
       </div>
 

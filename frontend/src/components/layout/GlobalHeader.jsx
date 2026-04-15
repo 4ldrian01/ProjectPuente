@@ -59,7 +59,7 @@ export default function GlobalHeader({
             className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-border-subtle/70 bg-bg-card/70 text-text-secondary transition-all duration-300 hover:bg-bg-elevated hover:text-text-primary active:scale-[0.98] md:hidden"
             aria-label={mobileNavOpen ? 'Close navigation menu' : 'Open navigation menu'}
           >
-            <Menu className="h-4.5 w-4.5" />
+            <Menu className="h-[1.125rem] w-[1.125rem]" />
           </button>
 
           <button
@@ -69,7 +69,7 @@ export default function GlobalHeader({
             aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
-            {isSidebarCollapsed ? <PanelLeft className="h-4.5 w-4.5" /> : <PanelLeftClose className="h-4.5 w-4.5" />}
+            {isSidebarCollapsed ? <PanelLeft className="h-[1.125rem] w-[1.125rem]" /> : <PanelLeftClose className="h-[1.125rem] w-[1.125rem]" />}
           </button>
 
           <h1 className="sr-only">{screenTitle}</h1>
@@ -101,6 +101,7 @@ export default function GlobalHeader({
           </div>
 
           <button
+            type="button"
             onClick={onPing}
             className="spring-nav-transition inline-flex items-center gap-2 rounded-full border border-border-subtle/70 bg-bg-card/80 px-3 py-1.5 text-xs font-semibold text-text-secondary transition-all duration-300 hover:border-accent-magenta/35 hover:bg-bg-elevated hover:text-text-primary active:scale-[0.98]"
             title="Refresh backend health check"

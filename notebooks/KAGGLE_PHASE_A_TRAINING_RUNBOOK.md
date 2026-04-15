@@ -8,6 +8,19 @@ Use this runbook when Colab GPU quota is exhausted and you need to continue trai
 - Project path: `/kaggle/working/ProjectPuente` (recommended)
 - Launcher: `notebooks/scripts/run_kaggle_phase_a_training.sh`
 - Pipeline: `notebooks/scripts/colab_lora_training_pipeline.py` (runtime-aware)
+- Runtime deps file: `notebooks/scripts/requirements_colab.txt`
+
+## Runtime Python Dependencies (Auto-Installed)
+
+The launcher installs these packages before training:
+
+- `torch`
+- `transformers`
+- `datasets`
+- `peft`
+- `accelerate`
+- `sentencepiece`
+- `safetensors`
 
 ## 1) Prepare Kaggle Notebook Environment
 
@@ -36,12 +49,17 @@ Ensure project root contains expected folders:
 - `datasets/`
 - `notebooks/`
 
-Check split files:
+Check split files (default canonical naming):
 
 ```bash
 PRJ=/kaggle/working/ProjectPuente
 ls -lah "$PRJ/datasets/processed/80-10-10_split/01_chavacano"/{train,eval,test}.jsonl
 ```
+
+The launcher can also auto-detect these alternative split filename triplets inside the selected dataset directory:
+
+- `cbk_en_train.jsonl`, `cbk_en_val.jsonl`, `cbk_en_test.jsonl`
+- `cbk_en_trial_train.jsonl`, `cbk_en_trial_val.jsonl`, `cbk_en_trial_test.jsonl`
 
 Confirm CUDA before starting training:
 
@@ -99,6 +117,15 @@ sleep 12
 sed -n '1,220p' "$LOG"
 tail -f "$LOG"
 ```
+
+Quick smoke-run before full training (recommended to avoid burning GPU hours on config mistakes):
+
+```bash
+export PUENTE_DATASET_REL_DIR=datasets/processed/80-10-10_split/01_chavacano/trial_small
+export PUENTE_RUN_NAME=lora-cbk-trial-kaggle
+```
+
+The launcher will auto-detect `cbk_en_trial_*` split filenames in `trial_small`.
 
 ## 5) Output Locations
 

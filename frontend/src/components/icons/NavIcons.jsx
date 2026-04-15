@@ -155,7 +155,7 @@ export function SearchIcon({ className = 'w-5 h-5' }) {
   )
 }
 
-export function FunnelIcon({ className = 'w-4.5 h-4.5' }) {
+export function FunnelIcon({ className = 'w-[1.125rem] h-[1.125rem]' }) {
   return (
     <svg
       className={className}

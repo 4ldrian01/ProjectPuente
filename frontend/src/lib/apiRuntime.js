@@ -1,3 +1,8 @@
+/**
+ * apiRuntime.js — Runtime endpoint and host resolution utilities.
+ * Summary: Determines reachable backend URLs, local alias promotion rules, and browser-safe API routing.
+ */
+
 const PROJECTPUENTE_LOCAL_HOST = 'projectpuente.local'
 const DEFAULT_FRONTEND_PORT = '5173'
 const LOCAL_HOST_ALIASES = new Set(['localhost', '127.0.0.1', '0.0.0.0', '[::1]'])

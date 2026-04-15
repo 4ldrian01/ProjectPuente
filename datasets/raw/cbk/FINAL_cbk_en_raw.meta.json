@@ -1,0 +1,42 @@
+{
+  "generated_at_utc": "2026-04-15T05:29:58.745530+00:00",
+  "output_path": "/home/rauf/Desktop/Machine Learning/ProjectPuente/datasets/raw/cbk/FINAL_cbk_en_raw.jsonl",
+  "output_rows": 2524,
+  "schema": {
+    "translation": {
+      "cbk": "string",
+      "en": "string"
+    }
+  },
+  "datasets_package": {
+    "version": "4.8.4",
+    "module_path": "/home/rauf/Desktop/Machine Learning/ProjectPuente/.venv/lib/python3.13/site-packages/datasets/__init__.py"
+  },
+  "sources": [
+    {
+      "source_name": "tatoeba_cbk_en",
+      "loaded": true,
+      "raw_rows": 2529,
+      "accepted_rows": 2524,
+      "dropped_invalid": 5,
+      "dropped_duplicate": 0,
+      "errors": 1
+    },
+    {
+      "source_name": "chavacanomt_cbk_eng",
+      "loaded": true,
+      "raw_rows": 0,
+      "accepted_rows": 0,
+      "dropped_invalid": 0,
+      "dropped_duplicate": 0,
+      "errors": 2
+    }
+  ],
+  "totals": {
+    "raw_rows": 2529,
+    "accepted_rows": 2524,
+    "dropped_invalid": 5,
+    "dropped_duplicate": 0,
+    "errors": 3
+  }
+}
