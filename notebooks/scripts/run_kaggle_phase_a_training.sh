@@ -67,6 +67,7 @@ export PUENTE_LR="${PUENTE_LR:-0.0002}"
 export PUENTE_GRADIENT_CHECKPOINTING="${PUENTE_GRADIENT_CHECKPOINTING:-true}"
 export PUENTE_SAVE_STEPS="${PUENTE_SAVE_STEPS:-500}"
 export PUENTE_REQUIRE_GPU="${PUENTE_REQUIRE_GPU:-true}"
+export PUENTE_RESUME_FROM_CHECKPOINT="${PUENTE_RESUME_FROM_CHECKPOINT:-}"
 
 # Optional HF auth bootstrap for stable model downloads.
 default_hf_token_file="${PUENTE_PROJECT_ROOT}/.secrets/hf_token"

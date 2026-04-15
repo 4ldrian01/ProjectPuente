@@ -73,6 +73,8 @@ export PUENTE_GRAD_ACCUM_STEPS="${PUENTE_GRAD_ACCUM_STEPS:-4}"
 export PUENTE_LR="${PUENTE_LR:-0.0002}"
 export PUENTE_GRADIENT_CHECKPOINTING="${PUENTE_GRADIENT_CHECKPOINTING:-true}"
 export PUENTE_SAVE_STEPS="${PUENTE_SAVE_STEPS:-500}"
+export PUENTE_REQUIRE_GPU="${PUENTE_REQUIRE_GPU:-true}"
+export PUENTE_RESUME_FROM_CHECKPOINT="${PUENTE_RESUME_FROM_CHECKPOINT:-}"
 
 # Optional HF auth bootstrap for stable model downloads.
 default_hf_token_file="${PUENTE_PROJECT_ROOT}/.secrets/hf_token"
@@ -108,6 +110,21 @@ for split in train eval test; do
 done
 
 echo "[data] Using dataset splits from: ${PUENTE_DRIVE_ROOT}/${PUENTE_DATASET_REL_DIR}"
+
+if [[ "${PUENTE_REQUIRE_GPU}" == "true" ]]; then
+  python - <<'PY'
+import sys
+import torch
+
+if not torch.cuda.is_available():
+    print('ERROR: GPU is required but CUDA is not available in this Colab runtime.')
+    print('Hint: In Colab, switch Runtime -> Change runtime type -> Hardware accelerator: GPU.')
+    print('If quota is exhausted, retry later or use Kaggle fallback launcher.')
+    sys.exit(1)
+
+print(f'[gpu] Using GPU: {torch.cuda.get_device_name(0)}')
+PY
+fi
 
 SCRIPT_DIR="${PUENTE_PROJECT_ROOT}/notebooks/scripts"
 REQ_FILE="${SCRIPT_DIR}/requirements_colab.txt"

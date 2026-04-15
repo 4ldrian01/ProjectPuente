@@ -115,6 +115,9 @@ export PUENTE_GRAD_ACCUM_STEPS=4
 export PUENTE_LR=0.0002
 export PUENTE_GRADIENT_CHECKPOINTING=true
 export PUENTE_SAVE_STEPS=500
+export PUENTE_REQUIRE_GPU=true
+# Optional resume path
+# export PUENTE_RESUME_FROM_CHECKPOINT=/content/drive/MyDrive/ProjectPuenteCloud/models/checkpoints/checkpoint-500
 bash notebooks/scripts/run_colab_phase_a_training.sh
 
 # Optional direct invocation after exports
@@ -141,6 +144,8 @@ For other source languages, update only these environment variables:
 - checkpoints written directly to Drive on trainer save steps (`PUENTE_SAVE_STEPS`, default 500)
 - aggressive GPU cleanup hooks (`torch.cuda.empty_cache()` + `torch.cuda.ipc_collect()`)
 - schema preflight for required translation keys (`translation.<source_key>` plus `translation.en`)
+- optional GPU hard-require gate (`PUENTE_REQUIRE_GPU=true`) to fail fast on quota/no-GPU runtimes
+- optional checkpoint resume hook (`PUENTE_RESUME_FROM_CHECKPOINT`) for interrupted runs
 
 ## Outputs and Persistence
 

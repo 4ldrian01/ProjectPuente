@@ -12,7 +12,11 @@ Use this runbook when Colab GPU quota is exhausted and you need to continue trai
 ## 1) Prepare Kaggle Notebook Environment
 
 1. Create a new Kaggle notebook.
-2. In notebook settings, set Accelerator to GPU.
+2. In notebook settings, open `Settings` (right sidebar) and set:
+	- `Accelerator`: `GPU T4 x2`
+	- `Internet`: On (required for repo clone and model download)
+3. Click `Turn on GPU T4 x2` and wait until the runtime reconnects.
+4. Verify status at the top-right runtime indicator shows GPU enabled.
 3. Open a terminal in Kaggle notebook.
 4. Clone your repository to working storage:
 
@@ -37,6 +41,20 @@ Check split files:
 ```bash
 PRJ=/kaggle/working/ProjectPuente
 ls -lah "$PRJ/datasets/processed/80-10-10_split/01_chavacano"/{train,eval,test}.jsonl
+```
+
+Confirm CUDA before starting training:
+
+```bash
+python - <<'PY'
+import torch, sys
+print('cuda_available =', torch.cuda.is_available())
+if not torch.cuda.is_available():
+	print('ERROR: GPU not active. Re-open Kaggle Settings and re-enable Accelerator: GPU T4 x2.')
+	sys.exit(1)
+print('gpu_count =', torch.cuda.device_count())
+print('active_gpu =', torch.cuda.get_device_name(0))
+PY
 ```
 
 ## 3) Optional HF Token Setup
@@ -65,6 +83,10 @@ export PUENTE_SOURCE_TRANSLATION_KEY=cbk
 export PUENTE_TARGET_TRANSLATION_KEY=en
 export PUENTE_DATASET_REL_DIR=datasets/processed/80-10-10_split/01_chavacano
 export PUENTE_RUN_NAME=lora-cbk-full-kaggle
+export PUENTE_REQUIRE_GPU=true
+
+# Optional: resume from prior checkpoint directory
+# export PUENTE_RESUME_FROM_CHECKPOINT="$PRJ/models/checkpoints/checkpoint-500"
 
 LOG="$PRJ/outputs/$PUENTE_RUN_NAME/train_$(date +%Y%m%d_%H%M%S).log"
 mkdir -p "$(dirname "$LOG")"
@@ -90,3 +112,4 @@ tail -f "$LOG"
 - If split files are missing, set `PUENTE_DATASET_REL_DIR` to the exact split directory.
 - If HF rate limits occur, set token at `.secrets/hf_token`.
 - If notebook session restarts, rerun launch block and follow latest log file.
+- If you need reproducible persistence, click `Save Version` in Kaggle to capture notebook outputs under `/kaggle/working`.

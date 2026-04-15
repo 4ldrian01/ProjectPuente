@@ -342,6 +342,8 @@ class ColabConfig:
     save_steps: int
     save_total_limit: int
     gradient_checkpointing: bool
+    require_gpu: bool
+    resume_from_checkpoint: Optional[str]
 
 
 def build_config() -> ColabConfig:
@@ -399,6 +401,8 @@ def build_config() -> ColabConfig:
         save_steps=env_int('PUENTE_SAVE_STEPS', 500),
         save_total_limit=env_int('PUENTE_SAVE_TOTAL_LIMIT', 3),
         gradient_checkpointing=env_bool('PUENTE_GRADIENT_CHECKPOINTING', True),
+        require_gpu=env_bool('PUENTE_REQUIRE_GPU', False),
+        resume_from_checkpoint=(env_str('PUENTE_RESUME_FROM_CHECKPOINT', '') or None),
     )
 
 
@@ -606,10 +610,23 @@ def build_training_args(cfg: ColabConfig, paths: Dict[str, Path]) -> Seq2SeqTrai
 def main() -> None:
     cfg = build_config()
     paths = resolve_paths(cfg)
+    runtime_name = detect_runtime_name()
+
+    print(f'[runtime] detected runtime: {runtime_name}')
+    if cfg.require_gpu and not torch.cuda.is_available():
+        raise RuntimeError(
+            'GPU is required but CUDA is not available. '
+            'Enable GPU in your runtime or set PUENTE_REQUIRE_GPU=false for CPU debugging.'
+        )
 
     if torch.cuda.is_available():
         torch.backends.cuda.matmul.allow_tf32 = True
         torch.backends.cudnn.allow_tf32 = True
+        device_count = torch.cuda.device_count()
+        active_name = torch.cuda.get_device_name(torch.cuda.current_device())
+        print(f'[gpu] CUDA available with {device_count} device(s). Active device: {active_name}')
+    else:
+        print('[gpu] CUDA is not available; training will run on CPU.')
 
     # Ensure output paths exist early for crash-safe metadata writes.
     paths['local_output_root'].mkdir(parents=True, exist_ok=True)
@@ -722,7 +739,17 @@ def main() -> None:
     metrics: Dict[str, Dict] = {}
     try:
         print('[train] starting LoRA fine-tuning...')
-        train_result = trainer.train()
+        train_kwargs = {}
+        if cfg.resume_from_checkpoint:
+            checkpoint_path = Path(cfg.resume_from_checkpoint).expanduser().resolve()
+            if not checkpoint_path.exists():
+                raise FileNotFoundError(
+                    f'PUENTE_RESUME_FROM_CHECKPOINT does not exist: {checkpoint_path}'
+                )
+            train_kwargs['resume_from_checkpoint'] = str(checkpoint_path)
+            print(f'[train] resuming from checkpoint: {checkpoint_path}')
+
+        train_result = trainer.train(**train_kwargs)
         metrics['train'] = train_result.metrics
 
         print('[eval] running holdout evaluation on test split...')
