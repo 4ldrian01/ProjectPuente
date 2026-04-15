@@ -2,7 +2,7 @@
 
 This document defines the thesis deployment path:
 
-- Phase A (Cloud): train LoRA adapters in Colab GPU through remote development.
+- Phase A (Cloud): train LoRA adapters in Colab GPU through remote development, with Kaggle GPU fallback when Colab quota is exhausted.
 - Phase B (Edge): run inference fully offline from local `ml_models` with zero API calls.
 
 ---
@@ -28,24 +28,29 @@ so large checkpoints and temporary training artifacts do not burden the laptop.
 
 ### Training script
 
-Use:
+Use one of:
 
 - `notebooks/scripts/colab_lora_training_pipeline.py`
+- `notebooks/scripts/run_colab_phase_a_training.sh` (Colab launcher)
+- `notebooks/scripts/run_kaggle_phase_a_training.sh` (Kaggle launcher)
 
-Expected input files in Drive:
+Expected split files under project root (recommended):
 
-- `/content/drive/MyDrive/ProjectPuenteCloud/data/train.jsonl`
-- `/content/drive/MyDrive/ProjectPuenteCloud/data/eval.jsonl`
+- `<project_root>/datasets/processed/80-10-10_split/01_chavacano/train.jsonl`
+- `<project_root>/datasets/processed/80-10-10_split/01_chavacano/eval.jsonl`
+- `<project_root>/datasets/processed/80-10-10_split/01_chavacano/test.jsonl`
 
-Expected JSONL schema:
+Accepted JSONL schemas:
 
 ```json
-{"translation": {"cbk": "Good morning", "en": "Buenos dias"}}
+{"translation": {"cbk": "Buen dia", "en": "Good morning"}}
 ```
 
-This unified schema applies to both Chavacano (`cbk`) and Cebuano (`ceb`) datasets,
-using the same nested `translation` object with the source language key (`cbk` or
-`ceb`) and the target key `en`.
+```json
+{"source_text": "Buen dia", "target_text": "Good morning"}
+```
+
+The pipeline auto-detects and sanitizes rows using supported schema variants so malformed rows do not crash long cloud runs.
 
 LoRA configuration in script:
 
@@ -58,6 +63,11 @@ Export products:
 - adapter directory in Drive output
 - zip archive containing adapter files
 - metadata JSON for reproducibility
+
+Runtime-local staging behavior:
+
+- Colab: stages to `/content/data`
+- Kaggle: stages to `/kaggle/working/data`
 
 ---
 

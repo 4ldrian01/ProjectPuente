@@ -1,16 +1,15 @@
-"""Cloud LoRA training pipeline for Project PUENTE (Colab + VS Code tunnel).
+"""Cloud LoRA training pipeline for Project PUENTE (Colab and Kaggle).
 
 Why this version exists:
-- Google Drive mounted under /content/drive is reliable but high-latency for tight
-  training loops due to FUSE-backed reads.
-- GPU training is faster and more stable when datasets are staged to local SSD-like
-  Colab storage (/content/data) before DataLoader access.
-- Checkpoints are written directly to Drive at save intervals so abrupt Colab runtime
+- Cloud-mounted/project-backed datasets can be slower for tight training loops.
+- GPU training is faster and more stable when datasets are staged to a local
+    high-speed path before DataLoader access.
+- Checkpoints are written to artifact storage at save intervals so abrupt runtime
     stops do not erase progress.
 
 This script enforces a strict runtime contract:
-1) Copy train/eval/test JSONL from source storage -> /content/data with SHA-256 verification.
-2) Train from /content/data using nested translation schema JSONL.
+1) Copy train/eval/test JSONL from source storage -> runtime local data dir with SHA-256 verification.
+2) Train from runtime local data dir using supported schema variants.
 3) Write checkpoints directly to artifact storage every configured save interval (default 500 steps).
 4) Export final LoRA adapter to artifact storage /models/lora_adapters.
 """
@@ -187,6 +186,52 @@ def infer_default_dataset_rel_dir(project_root: str) -> str:
     return 'datasets/processed/001_chavacano'
 
 
+def detect_runtime_name() -> str:
+    if Path('/kaggle').exists():
+        return 'kaggle'
+    if Path('/content').exists():
+        return 'colab'
+    return 'other'
+
+
+def infer_default_project_root() -> str:
+    runtime = detect_runtime_name()
+    if runtime == 'colab':
+        drive_root = Path('/content/drive/MyDrive/ProjectPuenteCloud')
+        if drive_root.is_dir():
+            return str(drive_root)
+        fallback = Path('/content/ProjectPuente')
+        if fallback.is_dir():
+            return str(fallback)
+        return str(drive_root)
+
+    if runtime == 'kaggle':
+        preferred = Path('/kaggle/working/ProjectPuente')
+        if preferred.is_dir():
+            return str(preferred)
+        return '/kaggle/working'
+
+    return str(Path(__file__).resolve().parents[2])
+
+
+def infer_default_local_data_dir() -> str:
+    runtime = detect_runtime_name()
+    if runtime == 'colab':
+        return '/content/data'
+    if runtime == 'kaggle':
+        return '/kaggle/working/data'
+    return '/tmp/puente-data'
+
+
+def infer_default_local_output_root() -> str:
+    runtime = detect_runtime_name()
+    if runtime == 'colab':
+        return '/content/outputs'
+    if runtime == 'kaggle':
+        return '/kaggle/working/outputs'
+    return '/tmp/puente-outputs'
+
+
 FLORES_TO_SCHEMA_KEY = {
     'eng': 'en',
     'spa': 'es',
@@ -319,7 +364,7 @@ def build_config() -> ColabConfig:
             f'PUENTE_TARGET_TRANSLATION_KEY must be en for this sequential source-to-English pipeline, got {target_translation_key!r}.'
         )
 
-    default_project_root = env_str('PUENTE_PROJECT_ROOT', '/content/drive/MyDrive/ProjectPuenteCloud')
+    default_project_root = env_str('PUENTE_PROJECT_ROOT', infer_default_project_root())
     if dataset_tag:
         default_dataset_rel_dir = f'datasets/processed/{dataset_tag}'
     else:
@@ -328,8 +373,8 @@ def build_config() -> ColabConfig:
     return ColabConfig(
         drive_root=env_str('PUENTE_DRIVE_ROOT', default_project_root),
         dataset_rel_dir=env_str('PUENTE_DATASET_REL_DIR', default_dataset_rel_dir),
-        local_data_dir=env_str('PUENTE_LOCAL_DATA_DIR', '/content/data'),
-        local_output_root=env_str('PUENTE_LOCAL_OUTPUT_ROOT', '/content/outputs'),
+        local_data_dir=env_str('PUENTE_LOCAL_DATA_DIR', infer_default_local_data_dir()),
+        local_output_root=env_str('PUENTE_LOCAL_OUTPUT_ROOT', infer_default_local_output_root()),
         drive_output_rel_dir=env_str('PUENTE_DRIVE_OUTPUT_REL_DIR', 'outputs'),
         run_name=env_str('PUENTE_RUN_NAME', f'lora-{source_tag}-to-{target_tag}-cloud'),
         train_filename=env_str('PUENTE_TRAIN_FILENAME', 'train.jsonl'),
@@ -443,14 +488,14 @@ def preflight_validate_local_splits(paths: Dict[str, Path], cfg: ColabConfig) ->
     """Hard-fail early if split files or schema contract are invalid.
 
     Strict checks:
-    - train/eval/test must exist in /content/data (high-speed local storage).
+    - train/eval/test must exist in runtime local data dir.
     - first JSONL record in each split must expose a valid source/target text pair.
     """
-    expected_local_root = Path('/content/data').resolve()
     configured_root = Path(cfg.local_data_dir).expanduser().resolve()
-    if configured_root != expected_local_root:
+    configured_root.mkdir(parents=True, exist_ok=True)
+    if not configured_root.exists() or not configured_root.is_dir():
         raise ValueError(
-            f'Preflight failed: local_data_dir must be /content/data, got {configured_root}'
+            f'Preflight failed: local_data_dir is not a usable directory: {configured_root}'
         )
 
     required_splits = {
@@ -462,7 +507,7 @@ def preflight_validate_local_splits(paths: Dict[str, Path], cfg: ColabConfig) ->
     for split_name, split_path in required_splits.items():
         if not split_path.exists():
             raise ValueError(
-                f'Preflight failed: missing {split_name} split file in /content/data: {split_path}'
+                f'Preflight failed: missing {split_name} split file in local_data_dir: {split_path}'
             )
 
         first_record = _read_first_json_line(split_path)
@@ -574,7 +619,7 @@ def main() -> None:
         'config': asdict(cfg),
         'paths': {key: str(value) for key, value in paths.items()},
         'notes': {
-            'io_strategy': 'datasets are copied from source storage to /content/data before training',
+            'io_strategy': 'datasets are copied from source storage to local_data_dir before training',
             'reliability': f'trainer checkpoints are written directly to artifact storage every {cfg.save_steps} steps',
         },
     }

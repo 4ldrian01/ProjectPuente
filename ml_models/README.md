@@ -74,7 +74,7 @@ ml_models/
 
 ## Training mode boundaries
 
-- Cloud Phase A production path: `../notebooks/scripts/run_colab_phase_a_training.sh` (or direct `colab_lora_training_pipeline.py`).
+- Cloud Phase A production path: `../notebooks/scripts/run_colab_phase_a_training.sh` (Colab) or `../notebooks/scripts/run_kaggle_phase_a_training.sh` (Kaggle); direct fallback `colab_lora_training_pipeline.py`.
 - `train_lora.py` remains available for local experimentation and controlled runs.
 - Post-training adapter checks should use `../notebooks/lora_inference_validation.ipynb`.
 

@@ -14,6 +14,7 @@ The notebooks in this repository are Python notebooks used for validation, model
 ## Canonical cloud training entrypoints
 
 - Preferred launcher: `notebooks/scripts/run_colab_phase_a_training.sh`
+- Kaggle launcher: `notebooks/scripts/run_kaggle_phase_a_training.sh`
 - Direct fallback: `notebooks/scripts/colab_lora_training_pipeline.py`
 - Post-training validation notebook: `notebooks/lora_inference_validation.ipynb`
 

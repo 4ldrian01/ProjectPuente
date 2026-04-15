@@ -6,17 +6,24 @@ This runbook is the end-to-end cloud workflow for LoRA training using:
 - Google Colab runtime (T4 GPU)
 - Remote Tunnel bridge
 
+If Colab GPU quota is exhausted, use Kaggle with:
+
+- `notebooks/KAGGLE_PHASE_A_TRAINING_RUNBOOK.md`
+- `notebooks/scripts/run_kaggle_phase_a_training.sh`
+
 ## Architecture Snapshot
 
 1. Local VS Code connects to Colab via `ms-vscode.remote-server` (Remote - Tunnels).
 2. Training data (`train.jsonl`, `eval.jsonl`, `test.jsonl`) lives under the configured project root.
-3. Before training, split files are copied to `/content/data` with SHA-256 verification.
-4. Trainer reads only from `/content/data` to avoid Drive FUSE I/O bottlenecks.
+3. Before training, split files are copied to runtime-local data storage with SHA-256 verification.
+4. Trainer reads from runtime-local data storage to avoid slow mounted/project storage I/O bottlenecks.
 5. Checkpoints are written directly to artifact storage during training; final adapters are saved there after training.
 
-## Why `/content/data` Is Faster Than Drive During Training
+## Why Local Runtime Storage Is Faster During Training
 
 Colab Drive mount uses a network-backed FUSE layer. During tokenization, dataloader fetches, and repeated epoch access, this introduces higher latency and lower throughput versus local runtime storage. Staging split files to `/content/data` reduces read latency and keeps GPU pipelines fed more consistently, improving step-time stability.
+
+On Kaggle, equivalent staging happens to `/kaggle/working/data`.
 
 ## Prerequisites
 
@@ -64,6 +71,9 @@ From the remote tunnel terminal:
 # Preferred: launcher installs dependencies and runs pipeline safely
 bash notebooks/scripts/run_colab_phase_a_training.sh
 
+# Kaggle launcher (use in Kaggle runtime instead of Colab launcher)
+# bash notebooks/scripts/run_kaggle_phase_a_training.sh
+
 # Direct pipeline execution (use when dependencies are already installed)
 python "${PUENTE_PROJECT_ROOT:-$PWD}"/notebooks/scripts/colab_lora_training_pipeline.py
 ```
@@ -76,7 +86,7 @@ This workflow:
   - `{"source_text": "...", "target_text": "..."}`
   - `{"source": "...", "target": "..."}`
   - `{"<source_key>": "...", "en": "..."}`
-3. executes checksum-safe staging to `/content/data`
+3. executes checksum-safe staging to runtime-local data storage
 4. starts LoRA training
 5. writes checkpoints and final adapter artifacts to artifact storage
 
@@ -156,6 +166,7 @@ Ephemeral local runtime artifacts (not guaranteed after Colab reset):
 2. If split file errors appear, verify exact filenames in the configured `PUENTE_DATASET_REL_DIR`.
 3. If Colab runtime disconnects, restart runtime, re-run tunnel cells, then relaunch training.
 4. If VRAM OOM occurs, lower `PUENTE_BATCH_SIZE_TRAIN` and/or increase `PUENTE_GRAD_ACCUM_STEPS`.
+5. If Colab GPU quota is blocked, migrate to Kaggle and run `notebooks/scripts/run_kaggle_phase_a_training.sh`.
 
 ## Next Step After Phase A Training
 
