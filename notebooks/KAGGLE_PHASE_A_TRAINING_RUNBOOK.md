@@ -1120,12 +1120,23 @@ status = subprocess.run(
 
 proc_stat = status.stdout.strip()
 proc_alive = bool(proc_stat) and not proc_stat.startswith('Z')
+log_path = Path(log_file)
+done_marker = '[done] Cloud training pipeline completed successfully.'
+traceback_marker = 'Traceback (most recent call last):'
+log_text = log_path.read_text(encoding='utf-8', errors='replace') if log_path.exists() else ''
+
+print('log_exists =', log_path.exists())
+print('done_marker_found =', done_marker in log_text)
+print('traceback_found =', traceback_marker in log_text)
 
 if proc_alive:
     print('Training still running; artifact files may still be MISSING at this moment.')
     print('Wait, then re-run Cell 8 and Cell 9.')
+elif done_marker in log_text:
+    print('Training completed successfully ([done] marker found in log).')
 elif proc_stat.startswith('Z'):
-    print('Training process is defunct (zombie): run has already exited. Check Cell 8 log output for final status.')
+    print('Training process is defunct (zombie): run has exited without a completion marker.')
+    print('Inspect Cell 8 output for Traceback/ERROR details.')
 else:
     print('Training process is not running. Check artifact status below and inspect log for [done] or Traceback.')
 
