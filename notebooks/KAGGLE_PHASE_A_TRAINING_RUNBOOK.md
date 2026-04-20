@@ -483,6 +483,7 @@ If any step fails, fix that step first and do not continue.
 - If you see `SyntaxError` on a line starting with ```bash or ```, remove that line and re-run the cell.
 - If shell commands fail in a Python cell, add `!` before each shell command or use `%%bash`.
 - If `ps -p <pid>` shows only the header row, that process is no longer running.
+- If `git pull` aborts with `Your local changes ... would be overwritten by merge`, rerun Section 9 Cell 2. It auto-stashes local edits (including prior hotfix edits) before pulling latest `origin/development`.
 - If `tail` or `grep` says log file does not exist, use a dynamic log lookup first:
 
 ```python
@@ -614,6 +615,8 @@ Policy for this section:
 
 ```python
 from pathlib import Path
+import subprocess
+from datetime import datetime
 
 if not Path('/kaggle/working/ProjectPuente/.git').exists():
     !git clone https://github.com/4ldrian01/ProjectPuente.git /kaggle/working/ProjectPuente
@@ -621,6 +624,21 @@ if not Path('/kaggle/working/ProjectPuente/.git').exists():
 %cd /kaggle/working/ProjectPuente
 !git fetch origin
 !git checkout development
+
+status = subprocess.run(
+    ['git', 'status', '--porcelain'],
+    capture_output=True,
+    text=True,
+    check=False,
+)
+
+if status.stdout.strip():
+    stash_name = f"kaggle-pre-sync-{datetime.now():%Y%m%d_%H%M%S}"
+    print('Local changes detected; stashing before pull:', stash_name)
+    subprocess.run(['git', 'stash', 'push', '-u', '-m', stash_name], check=True)
+else:
+    print('Working tree clean; no stash needed.')
+
 !git pull --ff-only origin development
 ```
 
