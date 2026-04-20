@@ -32,6 +32,7 @@ from typing import Dict, Optional
 import torch
 from peft import LoraConfig, TaskType, get_peft_model
 from transformers import (
+    AutoConfig,
     AutoModelForSeq2SeqLM,
     AutoTokenizer,
     DataCollatorForSeq2Seq,
@@ -150,7 +151,12 @@ def hf_auth_kwargs(from_pretrained_callable, token: Optional[str]) -> Dict[str, 
     return {'token': token}
 
 
-def load_model_with_dtype_fallback(model_id: str, dtype_value, auth_kwargs: Dict[str, str]):
+def load_model_with_dtype_fallback(
+    model_id: str,
+    dtype_value,
+    auth_kwargs: Dict[str, str],
+    config=None,
+):
     """Load model while handling dtype kwarg differences across transformers versions."""
     preferred_kwargs = {'dtype': dtype_value}
     fallback_kwargs = {'torch_dtype': dtype_value}
@@ -159,12 +165,14 @@ def load_model_with_dtype_fallback(model_id: str, dtype_value, auth_kwargs: Dict
         return AutoModelForSeq2SeqLM.from_pretrained(
             model_id,
             **preferred_kwargs,
+            config=config,
             **auth_kwargs,
         )
     except TypeError:
         return AutoModelForSeq2SeqLM.from_pretrained(
             model_id,
             **fallback_kwargs,
+            config=config,
             **auth_kwargs,
         )
 
@@ -665,7 +673,8 @@ def sanitize_dataset_records(dataset, cfg: ColabConfig):
     def is_valid_record(example):
         return _extract_source_target_text(example, cfg) is not None
 
-    sanitized = dataset.filter(is_valid_record)
+    # Force fresh filtering to avoid stale cache artifacts across reruns.
+    sanitized = dataset.filter(is_valid_record, load_from_cache_file=False)
     after_counts = {split: len(sanitized[split]) for split in split_names}
 
     dropped_total = 0
@@ -682,6 +691,18 @@ def sanitize_dataset_records(dataset, cfg: ColabConfig):
 
     if dropped_total > 0:
         print('[data] Sanitization removed malformed rows; training will proceed with valid records only.')
+
+    # Safety check: ensure no malformed rows remain before map/tokenization.
+    residual_invalid = sanitized.filter(
+        lambda example: _extract_source_target_text(example, cfg) is None,
+        load_from_cache_file=False,
+    )
+    residual_counts = {split: len(residual_invalid[split]) for split in split_names}
+    if any(count > 0 for count in residual_counts.values()):
+        raise ValueError(
+            'Residual malformed rows detected after sanitization. '
+            f'Counts={residual_counts}. Clear dataset cache and verify JSONL schema.'
+        )
 
     return sanitized
 
@@ -734,7 +755,6 @@ def build_training_args(
         'predict_with_generate': False,
         'fp16': torch.cuda.is_available(),
         'report_to': 'none',
-        'save_safetensors': True,
     }
 
     # Transformers changed this arg name across versions.
@@ -746,7 +766,21 @@ def build_training_args(
     else:
         args_kwargs['do_eval'] = True
 
-    return Seq2SeqTrainingArguments(**args_kwargs)
+    # save_safetensors exists in some versions but was removed/renamed in others.
+    if 'save_safetensors' in init_params:
+        args_kwargs['save_safetensors'] = True
+
+    supported_kwargs = {
+        key: value for key, value in args_kwargs.items() if key in init_params
+    }
+    unsupported_keys = sorted(set(args_kwargs) - set(supported_kwargs))
+    if unsupported_keys:
+        print(
+            '[args] Ignoring unsupported Seq2SeqTrainingArguments keys for this '
+            f'transformers version: {", ".join(unsupported_keys)}'
+        )
+
+    return Seq2SeqTrainingArguments(**supported_kwargs)
 
 
 def main() -> None:
@@ -798,6 +832,15 @@ def main() -> None:
         print('[auth] HF token not detected; unauthenticated download may be rate-limited.')
 
     print('[model] loading tokenizer and base model...')
+    config = AutoConfig.from_pretrained(
+        cfg.model_id,
+        **hf_auth_kwargs(AutoConfig.from_pretrained, hf_token),
+    )
+    if hasattr(config, 'tie_word_embeddings'):
+        # Transformers warns when checkpoints contain tied weights but config says untied.
+        # Setting this explicitly aligns config/runtime and avoids noisy startup warnings.
+        config.tie_word_embeddings = False
+
     tokenizer = AutoTokenizer.from_pretrained(
         cfg.model_id,
         **hf_auth_kwargs(AutoTokenizer.from_pretrained, hf_token),
@@ -806,6 +849,7 @@ def main() -> None:
         model_id=cfg.model_id,
         dtype_value=torch.float16 if torch.cuda.is_available() else torch.float32,
         auth_kwargs=hf_auth_kwargs(AutoModelForSeq2SeqLM.from_pretrained, hf_token),
+        config=config,
     )
 
     print('[model] applying LoRA adapter configuration...')
@@ -858,28 +902,49 @@ def main() -> None:
         f"requested_save_steps={cfg.save_steps} effective_save_steps={effective_save_steps}"
     )
 
-    def preprocess_function(example):
+    preprocess_stats = {'dropped_invalid': 0}
+
+    def preprocess_batch(batch):
+        """Tokenize a batch while safely skipping any residual malformed rows.
+
+        Even after preflight/sanitization, some runtime/cache combinations can still surface
+        malformed payloads during map. This keeps training resilient and reports dropped rows.
+        """
         tokenizer.src_lang = cfg.source_flores
         tokenizer.tgt_lang = cfg.target_flores
 
-        extracted_pair = _extract_source_target_text(example, cfg)
-        if extracted_pair is None:
-            raise ValueError(
-                'Invalid translation payload. Expected one of the supported schemas: '
-                '{"translation": {"<source_key>": "...", "en": "..."}}, '
-                '{"source_text": "...", "target_text": "..."}, '
-                '{"source": "...", "target": "..."}, or '
-                f'flat language keys like {{"{cfg.source_translation_key}": "...", "{cfg.target_translation_key}": "..."}}.'
-            )
-        source_text, target_text = extracted_pair
+        if not batch:
+            return {'input_ids': [], 'attention_mask': [], 'labels': []}
+
+        first_key = next(iter(batch.keys()), None)
+        if first_key is None:
+            return {'input_ids': [], 'attention_mask': [], 'labels': []}
+
+        batch_size = len(batch[first_key])
+        source_texts = []
+        target_texts = []
+
+        for row_idx in range(batch_size):
+            record = {key: values[row_idx] for key, values in batch.items()}
+            extracted_pair = _extract_source_target_text(record, cfg)
+            if extracted_pair is None:
+                preprocess_stats['dropped_invalid'] += 1
+                continue
+
+            source_text, target_text = extracted_pair
+            source_texts.append(source_text)
+            target_texts.append(target_text)
+
+        if not source_texts:
+            return {'input_ids': [], 'attention_mask': [], 'labels': []}
 
         inputs = tokenizer(
-            source_text,
+            source_texts,
             max_length=cfg.max_length,
             truncation=True,
         )
         labels = tokenizer(
-            text_target=target_text,
+            text_target=target_texts,
             max_length=cfg.max_length,
             truncation=True,
         )
@@ -888,23 +953,45 @@ def main() -> None:
 
     print('[data] tokenizing train/validation/test splits...')
     tokenized_datasets = dataset.map(
-        preprocess_function,
+        preprocess_batch,
+        batched=True,
+        load_from_cache_file=False,
         remove_columns=dataset['train'].column_names,
     )
+
+    if preprocess_stats['dropped_invalid'] > 0:
+        print(f"[data] tokenization dropped residual malformed rows: {preprocess_stats['dropped_invalid']}")
+
+    for split_name in ('train', 'validation', 'test'):
+        if len(tokenized_datasets[split_name]) == 0:
+            raise ValueError(
+                f'Tokenization produced an empty split: {split_name}. '
+                'Check source JSONL schema and tokenizer input extraction rules.'
+            )
+
     print("Schema mapping successful. First tokenized example:", tokenized_datasets["train"][0])
     gpu_gc('after-tokenization')
 
     data_collator = DataCollatorForSeq2Seq(tokenizer=tokenizer, model=model)
     training_args = build_training_args(cfg, paths, training_plan)
 
-    trainer = Seq2SeqTrainer(
-        model=model,
-        args=training_args,
-        train_dataset=tokenized_datasets['train'],
-        eval_dataset=tokenized_datasets['validation'],
-        data_collator=data_collator,
-        tokenizer=tokenizer,
-    )
+    trainer_kwargs = {
+        'model': model,
+        'args': training_args,
+        'train_dataset': tokenized_datasets['train'],
+        'eval_dataset': tokenized_datasets['validation'],
+        'data_collator': data_collator,
+    }
+    trainer_init_params = inspect.signature(Seq2SeqTrainer.__init__).parameters
+    if 'tokenizer' in trainer_init_params:
+        trainer_kwargs['tokenizer'] = tokenizer
+    elif 'processing_class' in trainer_init_params:
+        # Transformers >=5 can replace tokenizer= with processing_class=.
+        trainer_kwargs['processing_class'] = tokenizer
+    else:
+        print('[trainer] No tokenizer/processing_class parameter detected; continuing without explicit processor.')
+
+    trainer = Seq2SeqTrainer(**trainer_kwargs)
 
     metrics: Dict[str, Dict] = {
         'plan': {
