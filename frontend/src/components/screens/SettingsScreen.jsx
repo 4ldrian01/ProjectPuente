@@ -9,6 +9,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import {
+  ChevronDown,
   CheckCircle2,
   Cpu,
   Gauge,
@@ -99,7 +100,7 @@ function ConnectionRow({ icon, label, value, healthy, hint }) {
       <div className="flex items-center justify-between gap-3">
         <span className="inline-flex items-center gap-2 text-sm text-text-secondary">
           <span className={`inline-flex h-7 w-7 items-center justify-center rounded-xl border ${healthy ? 'border-status-success-border/45 bg-status-success-bg/60 text-status-success-text' : 'border-status-warning-border/45 bg-status-warning-bg/65 text-status-warning-text'}`}>
-            <IconGlyph className="h-[0.875rem] w-[0.875rem]" />
+            <IconGlyph className="h-3.5 w-3.5" />
           </span>
           {label}
         </span>
@@ -269,7 +270,7 @@ export default function SettingsScreen({ health, onRefreshHealth, onClose, activ
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="a26-chip"><Gauge className="h-[0.875rem] w-[0.875rem]" /> Health {healthScore}%</span>
+            <span className="a26-chip"><Gauge className="h-3.5 w-3.5" /> Health {healthScore}%</span>
             {onClose && (
               <button
                 type="button"
@@ -319,28 +320,34 @@ export default function SettingsScreen({ health, onRefreshHealth, onClose, activ
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <div className="rounded-2xl border border-border-subtle/70 bg-bg-elevated/45 p-3.5">
               <p className="mb-2 text-sm font-semibold text-text-primary">Default Source</p>
-              <select
-                value={defaultSourceLang}
-                onChange={(event) => handleSourceChange(event.target.value)}
-                className="w-full rounded-xl border border-border-subtle bg-bg-card px-3 py-2 text-sm text-text-primary focus:border-accent-magenta focus:outline-none"
-              >
-                {SOURCE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
+              <span className="a26-select-wrap">
+                <select
+                  value={defaultSourceLang}
+                  onChange={(event) => handleSourceChange(event.target.value)}
+                  className="a26-select"
+                >
+                  {SOURCE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+                <ChevronDown className="a26-select-icon" />
+              </span>
             </div>
 
             <div className="rounded-2xl border border-border-subtle/70 bg-bg-elevated/45 p-3.5">
               <p className="mb-2 text-sm font-semibold text-text-primary">Default Target</p>
-              <select
-                value={defaultTargetLang}
-                onChange={(event) => handleTargetChange(event.target.value)}
-                className="w-full rounded-xl border border-border-subtle bg-bg-card px-3 py-2 text-sm text-text-primary focus:border-accent-magenta focus:outline-none"
-              >
-                {TARGET_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
+              <span className="a26-select-wrap">
+                <select
+                  value={defaultTargetLang}
+                  onChange={(event) => handleTargetChange(event.target.value)}
+                  className="a26-select"
+                >
+                  {TARGET_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+                <ChevronDown className="a26-select-icon" />
+              </span>
             </div>
           </div>
 
@@ -407,7 +414,7 @@ export default function SettingsScreen({ health, onRefreshHealth, onClose, activ
             <div className="mt-1 flex items-end justify-between">
               <p className="text-3xl font-black text-text-primary">{healthScore}%</p>
               <span className={`inline-flex items-center gap-1 text-xs font-semibold ${healthScore >= 75 ? 'text-status-success-text' : 'text-status-warning-text'}`}>
-                <CheckCircle2 className="h-[0.875rem] w-[0.875rem]" />
+                <CheckCircle2 className="h-3.5 w-3.5" />
                 {healthyCount}/{connectionItems.length} checks healthy
               </span>
             </div>

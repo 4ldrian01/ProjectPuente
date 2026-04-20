@@ -31,6 +31,9 @@ const OFFLINE_HEALTH = {
 export function useBackendHealth(apiUrl) {
   const [health, setHealth] = useState(DEFAULT_HEALTH)
   const [latencyMs, setLatencyMs] = useState(null)
+  const [isDocumentVisible, setIsDocumentVisible] = useState(
+    typeof document === 'undefined' ? true : document.visibilityState === 'visible',
+  )
 
   const refreshHealth = useCallback(async () => {
     const startedAt = typeof performance !== 'undefined' ? performance.now() : Date.now()
@@ -62,10 +65,32 @@ export function useBackendHealth(apiUrl) {
   }, [apiUrl])
 
   useEffect(() => {
-    refreshHealth()
-    const interval = setInterval(refreshHealth, 30000)
-    return () => clearInterval(interval)
-  }, [refreshHealth])
+    const handleVisibilityChange = () => {
+      setIsDocumentVisible(document.visibilityState === 'visible')
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [])
+
+  useEffect(() => {
+    if (!isDocumentVisible) {
+      return
+    }
+
+    const initialRefreshTimeout = setTimeout(() => {
+      refreshHealth()
+    }, 0)
+
+    const interval = setInterval(() => {
+      refreshHealth()
+    }, 30000)
+
+    return () => {
+      clearTimeout(initialRefreshTimeout)
+      clearInterval(interval)
+    }
+  }, [isDocumentVisible, refreshHealth])
 
   return {
     health,

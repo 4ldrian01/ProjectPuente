@@ -481,7 +481,7 @@ function App() {
       {/* Main column margin is coupled to desktop sidebar width with the same easing curve. */}
       <div
         className={`flex min-h-screen min-w-0 flex-1 flex-col transition-[margin] duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
-          isSidebarCollapsed ? 'md:ml-24' : 'md:ml-72'
+          isSidebarCollapsed ? 'md:ml-20' : 'md:ml-64'
         }`}
       >
         <GlobalHeader

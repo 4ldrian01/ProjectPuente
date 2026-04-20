@@ -6,7 +6,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import axios from 'axios'
-import { Database, FileUp, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
+import { ChevronDown, Database, FileUp, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
 import {
   CATEGORY_OPTIONS,
   LANGUAGE_LABEL_BY_CODE,
@@ -506,9 +506,8 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="a26-subtitle">God Mode</p>
+            <p className="a26-subtitle">Sociolinguistic Term Records</p>
             <h2 className="a26-hero-title mt-1 font-semibold text-text-primary">Database Admin</h2>
-            <p className="mt-1 text-sm text-text-secondary">ML sociolinguistic interceptor patches for strict linguistic gap coverage.</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -555,27 +554,33 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
             />
           </div>
 
-          <select
-            value={languageFilter}
-            onChange={(event) => setLanguageFilter(event.target.value)}
-            className="rounded-xl border border-border-subtle bg-bg-elevated/60 px-3 py-2.5 text-sm text-text-primary transition-all duration-300 focus:border-accent-magenta/70 focus:outline-none"
-          >
-            <option value="all">All Languages</option>
-            {LANGUAGE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
-            ))}
-          </select>
+          <span className="a26-select-wrap min-w-[11rem]">
+            <select
+              value={languageFilter}
+              onChange={(event) => setLanguageFilter(event.target.value)}
+              className="a26-select"
+            >
+              <option value="all">All Languages</option>
+              {LANGUAGE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+            <ChevronDown className="a26-select-icon" />
+          </span>
 
-          <select
-            value={categoryFilter}
-            onChange={(event) => setCategoryFilter(event.target.value)}
-            className="rounded-xl border border-border-subtle bg-bg-elevated/60 px-3 py-2.5 text-sm text-text-primary transition-all duration-300 focus:border-accent-magenta/70 focus:outline-none"
-          >
-            <option value="all">All Categories</option>
-            {categoryFilterOptions.map((category) => (
-              <option key={category} value={category}>{category}</option>
-            ))}
-          </select>
+          <span className="a26-select-wrap min-w-[11rem]">
+            <select
+              value={categoryFilter}
+              onChange={(event) => setCategoryFilter(event.target.value)}
+              className="a26-select"
+            >
+              <option value="all">All Categories</option>
+              {categoryFilterOptions.map((category) => (
+                <option key={category} value={category}>{category}</option>
+              ))}
+            </select>
+            <ChevronDown className="a26-select-icon" />
+          </span>
         </div>
 
         {notice && (
@@ -757,28 +762,34 @@ export default function DatabaseAdminScreen({ apiUrl, notify }) {
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary">Language</label>
-                  <select
-                    value={form.language}
-                    onChange={(event) => setForm((previous) => ({ ...previous, language: event.target.value }))}
-                    className="w-full rounded-xl border border-border-subtle bg-bg-elevated/60 px-3 py-2 text-sm text-text-primary focus:border-accent-magenta/70 focus:outline-none"
-                  >
-                    {LANGUAGE_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
+                  <span className="a26-select-wrap">
+                    <select
+                      value={form.language}
+                      onChange={(event) => setForm((previous) => ({ ...previous, language: event.target.value }))}
+                      className="a26-select"
+                    >
+                      {LANGUAGE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="a26-select-icon" />
+                  </span>
                 </div>
 
                 <div>
                   <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary">Category</label>
-                  <select
-                    value={form.category}
-                    onChange={(event) => setForm((previous) => ({ ...previous, category: event.target.value }))}
-                    className="w-full rounded-xl border border-border-subtle bg-bg-elevated/60 px-3 py-2 text-sm text-text-primary focus:border-accent-magenta/70 focus:outline-none"
-                  >
-                    {CATEGORY_OPTIONS.map((category) => (
-                      <option key={category} value={category}>{category}</option>
-                    ))}
-                  </select>
+                  <span className="a26-select-wrap">
+                    <select
+                      value={form.category}
+                      onChange={(event) => setForm((previous) => ({ ...previous, category: event.target.value }))}
+                      className="a26-select"
+                    >
+                      {CATEGORY_OPTIONS.map((category) => (
+                        <option key={category} value={category}>{category}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="a26-select-icon" />
+                  </span>
                 </div>
               </div>
 

@@ -169,22 +169,120 @@ def load_model_with_dtype_fallback(model_id: str, dtype_value, auth_kwargs: Dict
         )
 
 
-def infer_default_dataset_rel_dir(project_root: str) -> str:
-    root = Path(project_root).expanduser()
-    candidates = (
+def infer_dataset_candidate_dirs(source_translation_key: str) -> tuple[str, ...]:
+    if source_translation_key == 'ceb':
+        return (
+            'datasets/processed/80-10-10_split/02_cebuano',
+            'datasets/processed/02_cebuano',
+            'datasets/processed/002_cebuano',
+        )
+
+    if source_translation_key == 'cbk':
+        return (
+            'datasets/processed/80-10-10_split/01_chavacano',
+            'datasets/processed/01_chavacano',
+            'datasets/processed/001_chavacano',
+        )
+
+    return (
         'datasets/processed/80-10-10_split/01_chavacano',
+        'datasets/processed/80-10-10_split/02_cebuano',
         'datasets/processed/01_chavacano',
         'datasets/processed/001_chavacano',
+        'datasets/processed/02_cebuano',
+        'datasets/processed/002_cebuano',
     )
-    required_files = ('train.jsonl', 'eval.jsonl', 'test.jsonl')
+
+
+def detect_split_triplet_for_dir(
+    candidate_root: Path,
+    source_translation_key: str,
+    target_translation_key: str,
+) -> Optional[tuple[str, str, str]]:
+    candidate_triplets = (
+        (
+            f'LATEST_{source_translation_key}_{target_translation_key}_train.jsonl',
+            f'LATEST_{source_translation_key}_{target_translation_key}_val.jsonl',
+            f'LATEST_{source_translation_key}_{target_translation_key}_test.jsonl',
+        ),
+        (
+            f'LATEST_{source_translation_key}_{target_translation_key}_train.jsonl',
+            f'LATEST_{source_translation_key}_{target_translation_key}_eval.jsonl',
+            f'LATEST_{source_translation_key}_{target_translation_key}_test.jsonl',
+        ),
+        (
+            f'FINAL_{source_translation_key}_{target_translation_key}_train.jsonl',
+            f'FINAL_{source_translation_key}_{target_translation_key}_val.jsonl',
+            f'FINAL_{source_translation_key}_{target_translation_key}_test.jsonl',
+        ),
+        (
+            f'FINAL_{source_translation_key}_{target_translation_key}_train.jsonl',
+            f'FINAL_{source_translation_key}_{target_translation_key}_eval.jsonl',
+            f'FINAL_{source_translation_key}_{target_translation_key}_test.jsonl',
+        ),
+        (
+            f'{source_translation_key}_{target_translation_key}_train.jsonl',
+            f'{source_translation_key}_{target_translation_key}_val.jsonl',
+            f'{source_translation_key}_{target_translation_key}_test.jsonl',
+        ),
+        (
+            f'{source_translation_key}_{target_translation_key}_train.jsonl',
+            f'{source_translation_key}_{target_translation_key}_eval.jsonl',
+            f'{source_translation_key}_{target_translation_key}_test.jsonl',
+        ),
+        ('train.jsonl', 'eval.jsonl', 'test.jsonl'),
+        ('cbk_en_trial_train.jsonl', 'cbk_en_trial_val.jsonl', 'cbk_en_trial_test.jsonl'),
+    )
+
+    for train_file, eval_file, test_file in candidate_triplets:
+        if (
+            (candidate_root / train_file).is_file()
+            and (candidate_root / eval_file).is_file()
+            and (candidate_root / test_file).is_file()
+        ):
+            return train_file, eval_file, test_file
+
+    return None
+
+
+def infer_default_dataset_rel_dir(
+    project_root: str,
+    source_translation_key: str,
+    target_translation_key: str,
+) -> str:
+    root = Path(project_root).expanduser()
+    candidates = infer_dataset_candidate_dirs(source_translation_key)
 
     for rel_dir in candidates:
         candidate_root = root / rel_dir
-        if all((candidate_root / filename).is_file() for filename in required_files):
+        if detect_split_triplet_for_dir(
+            candidate_root,
+            source_translation_key,
+            target_translation_key,
+        ):
             return rel_dir
 
-    # Keep legacy default when candidate probes are unavailable.
-    return 'datasets/processed/001_chavacano'
+    if source_translation_key == 'ceb':
+        return 'datasets/processed/80-10-10_split/02_cebuano'
+    return 'datasets/processed/80-10-10_split/01_chavacano'
+
+
+def infer_default_split_filenames(
+    drive_root: str,
+    dataset_rel_dir: str,
+    source_translation_key: str,
+    target_translation_key: str,
+) -> tuple[str, str, str]:
+    dataset_root = Path(drive_root).expanduser() / dataset_rel_dir
+    detected_triplet = detect_split_triplet_for_dir(
+        dataset_root,
+        source_translation_key,
+        target_translation_key,
+    )
+    if detected_triplet is not None:
+        return detected_triplet
+
+    return 'train.jsonl', 'eval.jsonl', 'test.jsonl'
 
 
 def detect_runtime_name() -> str:
@@ -368,21 +466,34 @@ def build_config() -> ColabConfig:
         )
 
     default_project_root = env_str('PUENTE_PROJECT_ROOT', infer_default_project_root())
+    default_drive_root = env_str('PUENTE_DRIVE_ROOT', default_project_root)
     if dataset_tag:
         default_dataset_rel_dir = f'datasets/processed/{dataset_tag}'
     else:
-        default_dataset_rel_dir = infer_default_dataset_rel_dir(default_project_root)
+        default_dataset_rel_dir = infer_default_dataset_rel_dir(
+            default_drive_root,
+            source_translation_key,
+            target_translation_key,
+        )
+
+    resolved_dataset_rel_dir = env_str('PUENTE_DATASET_REL_DIR', default_dataset_rel_dir)
+    default_train_filename, default_eval_filename, default_test_filename = infer_default_split_filenames(
+        default_drive_root,
+        resolved_dataset_rel_dir,
+        source_translation_key,
+        target_translation_key,
+    )
 
     return ColabConfig(
-        drive_root=env_str('PUENTE_DRIVE_ROOT', default_project_root),
-        dataset_rel_dir=env_str('PUENTE_DATASET_REL_DIR', default_dataset_rel_dir),
+        drive_root=default_drive_root,
+        dataset_rel_dir=resolved_dataset_rel_dir,
         local_data_dir=env_str('PUENTE_LOCAL_DATA_DIR', infer_default_local_data_dir()),
         local_output_root=env_str('PUENTE_LOCAL_OUTPUT_ROOT', infer_default_local_output_root()),
         drive_output_rel_dir=env_str('PUENTE_DRIVE_OUTPUT_REL_DIR', 'outputs'),
         run_name=env_str('PUENTE_RUN_NAME', f'lora-{source_tag}-to-{target_tag}-cloud'),
-        train_filename=env_str('PUENTE_TRAIN_FILENAME', 'train.jsonl'),
-        eval_filename=env_str('PUENTE_EVAL_FILENAME', 'eval.jsonl'),
-        test_filename=env_str('PUENTE_TEST_FILENAME', 'test.jsonl'),
+        train_filename=env_str('PUENTE_TRAIN_FILENAME', default_train_filename),
+        eval_filename=env_str('PUENTE_EVAL_FILENAME', default_eval_filename),
+        test_filename=env_str('PUENTE_TEST_FILENAME', default_test_filename),
         source_translation_key=source_translation_key,
         target_translation_key=target_translation_key,
         model_id=env_str('PUENTE_MODEL_ID', 'facebook/nllb-200-distilled-600M'),
@@ -423,7 +534,7 @@ def resolve_paths(cfg: ColabConfig) -> Dict[str, Path]:
     artifact_root = Path(env_str('PUENTE_ARTIFACT_ROOT', cfg.drive_root)).expanduser().resolve()
     local_data_dir = Path(cfg.local_data_dir).expanduser().resolve()
     local_output_root = Path(cfg.local_output_root).expanduser().resolve() / cfg.run_name
-    drive_checkpoint_dir = (artifact_root / 'models' / 'checkpoints').resolve()
+    drive_checkpoint_dir = (artifact_root / 'models' / 'checkpoints' / cfg.run_name).resolve()
     drive_lora_adapter_dir = (artifact_root / 'models' / 'lora_adapters' / cfg.run_name).resolve()
 
     drive_data_dir = drive_root / cfg.dataset_rel_dir

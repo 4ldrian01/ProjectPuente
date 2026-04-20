@@ -33,6 +33,7 @@ export default function AppScreenStack({
         aria-hidden={activeScreen !== 'translate'}
       >
         <TranslateScreen
+          isActive={activeScreen === 'translate'}
           onTranslate={onTranslate}
           translatedText={translatedText}
           loading={loading}
@@ -71,7 +72,12 @@ export default function AppScreenStack({
           className={`${activeScreen === 'activity-logs' ? 'flex' : 'hidden'} screen-transition-in min-h-[calc(100vh-8rem)] flex-col`}
           aria-hidden={activeScreen !== 'activity-logs'}
         >
-          <ActivityLogsScreen apiUrl={apiUrl} backendUp={health.backendUp} notify={notify} />
+          <ActivityLogsScreen
+            apiUrl={apiUrl}
+            backendUp={health.backendUp}
+            notify={notify}
+            isActive={activeScreen === 'activity-logs'}
+          />
         </div>
       ) : null}
 

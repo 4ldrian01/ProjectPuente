@@ -3,7 +3,7 @@
  * Summary: Displays translation logs, filtering controls, payload drill-down, and CSV export actions.
  */
 
-import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import axios from 'axios'
 import {
   Activity,
@@ -51,7 +51,7 @@ import {
   toFiniteNumber,
 } from '../../lib/activityLogsUtils'
 
-export default function ActivityLogsScreen({ apiUrl, backendUp, notify }) {
+export default function ActivityLogsScreen({ apiUrl, backendUp, notify, isActive = true }) {
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -66,6 +66,11 @@ export default function ActivityLogsScreen({ apiUrl, backendUp, notify }) {
   const [expandedLogId, setExpandedLogId] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [lastSyncedAt, setLastSyncedAt] = useState('')
+  const [isDocumentVisible, setIsDocumentVisible] = useState(
+    typeof document === 'undefined' ? true : document.visibilityState === 'visible',
+  )
+  const requestVersionRef = useRef(0)
+  const inFlightControllerRef = useRef(null)
   const [suppressedLogIds, setSuppressedLogIds] = useState(() => {
     if (typeof window === 'undefined') {
       return new Set()
@@ -87,6 +92,28 @@ export default function ActivityLogsScreen({ apiUrl, backendUp, notify }) {
   }, [notify])
 
   useEffect(() => {
+    const handleVisibilityChange = () => {
+      const visible = document.visibilityState === 'visible'
+      setIsDocumentVisible(visible)
+
+      if (visible && isActive && backendUp) {
+        fetchLogs({ silent: true })
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [backendUp, fetchLogs, isActive])
+
+  useEffect(() => {
+    return () => {
+      if (inFlightControllerRef.current) {
+        inFlightControllerRef.current.abort()
+      }
+    }
+  }, [])
+
+  useEffect(() => {
     setCurrentPage(1)
   }, [statusFilter, sourceFilter, targetFilter, debouncedQuery])
 
@@ -104,6 +131,18 @@ export default function ActivityLogsScreen({ apiUrl, backendUp, notify }) {
   }, [suppressedLogIds])
 
   const fetchLogs = useCallback(async ({ silent = false } = {}) => {
+    if (!isActive) {
+      if (!silent) {
+        setLoading(false)
+      }
+      setRefreshing(false)
+      return
+    }
+
+    if (!isDocumentVisible && silent) {
+      return
+    }
+
     if (!backendUp) {
       const message = 'Backend is offline. Activity logs are unavailable until backend reconnects.'
       setError(message)
@@ -126,6 +165,15 @@ export default function ActivityLogsScreen({ apiUrl, backendUp, notify }) {
     } else {
       setLoading(true)
     }
+
+    if (inFlightControllerRef.current) {
+      inFlightControllerRef.current.abort()
+    }
+
+    const controller = new AbortController()
+    inFlightControllerRef.current = controller
+    const requestVersion = requestVersionRef.current + 1
+    requestVersionRef.current = requestVersion
 
     setError('')
 
@@ -153,14 +201,27 @@ export default function ActivityLogsScreen({ apiUrl, backendUp, notify }) {
       const { data } = await axios.get(`${apiUrl}/logs/`, {
         params,
         timeout: 10000,
+        signal: controller.signal,
       })
+
+      if (requestVersion !== requestVersionRef.current) {
+        return
+      }
 
       const nextRows = data?.results || []
       setLogs(nextRows)
       setTotalCount(Number(data?.count || nextRows.length || 0))
 
       setLastSyncedAt(new Date().toISOString())
-    } catch {
+    } catch (errorResponse) {
+      if (errorResponse?.code === 'ERR_CANCELED') {
+        return
+      }
+
+      if (requestVersion !== requestVersionRef.current) {
+        return
+      }
+
       const message = 'Failed to load activity logs from backend observer endpoint.'
       setError(message)
       if (!silent) {
@@ -172,24 +233,34 @@ export default function ActivityLogsScreen({ apiUrl, backendUp, notify }) {
         })
       }
     } finally {
-      setLoading(false)
-      setRefreshing(false)
+      if (inFlightControllerRef.current === controller) {
+        inFlightControllerRef.current = null
+      }
+
+      if (requestVersion === requestVersionRef.current) {
+        setLoading(false)
+        setRefreshing(false)
+      }
     }
-  }, [apiUrl, backendUp, debouncedQuery, emitToast, sourceFilter, statusFilter, targetFilter])
+  }, [apiUrl, backendUp, debouncedQuery, emitToast, isActive, isDocumentVisible, sourceFilter, statusFilter, targetFilter])
 
   useEffect(() => {
+    if (!isActive) {
+      return
+    }
+
     fetchLogs()
-  }, [fetchLogs])
+  }, [fetchLogs, isActive])
 
   useEffect(() => {
-    if (!backendUp) return undefined
+    if (!backendUp || !isActive || !isDocumentVisible) return undefined
 
     const interval = setInterval(() => {
       fetchLogs({ silent: true })
     }, POLL_INTERVAL_MS)
 
     return () => clearInterval(interval)
-  }, [backendUp, fetchLogs])
+  }, [backendUp, fetchLogs, isActive, isDocumentVisible])
 
   const visibleLogs = useMemo(
     () => logs.filter((row) => !suppressedLogIds.has(String(row.id))),
@@ -378,7 +449,7 @@ export default function ActivityLogsScreen({ apiUrl, backendUp, notify }) {
         <div className="relative flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="a26-subtitle">Observer Agent</p>
-            <h2 className="a26-hero-title mt-1 font-semibold text-text-primary">Flight Recorder</h2>
+            <h2 className="a26-hero-title mt-1 font-semibold text-text-primary">Activity Logs</h2>
             <p className="mt-2 max-w-3xl text-sm text-text-secondary">
               Offline MLOps trace surface for translation outcomes, pivot routing, intervention tags, and recovery diagnostics.
             </p>
@@ -456,7 +527,7 @@ export default function ActivityLogsScreen({ apiUrl, backendUp, notify }) {
             <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,0.55fr)_minmax(0,0.7fr)_minmax(0,0.7fr)]">
               <label className="space-y-1.5">
                 <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-text-secondary">Search</span>
-                <span className="relative block">
+                <span className="a26-select-wrap block">
                   <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
                   <input
                     value={searchQuery}
@@ -472,33 +543,33 @@ export default function ActivityLogsScreen({ apiUrl, backendUp, notify }) {
                   <Filter className="h-3 w-3" />
                   Status
                 </span>
-                <span className="relative block">
+                <span className="a26-select-wrap block">
                   <select
                     value={statusFilter}
                     onChange={(event) => setStatusFilter(event.target.value)}
-                    className="w-full appearance-none rounded-xl border border-border-subtle bg-bg-card/80 px-3 py-2.5 pr-9 text-sm font-semibold text-text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-all duration-300 focus:border-accent-magenta/70 focus:shadow-[0_0_0_3px_rgba(217,70,239,0.14)] focus:outline-none"
+                    className="a26-select"
                   >
                     {STATUS_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>{option.label}</option>
                     ))}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
+                  <ChevronDown className="a26-select-icon" />
                 </span>
               </label>
 
               <label className="space-y-1.5">
                 <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-text-secondary">Source</span>
-                <span className="relative block">
+                <span className="a26-select-wrap block">
                   <select
                     value={sourceFilter}
                     onChange={(event) => setSourceFilter(event.target.value)}
-                    className="w-full appearance-none rounded-xl border border-border-subtle bg-bg-card/80 px-3 py-2.5 pr-9 text-sm font-semibold text-text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-all duration-300 focus:border-accent-magenta/70 focus:shadow-[0_0_0_3px_rgba(217,70,239,0.14)] focus:outline-none"
+                    className="a26-select"
                   >
                     {SOURCE_LANGUAGE_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>{option.label}</option>
                     ))}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
+                  <ChevronDown className="a26-select-icon" />
                 </span>
               </label>
 
@@ -508,13 +579,13 @@ export default function ActivityLogsScreen({ apiUrl, backendUp, notify }) {
                   <select
                     value={targetFilter}
                     onChange={(event) => setTargetFilter(event.target.value)}
-                    className="w-full appearance-none rounded-xl border border-border-subtle bg-bg-card/80 px-3 py-2.5 pr-9 text-sm font-semibold text-text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-all duration-300 focus:border-accent-magenta/70 focus:shadow-[0_0_0_3px_rgba(217,70,239,0.14)] focus:outline-none"
+                    className="a26-select"
                   >
                     {TARGET_LANGUAGE_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>{option.label}</option>
                     ))}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
+                  <ChevronDown className="a26-select-icon" />
                 </span>
               </label>
             </div>

@@ -5,7 +5,7 @@
 
 import { useMemo } from 'react'
 import { Activity, BrainCircuit, Gauge, ShieldCheck, Sparkles } from 'lucide-react'
-import * as echarts from 'echarts/core'
+import * as echarts from 'echarts'
 import ReactEChartsCore from 'echarts-for-react/lib/core.js'
 import { PieChart, LineChart } from 'echarts/charts'
 import {
@@ -223,19 +223,16 @@ export default function SystemEvaluationScreen() {
         <div className="pointer-events-none absolute -bottom-10 left-8 h-32 w-32 rounded-full bg-accent-gold/10 blur-3xl" />
 
         <div className="relative">
-          <p className="a26-subtitle">System Evaluation</p>
+          <p className="a26-subtitle">Metrics and Analytics</p>
           <h2 className="a26-hero-title mt-1 font-semibold text-text-primary">
-            Sociolinguistic Quality Observatory
+            Sociolinguistic System Evaluation
           </h2>
-          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-text-secondary">
-            Runtime-aligned evaluation cockpit blending quality metrics, intercept diagnostics,
-            and inference behavior trends into one visual control layer.
-          </p>
+          
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <span className="a26-chip"><Activity className="h-[0.875rem] w-[0.875rem]" /> Live Dashboard</span>
-            <span className="a26-chip"><Gauge className="h-[0.875rem] w-[0.875rem]" /> Edge Inference Signal</span>
-            <span className="a26-chip"><BrainCircuit className="h-[0.875rem] w-[0.875rem]" /> Sociolinguistic Focus</span>
+            <span className="a26-chip"><Activity className="h-3.5 w-3.5" /> Live Dashboard</span>
+            <span className="a26-chip"><Gauge className="h-3.5 w-3.5" /> Edge Inference Signal</span>
+            <span className="a26-chip"><BrainCircuit className="h-3.5 w-3.5" /> Sociolinguistic Focus</span>
           </div>
         </div>
       </header>
@@ -253,7 +250,7 @@ export default function SystemEvaluationScreen() {
               </div>
 
               <span className={`inline-flex h-10 w-10 items-center justify-center rounded-2xl border ${card.accent}`}>
-                <card.icon className="h-[1.125rem] w-[1.125rem]" />
+                <card.icon className="h-4.5 w-4.5" />
               </span>
             </div>
 
@@ -274,7 +271,7 @@ export default function SystemEvaluationScreen() {
           <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-text-secondary">Sociolinguistic Intercept Concurrence</h3>
           <p className="mt-1 text-sm text-text-secondary">False Cognates vs Politeness Gaps vs Idioms</p>
 
-          <div className="relative mt-4 h-[300px]">
+          <div className="relative mt-4 h-75">
             <ReactEChartsCore
               echarts={echarts}
               option={interceptChartOption}
@@ -293,7 +290,7 @@ export default function SystemEvaluationScreen() {
           <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-text-secondary">Translation Length vs Inference Time</h3>
           <p className="mt-1 text-sm text-text-secondary">Mock trendline from local edge inference samples</p>
 
-          <div className="mt-4 h-[300px]">
+          <div className="mt-4 h-75">
             <ReactEChartsCore
               echarts={echarts}
               option={lengthInferenceChartOption}

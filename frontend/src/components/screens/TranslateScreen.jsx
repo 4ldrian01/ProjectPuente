@@ -44,6 +44,7 @@ import { useSettingsSync } from '../../hooks/useSettingsSync'
 
 /* ── Component ───────────────────────────────────────────────── */
 export default function TranslateScreen({
+  isActive = true,
   onTranslate,
   translatedText,
   loading,
@@ -97,6 +98,9 @@ export default function TranslateScreen({
     gpuPercent: 0,
     gpuReason: '',
   })
+  const [isDocumentVisible, setIsDocumentVisible] = useState(
+    typeof document === 'undefined' ? true : document.visibilityState === 'visible',
+  )
 
   const debounceMs = 800
   const lastSentKeyRef = useRef('')
@@ -329,8 +333,12 @@ export default function TranslateScreen({
     if (!el) return
 
     const minHeight = 156
+    const maxHeight = 280
     el.style.height = 'auto'
-    el.style.height = `${Math.max(minHeight, el.scrollHeight)}px`
+    const nextHeight = Math.max(minHeight, el.scrollHeight)
+    const clampedHeight = Math.min(nextHeight, maxHeight)
+    el.style.height = `${clampedHeight}px`
+    el.style.overflowY = nextHeight > maxHeight ? 'auto' : 'hidden'
   }, [sourceText])
 
   useEffect(() => {
@@ -376,6 +384,19 @@ export default function TranslateScreen({
   }, [translatedText])
 
   useEffect(() => {
+    const handleVisibilityChange = () => {
+      setIsDocumentVisible(document.visibilityState === 'visible')
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [])
+
+  useEffect(() => {
+    if (!isActive) {
+      return
+    }
+
     if (!backendUp) {
       setTelemetry((prev) => ({
         ...prev,
@@ -385,13 +406,24 @@ export default function TranslateScreen({
       return
     }
 
+    if (!isDocumentVisible) {
+      return
+    }
+
     let disposed = false
+    const controller = new AbortController()
+
+    setTelemetry((prev) => ({
+      ...prev,
+      loading: true,
+    }))
 
     const pollTelemetry = async () => {
       try {
         const response = await fetch(`${apiUrl}/telemetry/`, {
           method: 'GET',
           cache: 'no-store',
+          signal: controller.signal,
         })
 
         const payload = await response.json().catch(() => ({}))
@@ -419,6 +451,10 @@ export default function TranslateScreen({
           gpuReason: String(gpu.reason || ''),
         })
       } catch (err) {
+        if (err?.name === 'AbortError') {
+          return
+        }
+
         if (disposed) return
 
         setTelemetry((prev) => ({
@@ -434,9 +470,10 @@ export default function TranslateScreen({
 
     return () => {
       disposed = true
+      controller.abort()
       clearInterval(timer)
     }
-  }, [apiUrl, backendUp])
+  }, [apiUrl, backendUp, isActive, isDocumentVisible])
 
   useEffect(() => {
     if (!loading) {
@@ -892,7 +929,7 @@ export default function TranslateScreen({
       title="Swap languages"
       aria-label="Swap source and target languages"
     >
-      <svg className="h-[1.125rem] w-[1.125rem]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
       </svg>
     </button>
@@ -913,9 +950,9 @@ export default function TranslateScreen({
         <button
           type="button"
           onClick={() => setIsStreetMode(false)}
-          className={`relative z-10 min-w-[6.25rem] rounded-xl px-3.5 py-1.5 text-xs font-semibold tracking-[0.01em] transition-all ${
+          className={`relative z-10 min-w-25 rounded-xl px-3.5 py-1.5 text-xs font-semibold tracking-[0.01em] transition-all ${
             !isStreetMode
-              ? 'bg-gradient-to-r from-accent-magenta/24 to-accent-gold/16 text-accent-magenta shadow-[0_8px_18px_rgba(217,70,239,0.2)]'
+              ? 'bg-linear-to-r from-accent-magenta/24 to-accent-gold/16 text-accent-magenta shadow-[0_8px_18px_rgba(217,70,239,0.2)]'
               : 'text-text-secondary/85 hover:bg-bg-card/70 hover:text-text-primary'
           }`}
           aria-label="Switch to formal register"
@@ -926,9 +963,9 @@ export default function TranslateScreen({
         <button
           type="button"
           onClick={() => setIsStreetMode(true)}
-          className={`relative z-10 min-w-[6.25rem] rounded-xl px-3.5 py-1.5 text-xs font-semibold tracking-[0.01em] transition-all ${
+          className={`relative z-10 min-w-25 rounded-xl px-3.5 py-1.5 text-xs font-semibold tracking-[0.01em] transition-all ${
             isStreetMode
-              ? 'bg-gradient-to-r from-accent-gold/18 to-accent-magenta/24 text-accent-magenta shadow-[0_8px_18px_rgba(217,70,239,0.2)]'
+              ? 'bg-linear-to-r from-accent-gold/18 to-accent-magenta/24 text-accent-magenta shadow-[0_8px_18px_rgba(217,70,239,0.2)]'
               : 'text-text-secondary/85 hover:bg-bg-card/70 hover:text-text-primary'
           }`}
           aria-label="Switch to street register"
@@ -945,7 +982,7 @@ export default function TranslateScreen({
   )
 
   const renderInputBox = () => (
-    <div className={`relative flex min-h-[14.5rem] flex-col rounded-[1.25rem] border shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 ${
+    <div className={`relative flex min-h-58 flex-col rounded-[1.25rem] border shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 ${
       isCharLimitExceeded
         ? 'border-status-danger-border/90 bg-bg-card/92 shadow-[0_0_0_1px_rgba(185,28,28,0.3),0_10px_24px_rgba(0,0,0,0.08)]'
         : isSourceInputFocused
@@ -953,7 +990,7 @@ export default function TranslateScreen({
           : 'border-border-subtle bg-bg-card/90'
     }`}>
       <span
-        className={`pointer-events-none absolute inset-x-0 top-0 h-14 rounded-t-[1.25rem] bg-gradient-to-b from-accent-magenta/10 to-transparent transition-opacity duration-300 ${
+        className={`pointer-events-none absolute inset-x-0 top-0 h-14 rounded-t-[1.25rem] bg-linear-to-b from-accent-magenta/10 to-transparent transition-opacity duration-300 ${
           isSourceInputFocused ? 'opacity-100' : 'opacity-0'
         }`}
         aria-hidden="true"
@@ -1015,8 +1052,8 @@ export default function TranslateScreen({
           onFocus={() => setIsSourceInputFocused(true)}
           onBlur={() => setIsSourceInputFocused(false)}
           placeholder={showSourceQuickActions ? '' : SOURCE_PLACEHOLDER}
-          className="w-full resize-none overflow-hidden bg-transparent px-4 pt-3 pb-2 text-base font-medium leading-relaxed tracking-[0.004em] text-text-primary placeholder-text-secondary/45 focus:outline-none transition-[height] duration-150 ease-out"
-          style={{ minHeight: '156px' }}
+          className="w-full resize-none overflow-y-auto bg-transparent px-4 pt-3 pb-2 text-base font-medium leading-relaxed tracking-[0.004em] text-text-primary placeholder-text-secondary/45 focus:outline-none transition-[height] duration-150 ease-out"
+          style={{ minHeight: '156px', maxHeight: '280px' }}
           maxLength={CHAR_LIMIT}
         />
       </div>
@@ -1094,24 +1131,24 @@ export default function TranslateScreen({
   }
 
   const renderOutputBox = () => (
-    <div className="flex min-h-[14.5rem] flex-col rounded-[1.25rem] border border-border-subtle/70 bg-bg-card/82 shadow-[0_6px_22px_rgb(0,0,0,0.04)]">
+    <div className="flex min-h-58 flex-col rounded-[1.25rem] border border-border-subtle/70 bg-bg-card/82 shadow-[0_6px_22px_rgb(0,0,0,0.04)]">
       <div className="border-b border-border-subtle/55 px-4 py-2.5">
         <div className="ml-1 w-full max-w-[20rem] sm:max-w-[64%]">
           {targetLangBar}
         </div>
       </div>
 
-      <div className="flex-1 min-h-[9.75rem] px-4 pt-3 pb-1" aria-busy={loading}>
+      <div className="flex-1 min-h-39 max-h-72 overflow-y-auto px-4 pt-3 pb-1" aria-busy={loading}>
         {loading ? (
           <div className="flex items-center gap-3 text-accent-magenta">
-            <svg className="h-[1.125rem] w-[1.125rem] animate-spin" viewBox="0 0 24 24" fill="none">
+            <svg className="h-4.5 w-4.5 animate-spin" viewBox="0 0 24 24" fill="none">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
             <span className="text-sm">Translating...</span>
           </div>
         ) : translatedText ? (
-          <div className="break-words text-base leading-relaxed text-text-primary" aria-readonly="true">
+          <div className="wrap-break-word text-base leading-relaxed text-text-primary" aria-readonly="true">
             {renderHighlightedText()}
           </div>
         ) : (
@@ -1239,7 +1276,7 @@ export default function TranslateScreen({
 
   const renderProfilerCard = () => (
     <section
-      className={`flex h-full min-h-[10rem] flex-col rounded-[1.25rem] border border-border-subtle bg-bg-card transition-shadow ${
+      className={`flex h-full min-h-40 flex-col rounded-[1.25rem] border border-border-subtle bg-bg-card transition-shadow ${
         profilerFlash ? 'shadow-[0_0_0_1px_rgba(217,70,239,0.45),0_0_25px_rgba(217,70,239,0.18)]' : 'shadow-sm'
       }`}
     >
@@ -1343,7 +1380,7 @@ export default function TranslateScreen({
           <GapAnalysisTerminal
             logs={systemLogs}
             isFlushing={loading}
-            className="h-full min-h-[10rem]"
+            className="h-full min-h-40"
           />
           {renderProfilerCard()}
         </div>
@@ -1363,7 +1400,7 @@ export default function TranslateScreen({
           <GapAnalysisTerminal
             logs={systemLogs}
             isFlushing={loading}
-            className="min-h-[10rem]"
+            className="min-h-40"
           />
           {renderProfilerCard()}
         </div>

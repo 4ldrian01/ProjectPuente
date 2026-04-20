@@ -8,3 +8,4 @@ peft
 accelerate
 sentencepiece
 safetensors
+huggingface_hub

@@ -49,16 +49,22 @@ Ensure project root contains expected folders:
 - `datasets/`
 - `notebooks/`
 
-Check split files (default canonical naming):
+Check split files (recommended LATEST naming):
 
 ```bash
 PRJ=/kaggle/working/ProjectPuente
-ls -lah "$PRJ/datasets/processed/80-10-10_split/01_chavacano"/{train,eval,test}.jsonl
+ls -lah "$PRJ/datasets/processed/80-10-10_split/01_chavacano"/LATEST_cbk_en_{train,val,test}.jsonl
 ```
 
-The launcher can also auto-detect these alternative split filename triplets inside the selected dataset directory:
+The launcher auto-detects split filename triplets inside the selected dataset directory (LATEST-first):
 
+- `LATEST_cbk_en_train.jsonl`, `LATEST_cbk_en_val.jsonl`, `LATEST_cbk_en_test.jsonl`
+- `LATEST_ceb_en_train.jsonl`, `LATEST_ceb_en_val.jsonl`, `LATEST_ceb_en_test.jsonl`
+- `FINAL_cbk_en_train.jsonl`, `FINAL_cbk_en_val.jsonl`, `FINAL_cbk_en_test.jsonl`
+- `FINAL_ceb_en_train.jsonl`, `FINAL_ceb_en_val.jsonl`, `FINAL_ceb_en_test.jsonl`
 - `cbk_en_train.jsonl`, `cbk_en_val.jsonl`, `cbk_en_test.jsonl`
+- `ceb_en_train.jsonl`, `ceb_en_val.jsonl`, `ceb_en_test.jsonl`
+- `train.jsonl`, `eval.jsonl`, `test.jsonl`
 - `cbk_en_trial_train.jsonl`, `cbk_en_trial_val.jsonl`, `cbk_en_trial_test.jsonl`
 
 Confirm CUDA before starting training:
@@ -100,6 +106,9 @@ export PUENTE_TARGET_FLORES=eng_Latn
 export PUENTE_SOURCE_TRANSLATION_KEY=cbk
 export PUENTE_TARGET_TRANSLATION_KEY=en
 export PUENTE_DATASET_REL_DIR=datasets/processed/80-10-10_split/01_chavacano
+export PUENTE_TRAIN_FILENAME=LATEST_cbk_en_train.jsonl
+export PUENTE_EVAL_FILENAME=LATEST_cbk_en_val.jsonl
+export PUENTE_TEST_FILENAME=LATEST_cbk_en_test.jsonl
 export PUENTE_RUN_NAME=lora-cbk-full-kaggle
 export PUENTE_REQUIRE_GPU=true
 
@@ -129,7 +138,7 @@ The launcher will auto-detect `cbk_en_trial_*` split filenames in `trial_small`.
 
 ## 5) Output Locations
 
-- Checkpoints: `<project_root>/models/checkpoints/`
+- Checkpoints: `<project_root>/models/checkpoints/<run_name>/`
 - Final adapter: `<project_root>/models/lora_adapters/<run_name>/`
 - Metrics and config: `<project_root>/outputs/<run_name>/`
 

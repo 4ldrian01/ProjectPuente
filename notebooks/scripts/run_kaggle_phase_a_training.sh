@@ -36,6 +36,13 @@ export PUENTE_ARTIFACT_ROOT="${PUENTE_ARTIFACT_ROOT:-${PUENTE_DRIVE_ROOT}}"
 export PUENTE_LOCAL_DATA_DIR="${PUENTE_LOCAL_DATA_DIR:-/kaggle/working/data}"
 export PUENTE_LOCAL_OUTPUT_ROOT="${PUENTE_LOCAL_OUTPUT_ROOT:-/kaggle/working/outputs}"
 export PUENTE_DRIVE_OUTPUT_REL_DIR="${PUENTE_DRIVE_OUTPUT_REL_DIR:-outputs}"
+export HF_HOME="${HF_HOME:-${PUENTE_PROJECT_ROOT}/.cache/huggingface}"
+export HUGGINGFACE_HUB_CACHE="${HUGGINGFACE_HUB_CACHE:-${HF_HOME}/hub}"
+export TRANSFORMERS_CACHE="${TRANSFORMERS_CACHE:-${HUGGINGFACE_HUB_CACHE}}"
+export HF_DATASETS_CACHE="${HF_DATASETS_CACHE:-${HF_HOME}/datasets}"
+export TOKENIZERS_PARALLELISM="${TOKENIZERS_PARALLELISM:-false}"
+
+mkdir -p "${HF_HOME}" "${HUGGINGFACE_HUB_CACHE}" "${HF_DATASETS_CACHE}"
 
 detect_split_filenames() {
   local dataset_root="$1"
@@ -47,9 +54,18 @@ detect_split_filenames() {
     return
   fi
 
+  local source_key target_key
+  source_key="${PUENTE_SOURCE_TRANSLATION_KEY:-cbk}"
+  target_key="${PUENTE_TARGET_TRANSLATION_KEY:-en}"
+
   local candidate_triplets=(
+    "LATEST_${source_key}_${target_key}_train.jsonl LATEST_${source_key}_${target_key}_val.jsonl LATEST_${source_key}_${target_key}_test.jsonl"
+    "LATEST_${source_key}_${target_key}_train.jsonl LATEST_${source_key}_${target_key}_eval.jsonl LATEST_${source_key}_${target_key}_test.jsonl"
+    "FINAL_${source_key}_${target_key}_train.jsonl FINAL_${source_key}_${target_key}_val.jsonl FINAL_${source_key}_${target_key}_test.jsonl"
+    "FINAL_${source_key}_${target_key}_train.jsonl FINAL_${source_key}_${target_key}_eval.jsonl FINAL_${source_key}_${target_key}_test.jsonl"
+    "${source_key}_${target_key}_train.jsonl ${source_key}_${target_key}_val.jsonl ${source_key}_${target_key}_test.jsonl"
+    "${source_key}_${target_key}_train.jsonl ${source_key}_${target_key}_eval.jsonl ${source_key}_${target_key}_test.jsonl"
     "train.jsonl eval.jsonl test.jsonl"
-    "cbk_en_train.jsonl cbk_en_val.jsonl cbk_en_test.jsonl"
     "cbk_en_trial_train.jsonl cbk_en_trial_val.jsonl cbk_en_trial_test.jsonl"
   )
 
@@ -70,21 +86,52 @@ detect_split_filenames() {
 }
 
 if [[ -z "${PUENTE_DATASET_REL_DIR:-}" ]]; then
-  dataset_candidates=(
-    "datasets/processed/80-10-10_split/01_chavacano"
-    "datasets/processed/01_chavacano"
-    "datasets/processed/001_chavacano"
-  )
+  source_key_for_dataset="${PUENTE_SOURCE_TRANSLATION_KEY:-cbk}"
+
+  case "${source_key_for_dataset}" in
+    ceb)
+      dataset_candidates=(
+        "datasets/processed/80-10-10_split/02_cebuano"
+        "datasets/processed/02_cebuano"
+        "datasets/processed/002_cebuano"
+      )
+      ;;
+    cbk)
+      dataset_candidates=(
+        "datasets/processed/80-10-10_split/01_chavacano"
+        "datasets/processed/01_chavacano"
+        "datasets/processed/001_chavacano"
+      )
+      ;;
+    *)
+      dataset_candidates=(
+        "datasets/processed/80-10-10_split/01_chavacano"
+        "datasets/processed/80-10-10_split/02_cebuano"
+        "datasets/processed/01_chavacano"
+        "datasets/processed/001_chavacano"
+        "datasets/processed/02_cebuano"
+        "datasets/processed/002_cebuano"
+      )
+      ;;
+  esac
+
   for candidate in "${dataset_candidates[@]}"; do
     candidate_root="${PUENTE_DRIVE_ROOT}/${candidate}"
-    if [[ -f "${candidate_root}/train.jsonl" ]] && [[ -f "${candidate_root}/eval.jsonl" ]] && [[ -f "${candidate_root}/test.jsonl" ]]; then
+    detect_split_filenames "${candidate_root}"
+    if [[ -f "${candidate_root}/${PUENTE_TRAIN_FILENAME}" ]] && [[ -f "${candidate_root}/${PUENTE_EVAL_FILENAME}" ]] && [[ -f "${candidate_root}/${PUENTE_TEST_FILENAME}" ]]; then
       export PUENTE_DATASET_REL_DIR="${candidate}"
       break
     fi
   done
 fi
 
-export PUENTE_DATASET_REL_DIR="${PUENTE_DATASET_REL_DIR:-datasets/processed/001_chavacano}"
+if [[ -z "${PUENTE_DATASET_REL_DIR:-}" ]]; then
+  if [[ "${PUENTE_SOURCE_TRANSLATION_KEY:-cbk}" == "ceb" ]]; then
+    export PUENTE_DATASET_REL_DIR="datasets/processed/80-10-10_split/02_cebuano"
+  else
+    export PUENTE_DATASET_REL_DIR="datasets/processed/80-10-10_split/01_chavacano"
+  fi
+fi
 
 export PUENTE_MODEL_ID="${PUENTE_MODEL_ID:-facebook/nllb-200-distilled-600M}"
 export PUENTE_SOURCE_FLORES="${PUENTE_SOURCE_FLORES:-cbk_Latn}"
@@ -136,9 +183,9 @@ for split in train eval test; do
     echo "Configured filenames: train=${PUENTE_TRAIN_FILENAME} eval=${PUENTE_EVAL_FILENAME} test=${PUENTE_TEST_FILENAME}"
     if [[ -d "${PUENTE_DRIVE_ROOT}/datasets/processed" ]]; then
       echo "Hint: set PUENTE_DATASET_REL_DIR to one of these detected split roots:"
-      find "${PUENTE_DRIVE_ROOT}/datasets/processed" -maxdepth 4 -type f -name 'train.jsonl' 2>/dev/null \
+      find "${PUENTE_DRIVE_ROOT}/datasets/processed" -maxdepth 4 -type f \( -name 'train.jsonl' -o -name '*_train.jsonl' \) 2>/dev/null \
         | sed "s#^${PUENTE_DRIVE_ROOT}/##" \
-        | sed 's#/train.jsonl$##' \
+        | sed -E 's#/([^/]+_)?train\.jsonl$##' \
         | sort -u
     fi
     if [[ -d "${dataset_root}" ]]; then
@@ -185,6 +232,8 @@ if [[ ! -f "${PIPELINE_SCRIPT}" ]]; then
   echo "ERROR: Missing pipeline script: ${PIPELINE_SCRIPT}"
   exit 1
 fi
+
+cd "${PUENTE_PROJECT_ROOT}"
 
 python -m pip install -r "${REQ_FILE}"
 python "${PIPELINE_SCRIPT}"

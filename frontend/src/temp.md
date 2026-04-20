@@ -855,7 +855,7 @@ export default function TranslateScreen({
   )
 
   const renderInputBox = () => (
-    <div className={`flex min-h-[10.5rem] flex-col rounded-xl border bg-bg-card transition-colors ${
+    <div className={`flex min-h-42 flex-col rounded-xl border bg-bg-card transition-colors ${
       isCharLimitExceeded
         ? 'border-status-danger-border/90 focus-within:border-status-danger-border'
         : 'border-border-subtle focus-within:border-accent-magenta/90'
@@ -987,7 +987,7 @@ export default function TranslateScreen({
   const actionButtonClass = 'rounded-md border border-border-subtle px-2.5 py-1 text-[11px] font-medium text-text-secondary transition-colors hover:border-accent-magenta/55 hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-40'
 
   const renderOutputBox = () => (
-    <div className="flex min-h-[10.5rem] flex-col rounded-xl border border-border-subtle bg-bg-card/90">
+    <div className="flex min-h-42 flex-col rounded-xl border border-border-subtle bg-bg-card/90">
       <div className="flex-1 px-4 pt-3 pb-1">
         {loading ? (
           <div className="flex items-center gap-3 text-accent-magenta">
@@ -1120,7 +1120,7 @@ export default function TranslateScreen({
 
   const renderProfilerCard = () => (
     <section
-      className={`flex h-full min-h-[10rem] flex-col rounded-xl border border-border-subtle bg-bg-card transition-shadow ${
+      className={`flex h-full min-h-40 flex-col rounded-xl border border-border-subtle bg-bg-card transition-shadow ${
         profilerFlash ? 'shadow-[0_0_0_1px_rgba(217,70,239,0.45),0_0_25px_rgba(217,70,239,0.18)]' : 'shadow-sm'
       }`}
     >
@@ -1187,7 +1187,7 @@ export default function TranslateScreen({
      Render — desktop and mobile layouts
      ════════════════════════════════════════════════════════════ */
   return (
-    <div className="mx-auto flex w-full max-w-[78rem] flex-1 flex-col overflow-y-auto px-4 py-4 sm:px-6 md:py-5">
+    <div className="mx-auto flex w-full max-w-312 flex-1 flex-col overflow-y-auto px-4 py-4 sm:px-6 md:py-5">
       {/* ══ DESKTOP ══ (md+) */}
       <div className="hidden flex-1 flex-col md:flex">
         <div className="mb-2 flex items-center">
@@ -1207,7 +1207,7 @@ export default function TranslateScreen({
           <GapAnalysisTerminal
             logs={systemLogs}
             isFlushing={loading}
-            className="h-full min-h-[10rem]"
+            className="h-full min-h-40"
           />
           {renderProfilerCard()}
         </div>
@@ -1230,7 +1230,7 @@ export default function TranslateScreen({
           <GapAnalysisTerminal
             logs={systemLogs}
             isFlushing={loading}
-            className="min-h-[10rem]"
+            className="min-h-40"
           />
           {renderProfilerCard()}
         </div>

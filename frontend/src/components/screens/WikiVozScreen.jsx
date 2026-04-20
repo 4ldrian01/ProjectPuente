@@ -363,7 +363,7 @@ export default function WikiVozScreen({ apiUrl, backendUp, ttsAvailable, notify 
         <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="a26-subtitle">Wiki-Voz Intelligence Panel</p>
-            <h2 className="a26-hero-title mt-1 font-semibold text-text-primary">Cultural Term Explorer</h2>
+            <h2 className="a26-hero-title mt-1 font-semibold text-text-primary">Wiki-Voz Lexicon</h2>
             <p className="mt-2 max-w-3xl text-sm leading-relaxed text-text-secondary sm:text-[15px]">
               Data-driven sociolinguistic cards synchronized with wiki_voz_kb.json for explainable translation context.
             </p>
