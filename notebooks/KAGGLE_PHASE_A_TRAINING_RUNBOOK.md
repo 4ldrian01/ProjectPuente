@@ -374,8 +374,8 @@ else:
 - `GPU is required but CUDA is not available`: re-enable Kaggle GPU, reconnect runtime, rerun from Step 2 CUDA check.
 - `PUENTE_TARGET_TRANSLATION_KEY must be en`: keep `PUENTE_TARGET_TRANSLATION_KEY='en'` for this Phase A source-to-English pipeline.
 - `HF token not detected` or download/rate-limit issues: recreate `.secrets/hf_token`, then relaunch.
-- `TypeError: Seq2SeqTrainingArguments.__init__() got an unexpected keyword argument 'save_safetensors'`: run Section 9 Cell 6b to apply the compatibility hotfix, then relaunch from Section 9 Cell 7.
-- `TypeError: Seq2SeqTrainer.__init__() got an unexpected keyword argument 'tokenizer'`: run Section 9 Cell 6b to apply the compatibility hotfix, then relaunch from Section 9 Cell 7.
+- `TypeError: Seq2SeqTrainingArguments.__init__() got an unexpected keyword argument 'save_safetensors'`: first sync latest repo with Section 9 Cell 2 and relaunch from Section 9 Cell 7; if it still fails, run Section 9 Cell 6b then relaunch.
+- `TypeError: Seq2SeqTrainer.__init__() got an unexpected keyword argument 'tokenizer'`: first sync latest repo with Section 9 Cell 2 and relaunch from Section 9 Cell 7; if it still fails, run Section 9 Cell 6b then relaunch.
 - OOM during training: lower `PUENTE_BATCH_SIZE_TRAIN` and/or increase `PUENTE_GRAD_ACCUM_STEPS`, then relaunch.
 
 ### 5.7 Resume from a checkpoint (optional)
@@ -752,13 +752,13 @@ print('Strict LATEST validation passed.')
 !rm -f /kaggle/working/data/*.jsonl || true
 ```
 
-### Cell 6b: Apply pipeline hotfix in Kaggle clone (required)
+### Cell 6b: Apply pipeline hotfix in Kaggle clone (fallback only)
 
 Why this is needed:
 
-- Current upstream can report `kept 100%` in sanitize step and still fail during tokenization in some runs.
-- This hotfix forces fresh filter evaluation, adds residual malformed-row detection,
-  and replaces single-row tokenization with resilient batched tokenization that skips residual malformed rows.
+- Use this only if you still hit known failures after syncing latest `origin/development`.
+- On current `development`, these fixes are already included upstream for most runs.
+- This hotfix edits tracked files in your Kaggle clone; future pulls can fail until changes are stashed/cleaned.
 
 ```python
 from pathlib import Path
