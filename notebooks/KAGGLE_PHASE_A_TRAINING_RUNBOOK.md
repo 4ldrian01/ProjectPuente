@@ -62,6 +62,8 @@ If clone says destination already exists, run this instead:
 %cd /kaggle/working/ProjectPuente
 !git fetch origin
 !git checkout development
+# Stash any local edits (including prior hotfix edits) before syncing.
+!git stash push -u -m "kaggle-pre-sync-$(date +%Y%m%d_%H%M%S)" || true
 !git pull --ff-only origin development
 ```
 
@@ -615,8 +617,6 @@ Policy for this section:
 
 ```python
 from pathlib import Path
-import subprocess
-from datetime import datetime
 
 if not Path('/kaggle/working/ProjectPuente/.git').exists():
     !git clone https://github.com/4ldrian01/ProjectPuente.git /kaggle/working/ProjectPuente
@@ -624,22 +624,10 @@ if not Path('/kaggle/working/ProjectPuente/.git').exists():
 %cd /kaggle/working/ProjectPuente
 !git fetch origin
 !git checkout development
-
-status = subprocess.run(
-    ['git', 'status', '--porcelain'],
-    capture_output=True,
-    text=True,
-    check=False,
-)
-
-if status.stdout.strip():
-    stash_name = f"kaggle-pre-sync-{datetime.now():%Y%m%d_%H%M%S}"
-    print('Local changes detected; stashing before pull:', stash_name)
-    subprocess.run(['git', 'stash', 'push', '-u', '-m', stash_name], check=True)
-else:
-    print('Working tree clean; no stash needed.')
-
+# Stash any local edits (including prior hotfix edits) before syncing.
+!git stash push -u -m "kaggle-pre-sync-$(date +%Y%m%d_%H%M%S)" || true
 !git pull --ff-only origin development
+!git log --oneline -n 3
 ```
 
 ### Cell 3: Verify runtime readiness
