@@ -1097,6 +1097,7 @@ print('Log file    =', log_file)
 
 ```python
 from pathlib import Path
+import re
 import subprocess
 
 prj = Path('/kaggle/working/ProjectPuente')
@@ -1112,6 +1113,32 @@ log_path = Path(log_file)
 done_marker = '[done] Cloud training pipeline completed successfully.'
 traceback_marker = 'Traceback (most recent call last):'
 log_text = log_path.read_text(encoding='utf-8', errors='replace') if log_path.exists() else ''
+
+declared_run_name = str(globals().get('run_name', '') or '').strip()
+run_name_from_log = ''
+source_root_match = re.search(
+    r'\[done\]\s+source output root:\s+/kaggle/working/ProjectPuente/outputs/([^\s/]+)',
+    log_text,
+)
+if source_root_match:
+    run_name_from_log = source_root_match.group(1)
+
+run_name_from_logfile = log_path.parent.name if log_path.parent.name.startswith('lora-') else ''
+active_run_name = run_name_from_log or run_name_from_logfile or declared_run_name
+
+if not active_run_name:
+    latest_output_dirs = sorted(
+        (prj / 'outputs').glob('lora-*'),
+        key=lambda p: p.stat().st_mtime,
+        reverse=True,
+    )
+    if latest_output_dirs:
+        active_run_name = latest_output_dirs[0].name
+
+print('declared_run_name =', declared_run_name or '(unset)')
+print('resolved_run_name =', active_run_name or '(unresolved)')
+if declared_run_name and active_run_name and declared_run_name != active_run_name:
+    print('Notice: using resolved_run_name because declared run_name did not match this log.')
 
 print('log_exists =', log_path.exists())
 print('done_marker_found =', done_marker in log_text)
@@ -1129,10 +1156,10 @@ else:
     print('Training process is not running. Check artifact status below and inspect log for [done] or Traceback.')
 
 checks = {
-    'checkpoints_dir': prj / 'models' / 'checkpoints' / run_name,
-    'adapter_dir': prj / 'models' / 'lora_adapters' / run_name,
-    'metrics_json': prj / 'outputs' / run_name / 'training_metrics.json',
-    'run_config_json': prj / 'outputs' / run_name / 'run_config.json',
+    'checkpoints_dir': prj / 'models' / 'checkpoints' / active_run_name,
+    'adapter_dir': prj / 'models' / 'lora_adapters' / active_run_name,
+    'metrics_json': prj / 'outputs' / active_run_name / 'training_metrics.json',
+    'run_config_json': prj / 'outputs' / active_run_name / 'run_config.json',
 }
 for key, path in checks.items():
     print(key, '->', 'OK' if path.exists() else 'MISSING', '->', path)
