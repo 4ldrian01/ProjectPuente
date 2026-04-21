@@ -178,6 +178,13 @@ def load_model_with_dtype_fallback(
 
 
 def infer_dataset_candidate_dirs(source_translation_key: str) -> tuple[str, ...]:
+    if source_translation_key == 'es':
+        return (
+            'datasets/processed/80-10-10_split/04_spanish',
+            'datasets/processed/04_spanish',
+            'datasets/processed/004_spanish',
+        )
+
     if source_translation_key == 'ceb':
         return (
             'datasets/processed/80-10-10_split/02_cebuano',
@@ -193,8 +200,11 @@ def infer_dataset_candidate_dirs(source_translation_key: str) -> tuple[str, ...]
         )
 
     return (
+        'datasets/processed/80-10-10_split/04_spanish',
         'datasets/processed/80-10-10_split/01_chavacano',
         'datasets/processed/80-10-10_split/02_cebuano',
+        'datasets/processed/04_spanish',
+        'datasets/processed/004_spanish',
         'datasets/processed/01_chavacano',
         'datasets/processed/001_chavacano',
         'datasets/processed/02_cebuano',
@@ -238,6 +248,11 @@ def detect_split_triplet_for_dir(
             f'{source_translation_key}_{target_translation_key}_eval.jsonl',
             f'{source_translation_key}_{target_translation_key}_test.jsonl',
         ),
+        (
+            f'{source_translation_key}_{target_translation_key}_trial_train.jsonl',
+            f'{source_translation_key}_{target_translation_key}_trial_val.jsonl',
+            f'{source_translation_key}_{target_translation_key}_trial_test.jsonl',
+        ),
         ('train.jsonl', 'eval.jsonl', 'test.jsonl'),
         ('cbk_en_trial_train.jsonl', 'cbk_en_trial_val.jsonl', 'cbk_en_trial_test.jsonl'),
     )
@@ -272,7 +287,9 @@ def infer_default_dataset_rel_dir(
 
     if source_translation_key == 'ceb':
         return 'datasets/processed/80-10-10_split/02_cebuano'
-    return 'datasets/processed/80-10-10_split/01_chavacano'
+    if source_translation_key == 'es':
+        return 'datasets/processed/80-10-10_split/04_spanish'
+    return 'datasets/processed/80-10-10_split/04_spanish'
 
 
 def infer_default_split_filenames(
@@ -454,7 +471,7 @@ class ColabConfig:
 
 
 def build_config() -> ColabConfig:
-    source_flores = env_str('PUENTE_SOURCE_FLORES', 'cbk_Latn')
+    source_flores = env_str('PUENTE_SOURCE_FLORES', 'spa_Latn')
     target_flores = env_str('PUENTE_TARGET_FLORES', 'eng_Latn')
     source_tag = source_flores.split('_', 1)[0].casefold()
     target_tag = target_flores.split('_', 1)[0].casefold()

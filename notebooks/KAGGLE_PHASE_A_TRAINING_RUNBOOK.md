@@ -94,7 +94,7 @@ Check split files (recommended LATEST naming):
 Exact replacement for your previously failing snippet (Python-cell safe):
 
 ```python
-!ls -lah /kaggle/working/ProjectPuente/datasets/processed/80-10-10_split/01_chavacano/LATEST_cbk_en_train.jsonl /kaggle/working/ProjectPuente/datasets/processed/80-10-10_split/01_chavacano/LATEST_cbk_en_val.jsonl /kaggle/working/ProjectPuente/datasets/processed/80-10-10_split/01_chavacano/LATEST_cbk_en_test.jsonl
+!ls -lah /kaggle/working/ProjectPuente/datasets/processed/80-10-10_split/04_spanish/LATEST_es_en_train.jsonl /kaggle/working/ProjectPuente/datasets/processed/80-10-10_split/04_spanish/LATEST_es_en_val.jsonl /kaggle/working/ProjectPuente/datasets/processed/80-10-10_split/04_spanish/LATEST_es_en_test.jsonl
 ```
 
 Equivalent robust Python check:
@@ -103,11 +103,11 @@ Equivalent robust Python check:
 from pathlib import Path
 
 prj = Path('/kaggle/working/ProjectPuente')
-base = prj / 'datasets/processed/80-10-10_split/01_chavacano'
+base = prj / 'datasets/processed/80-10-10_split/04_spanish'
 checks = [
-    base / 'LATEST_cbk_en_train.jsonl',
-    base / 'LATEST_cbk_en_val.jsonl',
-    base / 'LATEST_cbk_en_test.jsonl',
+    base / 'LATEST_es_en_train.jsonl',
+    base / 'LATEST_es_en_val.jsonl',
+    base / 'LATEST_es_en_test.jsonl',
 ]
 
 for p in checks:
@@ -116,14 +116,14 @@ for p in checks:
 
 The launcher auto-detects split filename triplets inside the selected dataset directory (LATEST-first):
 
-- `LATEST_cbk_en_train.jsonl`, `LATEST_cbk_en_val.jsonl`, `LATEST_cbk_en_test.jsonl`
+- `LATEST_es_en_train.jsonl`, `LATEST_es_en_val.jsonl`, `LATEST_es_en_test.jsonl`
 - `LATEST_ceb_en_train.jsonl`, `LATEST_ceb_en_val.jsonl`, `LATEST_ceb_en_test.jsonl`
-- `FINAL_cbk_en_train.jsonl`, `FINAL_cbk_en_val.jsonl`, `FINAL_cbk_en_test.jsonl`
+- `FINAL_es_en_train.jsonl`, `FINAL_es_en_val.jsonl`, `FINAL_es_en_test.jsonl`
 - `FINAL_ceb_en_train.jsonl`, `FINAL_ceb_en_val.jsonl`, `FINAL_ceb_en_test.jsonl`
-- `cbk_en_train.jsonl`, `cbk_en_val.jsonl`, `cbk_en_test.jsonl`
+- `es_en_train.jsonl`, `es_en_val.jsonl`, `es_en_test.jsonl`
 - `ceb_en_train.jsonl`, `ceb_en_val.jsonl`, `ceb_en_test.jsonl`
 - `train.jsonl`, `eval.jsonl`, `test.jsonl`
-- `cbk_en_trial_train.jsonl`, `cbk_en_trial_val.jsonl`, `cbk_en_trial_test.jsonl`
+- `es_en_trial_train.jsonl`, `es_en_trial_val.jsonl`, `es_en_trial_test.jsonl`
 
 Confirm CUDA before starting training:
 
@@ -227,20 +227,20 @@ env = os.environ.copy()
 env.update({
     'PUENTE_PROJECT_ROOT': str(prj),
     'PUENTE_DRIVE_ROOT': str(prj),
-    'PUENTE_SOURCE_FLORES': 'cbk_Latn',
+    'PUENTE_SOURCE_FLORES': 'spa_Latn',
     'PUENTE_TARGET_FLORES': 'eng_Latn',
-    'PUENTE_SOURCE_TRANSLATION_KEY': 'cbk',
+    'PUENTE_SOURCE_TRANSLATION_KEY': 'es',
     'PUENTE_TARGET_TRANSLATION_KEY': 'en',
-    'PUENTE_DATASET_REL_DIR': 'datasets/processed/80-10-10_split/01_chavacano',
-    'PUENTE_TRAIN_FILENAME': 'LATEST_cbk_en_train.jsonl',
-    'PUENTE_EVAL_FILENAME': 'LATEST_cbk_en_val.jsonl',
-    'PUENTE_TEST_FILENAME': 'LATEST_cbk_en_test.jsonl',
-    'PUENTE_RUN_NAME': 'lora-cbk-full-kaggle',
+    'PUENTE_DATASET_REL_DIR': 'datasets/processed/80-10-10_split/04_spanish',
+    'PUENTE_TRAIN_FILENAME': 'LATEST_es_en_train.jsonl',
+    'PUENTE_EVAL_FILENAME': 'LATEST_es_en_val.jsonl',
+    'PUENTE_TEST_FILENAME': 'LATEST_es_en_test.jsonl',
+    'PUENTE_RUN_NAME': 'lora-es-full-kaggle',
     'PUENTE_REQUIRE_GPU': 'true',
 })
 
 # Optional resume:
-# env['PUENTE_RESUME_FROM_CHECKPOINT'] = str(prj / 'models/checkpoints/lora-cbk-full-kaggle/checkpoint-500')
+# env['PUENTE_RESUME_FROM_CHECKPOINT'] = str(prj / 'models/checkpoints/lora-es-full-kaggle/checkpoint-500')
 
 log_dir = prj / 'outputs' / env['PUENTE_RUN_NAME']
 log_dir.mkdir(parents=True, exist_ok=True)
@@ -264,11 +264,11 @@ Quick smoke-run before full training (recommended to avoid burning GPU hours on 
 
 ```python
 # Use these two env values in the launch cell above for smoke-run:
-# env['PUENTE_DATASET_REL_DIR'] = 'datasets/processed/80-10-10_split/01_chavacano/trial_small'
-# env['PUENTE_RUN_NAME'] = 'lora-cbk-trial-kaggle'
+# env['PUENTE_DATASET_REL_DIR'] = 'datasets/processed/80-10-10_split/04_spanish/trial_small'
+# env['PUENTE_RUN_NAME'] = 'lora-es-trial-kaggle'
 ```
 
-The launcher will auto-detect `cbk_en_trial_*` split filenames in `trial_small`.
+The launcher will auto-detect `es_en_trial_*` split filenames in `trial_small`.
 
 ## 5) After Launch: Monitor, Verify, and Finish
 
@@ -284,7 +284,7 @@ Now run the following steps.
 Use the exact command printed by the launch cell:
 
 ```python
-!tail -f /kaggle/working/ProjectPuente/outputs/lora-cbk-full-kaggle/train_YYYYMMDD_HHMMSS.log
+!tail -f /kaggle/working/ProjectPuente/outputs/lora-es-full-kaggle/train_YYYYMMDD_HHMMSS.log
 ```
 
 Replace `train_YYYYMMDD_HHMMSS.log` with your real filename.
@@ -298,8 +298,8 @@ Important notebook behavior:
 Non-blocking alternatives (recommended for quick checks):
 
 ```python
-!tail -n 120 /kaggle/working/ProjectPuente/outputs/lora-cbk-full-kaggle/train_YYYYMMDD_HHMMSS.log
-!grep -n "\[done\]\|ERROR\|Traceback\|ValueError" /kaggle/working/ProjectPuente/outputs/lora-cbk-full-kaggle/train_YYYYMMDD_HHMMSS.log | tail -n 40
+!tail -n 120 /kaggle/working/ProjectPuente/outputs/lora-es-full-kaggle/train_YYYYMMDD_HHMMSS.log
+!grep -n "\[done\]\|ERROR\|Traceback\|ValueError" /kaggle/working/ProjectPuente/outputs/lora-es-full-kaggle/train_YYYYMMDD_HHMMSS.log | tail -n 40
 ```
 
 Expected progress markers from the pipeline include:
@@ -326,7 +326,7 @@ Replace `170` with your actual PID.
 ### 5.3 Read final log lines after process exits
 
 ```python
-!tail -n 120 /kaggle/working/ProjectPuente/outputs/lora-cbk-full-kaggle/train_YYYYMMDD_HHMMSS.log
+!tail -n 120 /kaggle/working/ProjectPuente/outputs/lora-es-full-kaggle/train_YYYYMMDD_HHMMSS.log
 ```
 
 Success is confirmed by this exact marker:
@@ -341,7 +341,7 @@ Run this Python cell to verify expected outputs are present:
 from pathlib import Path
 
 prj = Path('/kaggle/working/ProjectPuente')
-run_name = 'lora-cbk-full-kaggle'
+run_name = 'lora-es-full-kaggle'
 
 checks = {
     'checkpoints_dir': prj / 'models' / 'checkpoints' / run_name,
@@ -360,7 +360,7 @@ for name, path in checks.items():
 import json
 from pathlib import Path
 
-metrics_path = Path('/kaggle/working/ProjectPuente/outputs/lora-cbk-full-kaggle/training_metrics.json')
+metrics_path = Path('/kaggle/working/ProjectPuente/outputs/lora-es-full-kaggle/training_metrics.json')
 if metrics_path.exists():
     data = json.loads(metrics_path.read_text())
     print('Top-level keys:', list(data.keys()))
@@ -414,7 +414,7 @@ from datetime import datetime
 prj = Path('/kaggle/working/ProjectPuente')
 os.chdir(prj)
 
-run_name = f"lora-cbk-full-kaggle-rerun-{datetime.now():%Y%m%d_%H%M%S}"
+run_name = f"lora-es-full-kaggle-rerun-{datetime.now():%Y%m%d_%H%M%S}"
 log_dir = prj / 'outputs' / run_name
 log_dir.mkdir(parents=True, exist_ok=True)
 log_file = log_dir / f"train_{datetime.now():%Y%m%d_%H%M%S}.log"
@@ -423,14 +423,14 @@ env = os.environ.copy()
 env.update({
     'PUENTE_PROJECT_ROOT': str(prj),
     'PUENTE_DRIVE_ROOT': str(prj),
-    'PUENTE_SOURCE_FLORES': 'cbk_Latn',
+    'PUENTE_SOURCE_FLORES': 'spa_Latn',
     'PUENTE_TARGET_FLORES': 'eng_Latn',
-    'PUENTE_SOURCE_TRANSLATION_KEY': 'cbk',
+    'PUENTE_SOURCE_TRANSLATION_KEY': 'es',
     'PUENTE_TARGET_TRANSLATION_KEY': 'en',
-    'PUENTE_DATASET_REL_DIR': 'datasets/processed/80-10-10_split/01_chavacano',
-    'PUENTE_TRAIN_FILENAME': 'LATEST_cbk_en_train.jsonl',
-    'PUENTE_EVAL_FILENAME': 'LATEST_cbk_en_val.jsonl',
-    'PUENTE_TEST_FILENAME': 'LATEST_cbk_en_test.jsonl',
+    'PUENTE_DATASET_REL_DIR': 'datasets/processed/80-10-10_split/04_spanish',
+    'PUENTE_TRAIN_FILENAME': 'LATEST_es_en_train.jsonl',
+    'PUENTE_EVAL_FILENAME': 'LATEST_es_en_val.jsonl',
+    'PUENTE_TEST_FILENAME': 'LATEST_es_en_test.jsonl',
     'PUENTE_RUN_NAME': run_name,
     'PUENTE_REQUIRE_GPU': 'true',
     'HF_DATASETS_CACHE': str(prj / '.cache' / 'huggingface' / f"datasets_{datetime.now():%Y%m%d_%H%M%S}"),
@@ -518,7 +518,7 @@ else:
   2. Run a non-blocking check first:
 
 ```python
-!tail -n 200 /kaggle/working/ProjectPuente/outputs/lora-cbk-full-kaggle/train_YYYYMMDD_HHMMSS.log
+!tail -n 200 /kaggle/working/ProjectPuente/outputs/lora-es-full-kaggle/train_YYYYMMDD_HHMMSS.log
 ```
 
   3. Validate both source JSONL and staged local JSONL schema:
@@ -528,13 +528,13 @@ from pathlib import Path
 import json
 
 files = [
-    'LATEST_cbk_en_train.jsonl',
-    'LATEST_cbk_en_val.jsonl',
-    'LATEST_cbk_en_test.jsonl',
+    'LATEST_es_en_train.jsonl',
+    'LATEST_es_en_val.jsonl',
+    'LATEST_es_en_test.jsonl',
 ]
 
 roots = [
-    Path('/kaggle/working/ProjectPuente/datasets/processed/80-10-10_split/01_chavacano'),
+    Path('/kaggle/working/ProjectPuente/datasets/processed/80-10-10_split/04_spanish'),
     Path('/kaggle/working/data'),
 ]
 
@@ -545,13 +545,13 @@ def valid(rec):
     if not isinstance(rec, dict):
         return False
     t = rec.get('translation')
-    if isinstance(t, dict) and norm(t.get('cbk'), t.get('en')):
+    if isinstance(t, dict) and norm(t.get('es'), t.get('en')):
         return True
     if norm(rec.get('source_text'), rec.get('target_text')):
         return True
     if norm(rec.get('source'), rec.get('target')):
         return True
-    if norm(rec.get('cbk'), rec.get('en')):
+    if norm(rec.get('es'), rec.get('en')):
         return True
     return False
 
@@ -594,17 +594,18 @@ for root in roots:
 !rm -rf /kaggle/working/ProjectPuente/.cache/huggingface/datasets
 ```
 
-## 9) Emergency One-Pass (After Hard Refresh)
+## 9) Emergency One-Pass (After Hard Refresh, Spanish Only)
 
 Use this section if you want one strict top-to-bottom sequence with no branching.
 
 Policy for this section:
 
-- Use only these split files for cbk:
-    - `LATEST_cbk_en_train.jsonl`
-    - `LATEST_cbk_en_val.jsonl`
-    - `LATEST_cbk_en_test.jsonl`
-- Do not switch to `cleaned_cbk_en` in this strict path unless you intentionally choose fallback troubleshooting.
+- Use only these split files for Spanish:
+    - `LATEST_es_en_train.jsonl`
+    - `LATEST_es_en_val.jsonl`
+    - `LATEST_es_en_test.jsonl`
+- This strict path assumes your latest split is the 500-row synthetic set (400 train / 50 val / 50 test).
+- Do not switch to alternate cleaned files in this strict path unless you intentionally choose fallback troubleshooting.
 
 ### Cell 1: Stop old background jobs
 
@@ -667,18 +668,18 @@ else:
     print('HF token ready:', token_path)
 ```
 
-### Cell 5: Strict LATEST split validation (no cleaned fallback)
+### Cell 5: Strict LATEST Spanish split validation (500-row check)
 
 ```python
 from pathlib import Path
 import json
 
 prj = Path('/kaggle/working/ProjectPuente')
-src = prj / 'datasets/processed/80-10-10_split/01_chavacano'
+src = prj / 'datasets/processed/80-10-10_split/04_spanish'
 files = [
-    src / 'LATEST_cbk_en_train.jsonl',
-    src / 'LATEST_cbk_en_val.jsonl',
-    src / 'LATEST_cbk_en_test.jsonl',
+    src / 'LATEST_es_en_train.jsonl',
+    src / 'LATEST_es_en_val.jsonl',
+    src / 'LATEST_es_en_test.jsonl',
 ]
 
 def norm(a, b):
@@ -688,13 +689,13 @@ def valid(rec):
     if not isinstance(rec, dict):
         return False
     t = rec.get('translation')
-    if isinstance(t, dict) and norm(t.get('cbk'), t.get('en')):
+    if isinstance(t, dict) and norm(t.get('es'), t.get('en')):
         return True
     if norm(rec.get('source_text'), rec.get('target_text')):
         return True
     if norm(rec.get('source'), rec.get('target')):
         return True
-    if norm(rec.get('cbk'), rec.get('en')):
+    if norm(rec.get('es'), rec.get('en')):
         return True
     return False
 
@@ -702,6 +703,7 @@ for p in files:
     if not p.exists():
         raise FileNotFoundError(f'Missing required strict split file: {p}')
 
+row_counts = {}
 for p in files:
     total = bad = 0
     first_bad = None
@@ -723,6 +725,7 @@ for p in files:
                 if first_bad is None:
                     first_bad = (i, str(rec)[:240])
 
+    row_counts[p.name] = total
     print(p.name, 'total=', total, 'bad=', bad)
     if first_bad:
         print('  first_bad_line=', first_bad[0])
@@ -730,7 +733,22 @@ for p in files:
     if bad > 0:
         raise RuntimeError(f'Strict LATEST validation failed for {p.name}. Fix source data before launch.')
 
-print('Strict LATEST validation passed.')
+expected = {
+    'LATEST_es_en_train.jsonl': 400,
+    'LATEST_es_en_val.jsonl': 50,
+    'LATEST_es_en_test.jsonl': 50,
+}
+
+for name, want in expected.items():
+    got = row_counts.get(name, -1)
+    if got != want:
+        raise RuntimeError(f'Unexpected split size for {name}: expected {want}, got {got}')
+
+total_rows = sum(row_counts.values())
+if total_rows != 500:
+    raise RuntimeError(f'Unexpected total rows: expected 500, got {total_rows}')
+
+print('Strict LATEST Spanish validation passed (500 rows total).')
 ```
 
 ### Cell 6: Clear caches and staged runtime files
@@ -1033,7 +1051,7 @@ pipeline.write_text(text, encoding='utf-8')
 print('Pipeline hotfix applied:', pipeline)
 ```
 
-### Cell 7: Launch deterministic rerun (strict LATEST files)
+### Cell 7: Launch deterministic rerun (strict LATEST Spanish files)
 
 ```python
 import os
@@ -1044,7 +1062,7 @@ from datetime import datetime
 prj = Path('/kaggle/working/ProjectPuente')
 os.chdir(prj)
 
-run_name = f"lora-cbk-latest-rerun-{datetime.now():%Y%m%d_%H%M%S}"
+run_name = f"lora-es-latest-rerun-{datetime.now():%Y%m%d_%H%M%S}"
 log_dir = prj / 'outputs' / run_name
 log_dir.mkdir(parents=True, exist_ok=True)
 log_file = log_dir / f"train_{datetime.now():%Y%m%d_%H%M%S}.log"
@@ -1053,14 +1071,14 @@ env = os.environ.copy()
 env.update({
     'PUENTE_PROJECT_ROOT': str(prj),
     'PUENTE_DRIVE_ROOT': str(prj),
-    'PUENTE_SOURCE_FLORES': 'cbk_Latn',
+    'PUENTE_SOURCE_FLORES': 'spa_Latn',
     'PUENTE_TARGET_FLORES': 'eng_Latn',
-    'PUENTE_SOURCE_TRANSLATION_KEY': 'cbk',
+    'PUENTE_SOURCE_TRANSLATION_KEY': 'es',
     'PUENTE_TARGET_TRANSLATION_KEY': 'en',
-    'PUENTE_DATASET_REL_DIR': 'datasets/processed/80-10-10_split/01_chavacano',
-    'PUENTE_TRAIN_FILENAME': 'LATEST_cbk_en_train.jsonl',
-    'PUENTE_EVAL_FILENAME': 'LATEST_cbk_en_val.jsonl',
-    'PUENTE_TEST_FILENAME': 'LATEST_cbk_en_test.jsonl',
+    'PUENTE_DATASET_REL_DIR': 'datasets/processed/80-10-10_split/04_spanish',
+    'PUENTE_TRAIN_FILENAME': 'LATEST_es_en_train.jsonl',
+    'PUENTE_EVAL_FILENAME': 'LATEST_es_en_val.jsonl',
+    'PUENTE_TEST_FILENAME': 'LATEST_es_en_test.jsonl',
     'PUENTE_RUN_NAME': run_name,
     'PUENTE_REQUIRE_GPU': 'true',
     'HF_DATASETS_CACHE': str(prj / '.cache' / 'huggingface' / f"datasets_{datetime.now():%Y%m%d_%H%M%S}"),

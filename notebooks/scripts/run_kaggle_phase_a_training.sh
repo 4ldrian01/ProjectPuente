@@ -55,7 +55,7 @@ detect_split_filenames() {
   fi
 
   local source_key target_key
-  source_key="${PUENTE_SOURCE_TRANSLATION_KEY:-cbk}"
+  source_key="${PUENTE_SOURCE_TRANSLATION_KEY:-es}"
   target_key="${PUENTE_TARGET_TRANSLATION_KEY:-en}"
 
   local candidate_triplets=(
@@ -66,6 +66,7 @@ detect_split_filenames() {
     "${source_key}_${target_key}_train.jsonl ${source_key}_${target_key}_val.jsonl ${source_key}_${target_key}_test.jsonl"
     "${source_key}_${target_key}_train.jsonl ${source_key}_${target_key}_eval.jsonl ${source_key}_${target_key}_test.jsonl"
     "train.jsonl eval.jsonl test.jsonl"
+    "${source_key}_${target_key}_trial_train.jsonl ${source_key}_${target_key}_trial_val.jsonl ${source_key}_${target_key}_trial_test.jsonl"
     "cbk_en_trial_train.jsonl cbk_en_trial_val.jsonl cbk_en_trial_test.jsonl"
   )
 
@@ -86,9 +87,16 @@ detect_split_filenames() {
 }
 
 if [[ -z "${PUENTE_DATASET_REL_DIR:-}" ]]; then
-  source_key_for_dataset="${PUENTE_SOURCE_TRANSLATION_KEY:-cbk}"
+  source_key_for_dataset="${PUENTE_SOURCE_TRANSLATION_KEY:-es}"
 
   case "${source_key_for_dataset}" in
+    es)
+      dataset_candidates=(
+        "datasets/processed/80-10-10_split/04_spanish"
+        "datasets/processed/04_spanish"
+        "datasets/processed/004_spanish"
+      )
+      ;;
     ceb)
       dataset_candidates=(
         "datasets/processed/80-10-10_split/02_cebuano"
@@ -105,8 +113,11 @@ if [[ -z "${PUENTE_DATASET_REL_DIR:-}" ]]; then
       ;;
     *)
       dataset_candidates=(
+        "datasets/processed/80-10-10_split/04_spanish"
         "datasets/processed/80-10-10_split/01_chavacano"
         "datasets/processed/80-10-10_split/02_cebuano"
+        "datasets/processed/04_spanish"
+        "datasets/processed/004_spanish"
         "datasets/processed/01_chavacano"
         "datasets/processed/001_chavacano"
         "datasets/processed/02_cebuano"
@@ -126,18 +137,20 @@ if [[ -z "${PUENTE_DATASET_REL_DIR:-}" ]]; then
 fi
 
 if [[ -z "${PUENTE_DATASET_REL_DIR:-}" ]]; then
-  if [[ "${PUENTE_SOURCE_TRANSLATION_KEY:-cbk}" == "ceb" ]]; then
+  if [[ "${PUENTE_SOURCE_TRANSLATION_KEY:-es}" == "ceb" ]]; then
     export PUENTE_DATASET_REL_DIR="datasets/processed/80-10-10_split/02_cebuano"
+  elif [[ "${PUENTE_SOURCE_TRANSLATION_KEY:-es}" == "es" ]]; then
+    export PUENTE_DATASET_REL_DIR="datasets/processed/80-10-10_split/04_spanish"
   else
-    export PUENTE_DATASET_REL_DIR="datasets/processed/80-10-10_split/01_chavacano"
+    export PUENTE_DATASET_REL_DIR="datasets/processed/80-10-10_split/04_spanish"
   fi
 fi
 
 export PUENTE_MODEL_ID="${PUENTE_MODEL_ID:-facebook/nllb-200-distilled-600M}"
-export PUENTE_SOURCE_FLORES="${PUENTE_SOURCE_FLORES:-cbk_Latn}"
+export PUENTE_SOURCE_FLORES="${PUENTE_SOURCE_FLORES:-spa_Latn}"
 export PUENTE_TARGET_FLORES="${PUENTE_TARGET_FLORES:-eng_Latn}"
 
-export PUENTE_RUN_NAME="${PUENTE_RUN_NAME:-lora-cbk-to-eng-kaggle}"
+export PUENTE_RUN_NAME="${PUENTE_RUN_NAME:-lora-es-to-eng-kaggle}"
 export PUENTE_EPOCHS="${PUENTE_EPOCHS:-3}"
 export PUENTE_BATCH_SIZE_TRAIN="${PUENTE_BATCH_SIZE_TRAIN:-4}"
 export PUENTE_BATCH_SIZE_EVAL="${PUENTE_BATCH_SIZE_EVAL:-4}"

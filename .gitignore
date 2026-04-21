@@ -24,6 +24,8 @@ htmlcov/
 venv/
 .venv/
 env/
+backend/venv/
+backend/backend/venv/
 .env
 .env.*
 !.env.example
@@ -62,6 +64,7 @@ ml_models/*.h5
 # ── PyTorch / HuggingFace Cache ──────────────────────────────
 .cache/
 *.ckpt
+.secrets/
 
 # ── Jupyter ───────────────────────────────────────────────────
 .ipynb_checkpoints/
@@ -77,6 +80,11 @@ coverage/
 *.bak
 *.tmp
 *.orig
+
+# ── Training Artifacts (large runtime outputs) ────────────────
+outputs/
+models/checkpoints/
+models/lora_adapters/
 
 
 # TOOLS
