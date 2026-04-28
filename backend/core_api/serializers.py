@@ -54,9 +54,27 @@ WIKI_LANGUAGE_ALIASES = {
 # Keep this narrow and explicit to avoid unsupported reverse-target tests.
 BTVL_TARGET_LANGUAGE_CODES = ('en', 'es', 'tl')
 
+FLORES_TO_APP_CODE = {
+    'eng_latn': 'en',
+    'spa_latn': 'es',
+    'tgl_latn': 'tl',
+    'cbk_latn': 'cbk',
+    'ceb_latn': 'ceb',
+    'hil_latn': 'hil',
+}
+
 
 def _normalize_text_input(value):
     return ' '.join(str(value or '').split()).strip()
+
+
+def _normalize_language_code(value, allowed_codes):
+    raw = str(value or '').strip()
+    normalized = raw.casefold()
+    normalized = FLORES_TO_APP_CODE.get(normalized, normalized)
+    if normalized not in allowed_codes:
+        raise serializers.ValidationError(f'"{raw}" is not a valid choice.')
+    return normalized
 
 
 class TranslateRequestSerializer(serializers.Serializer):
@@ -65,19 +83,14 @@ class TranslateRequestSerializer(serializers.Serializer):
     Max 250 characters to prevent OOM on 8GB RAM with NLLB-200 inference.
     """
     text = serializers.CharField(max_length=250, required=True)
-    source_lang = serializers.ChoiceField(
-        choices=SOURCE_LANGUAGE_CODES,
-        required=True,
-    )
-    target_lang = serializers.ChoiceField(
-        choices=TARGET_LANGUAGE_CODES,
-        required=True,
-    )
+    source_lang = serializers.CharField(required=True)
+    target_lang = serializers.CharField(required=True)
     mode = serializers.ChoiceField(
         choices=['formal', 'street'],
         default='formal',
         required=False,
     )
+    use_cache = serializers.BooleanField(default=True, required=False)
 
     def validate_text(self, value):
         normalized = _normalize_text_input(value)
@@ -86,21 +99,20 @@ class TranslateRequestSerializer(serializers.Serializer):
         if len(normalized) > 250:
             raise serializers.ValidationError('Text exceeds 250-character limit.')
         return normalized
+
+    def validate_source_lang(self, value):
+        return _normalize_language_code(value, SOURCE_LANGUAGE_CODES)
+
+    def validate_target_lang(self, value):
+        return _normalize_language_code(value, TARGET_LANGUAGE_CODES)
 
 
 class BackTranslationRequestSerializer(serializers.Serializer):
     """Validates BTVL requests for en/es/tl reverse verification targets."""
 
     text = serializers.CharField(max_length=250, required=True)
-    source_lang = serializers.ChoiceField(
-        choices=TARGET_LANGUAGE_CODES,
-        required=True,
-    )
-    target_lang = serializers.ChoiceField(
-        choices=BTVL_TARGET_LANGUAGE_CODES,
-        default='en',
-        required=False,
-    )
+    source_lang = serializers.CharField(required=True)
+    target_lang = serializers.CharField(default='en', required=False)
 
     def validate_text(self, value):
         normalized = _normalize_text_input(value)
@@ -110,16 +122,18 @@ class BackTranslationRequestSerializer(serializers.Serializer):
             raise serializers.ValidationError('Text exceeds 250-character limit.')
         return normalized
 
+    def validate_source_lang(self, value):
+        return _normalize_language_code(value, TARGET_LANGUAGE_CODES)
+
+    def validate_target_lang(self, value):
+        return _normalize_language_code(value, BTVL_TARGET_LANGUAGE_CODES)
+
 
 class TextToSpeechRequestSerializer(serializers.Serializer):
     """Validates Edge TTS synthesis requests."""
 
     text = serializers.CharField(max_length=1000, required=True, trim_whitespace=True)
-    lang_code = serializers.ChoiceField(
-        choices=SOURCE_LANGUAGE_CODES,
-        default='en',
-        required=False,
-    )
+    lang_code = serializers.CharField(default='en', required=False)
     voice = serializers.CharField(max_length=100, required=False, allow_blank=True)
 
     def validate_text(self, value):
@@ -127,6 +141,9 @@ class TextToSpeechRequestSerializer(serializers.Serializer):
         if not normalized:
             raise serializers.ValidationError('Text is required and cannot be empty.')
         return normalized
+
+    def validate_lang_code(self, value):
+        return _normalize_language_code(value, SOURCE_LANGUAGE_CODES)
 
 
 class CulturalTermSerializer(serializers.ModelSerializer):

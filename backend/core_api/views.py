@@ -69,6 +69,28 @@ INTERCEPTOR_LANGUAGE_ALIASES = {
     'ceb': ('ceb', 'cebuano', 'bisaya', 'cebuano/bisaya'),
 }
 
+EN_TO_CBK_IDENTITY_GUARD_FALLBACKS = {
+    'hello': 'hola',
+    'hi': 'hola',
+    'hey': 'hola',
+    'good morning': 'buenas dias',
+    'good afternoon': 'buenas tardes',
+    'good evening': 'buenas noches',
+}
+
+# Lightweight phrase-level fallback for ultra-common, short greetings.
+# This keeps UX responsive on low-RAM/CPU systems when full inference is costly.
+EN_TO_CBK_QUICK_TRANSLATIONS = {
+    'hello': 'hola',
+    'hi': 'hola',
+    'hey': 'hola',
+    'good morning': 'buenas dias',
+    'good afternoon': 'buenas tardes',
+    'good evening': 'buenas noches',
+    'good night': 'buenas noches',
+    'thank you': 'gracias',
+}
+
 
 def _flatten_serializer_errors(errors):
     if not errors:
@@ -190,6 +212,15 @@ def _find_translation_memory_hit(text, source_lang, target_lang):
         .order_by('-created_at')
         .first()
     )
+
+
+def _should_skip_cached_identity_output(input_text, output_text, source_lang, target_lang):
+    """Bypass TM cache when cross-language cached output is unchanged from input."""
+    if source_lang == target_lang:
+        return False
+    if source_lang != 'auto' and FLORES_MAP.get(source_lang) == FLORES_MAP.get(target_lang):
+        return False
+    return _is_identity_translation(input_text, output_text)
 
 
 def _get_cultural_term_candidates(source_lang, target_lang):
@@ -340,6 +371,66 @@ def _should_fallback_to_proximate_pivot(direct_confidence, pivot_code):
     return direct_confidence < DIRECT_INFERENCE_CONFIDENCE_THRESHOLD
 
 
+def _is_identity_translation(input_text, output_text):
+    """Return True when cross-lingual output is effectively unchanged."""
+    normalized_in = _normalize_text_for_cache_lookup(input_text)
+    normalized_out = _normalize_text_for_cache_lookup(output_text)
+    return bool(normalized_in) and normalized_in == normalized_out
+
+
+def _apply_identity_guard_rule_fallback(input_text, output_text, src_code, tgt_code):
+    """Fallback for known en->cbk greetings when model output is unchanged."""
+    if str(src_code or '').casefold() != 'en' or str(tgt_code or '').casefold() != 'cbk':
+        return output_text, ''
+
+    if not _is_identity_translation(input_text, output_text):
+        return output_text, ''
+
+    normalized_key = _normalize_text_for_phrase_scan(input_text)
+    mapped = EN_TO_CBK_IDENTITY_GUARD_FALLBACKS.get(normalized_key)
+    if not mapped:
+        return output_text, ''
+
+    stripped = str(input_text or '').rstrip()
+    punctuation_match = re.search(r'([?!.,;:]+)$', stripped)
+    punctuation = punctuation_match.group(1) if punctuation_match else ''
+
+    fallback_text = mapped
+    if punctuation and not fallback_text.endswith(punctuation):
+        fallback_text = f'{fallback_text}{punctuation}'
+
+    if stripped[:1].isupper() and fallback_text:
+        fallback_text = fallback_text[:1].upper() + fallback_text[1:]
+
+    return fallback_text, 'rule-fallback-en-cbk'
+
+
+def _quick_rule_translate_if_available(input_text, source_lang, target_lang):
+    """Return a fast phrase-level fallback translation when available."""
+    src = str(source_lang or '').casefold()
+    tgt = str(target_lang or '').casefold()
+    if src != 'en' or tgt != 'cbk':
+        return None, ''
+
+    normalized_key = _normalize_text_for_phrase_scan(input_text)
+    mapped = EN_TO_CBK_QUICK_TRANSLATIONS.get(normalized_key)
+    if not mapped:
+        return None, ''
+
+    stripped = str(input_text or '').rstrip()
+    punctuation_match = re.search(r'([?!.,;:]+)$', stripped)
+    punctuation = punctuation_match.group(1) if punctuation_match else ''
+
+    translated = mapped
+    if punctuation and not translated.endswith(punctuation):
+        translated = f'{translated}{punctuation}'
+
+    if stripped[:1].isupper() and translated:
+        translated = translated[:1].upper() + translated[1:]
+
+    return translated, 'rule-fast-en-cbk'
+
+
 def _infer_once(model, tokenizer, text, src_flores, tgt_flores, *, with_confidence=False):
     """Single NLLB-200 inference pass (no gradient computation)."""
     import torch
@@ -353,10 +444,13 @@ def _infer_once(model, tokenizer, text, src_flores, tgt_flores, *, with_confiden
     device = next(model.parameters()).device
     inputs = {k: v.to(device) for k, v in inputs.items()}
 
+    is_cpu = getattr(device, 'type', '').lower() == 'cpu'
+
     generation_kwargs = {
         'forced_bos_token_id': tokenizer.convert_tokens_to_ids(tgt_flores),
-        'max_new_tokens': 128,
-        'num_beams': 4,
+        'max_new_tokens': 96 if is_cpu else 128,
+        'num_beams': 2 if is_cpu else 4,
+        'early_stopping': True,
     }
     if with_confidence:
         generation_kwargs.update({
@@ -415,6 +509,29 @@ def nllb_translate(text, src_code, tgt_code, mode='formal'):
         tokens = len(tokenizer.encode(text))
         return text, 0.0, tokens, tokens, False, '', 'passthrough', 1.0, model_base
 
+    # Ultra-fast guardrail for short en->cbk greeting phrases to keep
+    # low-RAM systems responsive even before full model decode.
+    fast_rule_result, fast_rule_strategy = _apply_identity_guard_rule_fallback(
+        input_text=text,
+        output_text=text,
+        src_code=src_code,
+        tgt_code=tgt_code,
+    )
+    if fast_rule_strategy:
+        tokens_in = len(tokenizer.encode(text))
+        tokens_out = len(tokenizer.encode(fast_rule_result))
+        return (
+            fast_rule_result,
+            0.0,
+            tokens_in,
+            tokens_out,
+            False,
+            '',
+            f'fast-{fast_rule_strategy}',
+            None,
+            f'{model_base}+rule-en-cbk-fast',
+        )
+
     start = time.perf_counter()
     pivot_used = False
     pivot_language = ''
@@ -424,29 +541,64 @@ def nllb_translate(text, src_code, tgt_code, mode='formal'):
     input_ids = tokenizer.encode(text)
     tokens_in = len(input_ids)
 
-    result, direct_confidence = _infer_once(
-        model,
-        tokenizer,
-        text,
-        src_flores,
-        tgt_flores,
-        with_confidence=True,
-    )
-
     proximate_pivot = select_proximate_pivot(src_code, tgt_code)
-    if _should_fallback_to_proximate_pivot(direct_confidence, proximate_pivot):
+    model_device = next(model.parameters()).device
+    use_confidence_scores = getattr(model_device, 'type', '').lower() != 'cpu'
+
+    if use_confidence_scores:
+        result, direct_confidence = _infer_once(
+            model,
+            tokenizer,
+            text,
+            src_flores,
+            tgt_flores,
+            with_confidence=True,
+        )
+    else:
+        result = _infer_once(
+            model,
+            tokenizer,
+            text,
+            src_flores,
+            tgt_flores,
+            with_confidence=False,
+        )
+        direct_confidence = None
+
+    should_use_pivot = _should_fallback_to_proximate_pivot(direct_confidence, proximate_pivot)
+    if (
+        not should_use_pivot
+        and src_flores != tgt_flores
+        and proximate_pivot
+        and _is_identity_translation(text, result)
+    ):
+        should_use_pivot = True
+
+    if should_use_pivot:
         pivot_flores = FLORES_MAP.get(proximate_pivot)
         if pivot_flores:
             pivot_used = True
             pivot_language = proximate_pivot
             route_strategy = 'proximate-pivot'
+            if _is_identity_translation(text, result):
+                route_strategy = 'identity-guard-pivot'
             mid_text = _infer_once(model, tokenizer, text, src_flores, pivot_flores)
             result = _infer_once(model, tokenizer, mid_text, pivot_flores, tgt_flores)
+
+    result, rule_strategy = _apply_identity_guard_rule_fallback(
+        input_text=text,
+        output_text=result,
+        src_code=src_code,
+        tgt_code=tgt_code,
+    )
+    if rule_strategy:
+        route_strategy = f'{route_strategy}+{rule_strategy}'
 
     elapsed_ms = (time.perf_counter() - start) * 1000
     tokens_out = len(tokenizer.encode(result))
     route_label = f'+pivot-{pivot_language}' if pivot_language else ''
-    model_name = f'{model_base}{route_label}'
+    rule_label = '+rule-en-cbk' if rule_strategy else ''
+    model_name = f'{model_base}{route_label}{rule_label}'
 
     return (
         result,
@@ -494,10 +646,15 @@ def telemetry_view(request):
         'total_gb': 0.0,
         'percent': 0.0,
         'reason': 'cuda-unavailable',
+        'torch_version': '',
+        'torch_cuda_version': '',
     }
 
     try:
         import torch
+
+        gpu_payload['torch_version'] = str(getattr(torch, '__version__', ''))
+        gpu_payload['torch_cuda_version'] = str(getattr(torch.version, 'cuda', '') or '')
 
         if torch.cuda.is_available():
             device_index = torch.cuda.current_device()
@@ -519,9 +676,14 @@ def telemetry_view(request):
                 'total_gb': _bytes_to_gb(total_bytes),
                 'percent': usage_percent,
                 'reason': '',
+                'torch_version': gpu_payload['torch_version'],
+                'torch_cuda_version': gpu_payload['torch_cuda_version'],
             }
         else:
-            gpu_payload['reason'] = 'cuda-not-detected'
+            if gpu_payload['torch_cuda_version']:
+                gpu_payload['reason'] = f"cuda-not-detected (torch-cuda={gpu_payload['torch_cuda_version']})"
+            else:
+                gpu_payload['reason'] = 'torch-cpu-build'
     except ImportError:
         # Fallback path for machines where torch is unavailable but NV driver
         # metrics are still queryable via GPUtil.
@@ -627,6 +789,7 @@ class TranslateView(APIView):
         source_lang = serializer.validated_data['source_lang']
         target_lang = serializer.validated_data['target_lang']
         mode = serializer.validated_data.get('mode', 'formal')
+        use_cache = serializer.validated_data.get('use_cache', True)
         request_started = time.perf_counter()
 
         # 2. Wiki-Voz interception (greedy phrase / n-gram style) -----------
@@ -639,20 +802,16 @@ class TranslateView(APIView):
         if wiki_match:
             wiki_data = CulturalTermSerializer(wiki_match).data
 
-        # 3. Translation Memory (TM) cache lookup ---------------------------
-        cached_log = _find_translation_memory_hit(
-            text=text,
+        # 2.5 Lightweight fast-path for common greeting phrases -----------
+        quick_translation, quick_route = _quick_rule_translate_if_available(
+            input_text=text,
             source_lang=source_lang,
             target_lang=target_lang,
         )
-        if cached_log:
-            translated_text = cached_log.output_text
-            tokens_in = cached_log.input_tokens or _estimate_token_count(text)
-            tokens_out = cached_log.output_tokens or _estimate_token_count(translated_text)
-            cached_pivot_language = _extract_pivot_lang_from_model_name(cached_log.model_name)
-            cached_route_strategy = 'proximate-pivot' if cached_log.pivot_used else 'direct'
-            cached_route_confidence = cached_log.route_confidence
-            cache_latency_ms = (time.perf_counter() - request_started) * 1000
+        if quick_translation is not None:
+            quick_tokens_in = _estimate_token_count(text)
+            quick_tokens_out = _estimate_token_count(quick_translation)
+            quick_latency_ms = (time.perf_counter() - request_started) * 1000
 
             TranslationLog.objects.create(
                 source_lang=source_lang,
@@ -660,36 +819,99 @@ class TranslateView(APIView):
                 mode=mode,
                 input_text=text,
                 input_chars=len(text),
-                input_tokens=tokens_in,
-                output_text=translated_text,
-                output_tokens=tokens_out,
-                model_name='tm-cache',
-                pivot_used=cached_log.pivot_used,
-                route_confidence=cached_route_confidence,
-                latency_ms=cache_latency_ms,
+                input_tokens=quick_tokens_in,
+                output_text=quick_translation,
+                output_tokens=quick_tokens_out,
+                model_name='rule-fast-en-cbk',
+                pivot_used=False,
+                route_confidence=1.0,
+                latency_ms=quick_latency_ms,
                 status='success',
                 wiki_voz_triggered=wiki_match is not None,
                 wiki_voz_term=wiki_match.term if wiki_match else '',
             )
 
             payload = {
-                'translated_text': translated_text,
+                'translated_text': quick_translation,
                 'source_lang': source_lang,
                 'target_lang': target_lang,
                 'mode': mode,
-                'model': 'tm-cache',
-                'latency_ms': round(cache_latency_ms, 1),
-                'tokens_in': tokens_in,
-                'tokens_out': tokens_out,
-                'pivot_used': cached_log.pivot_used,
-                'pivot_language': cached_pivot_language or None,
-                'route_strategy': cached_route_strategy,
-                'route_confidence': cached_route_confidence,
-                'is_cached': True,
+                'model': 'rule-fast-en-cbk',
+                'latency_ms': round(quick_latency_ms, 1),
+                'tokens_in': quick_tokens_in,
+                'tokens_out': quick_tokens_out,
+                'pivot_used': False,
+                'pivot_language': None,
+                'route_strategy': quick_route,
+                'route_confidence': 1.0,
+                'is_cached': False,
             }
             if wiki_data:
                 payload['wiki_voz'] = wiki_data
             return Response(payload)
+
+        # 3. Translation Memory (TM) cache lookup ---------------------------
+        cached_log = None
+        if use_cache:
+            cached_log = _find_translation_memory_hit(
+                text=text,
+                source_lang=source_lang,
+                target_lang=target_lang,
+            )
+
+        if cached_log:
+            if _should_skip_cached_identity_output(
+                input_text=text,
+                output_text=cached_log.output_text,
+                source_lang=source_lang,
+                target_lang=target_lang,
+            ):
+                cached_log = None
+            else:
+                translated_text = cached_log.output_text
+                tokens_in = cached_log.input_tokens or _estimate_token_count(text)
+                tokens_out = cached_log.output_tokens or _estimate_token_count(translated_text)
+                cached_pivot_language = _extract_pivot_lang_from_model_name(cached_log.model_name)
+                cached_route_strategy = 'proximate-pivot' if cached_log.pivot_used else 'direct'
+                cached_route_confidence = cached_log.route_confidence
+                cache_latency_ms = (time.perf_counter() - request_started) * 1000
+
+                TranslationLog.objects.create(
+                    source_lang=source_lang,
+                    target_lang=target_lang,
+                    mode=mode,
+                    input_text=text,
+                    input_chars=len(text),
+                    input_tokens=tokens_in,
+                    output_text=translated_text,
+                    output_tokens=tokens_out,
+                    model_name='tm-cache',
+                    pivot_used=cached_log.pivot_used,
+                    route_confidence=cached_route_confidence,
+                    latency_ms=cache_latency_ms,
+                    status='success',
+                    wiki_voz_triggered=wiki_match is not None,
+                    wiki_voz_term=wiki_match.term if wiki_match else '',
+                )
+
+                payload = {
+                    'translated_text': translated_text,
+                    'source_lang': source_lang,
+                    'target_lang': target_lang,
+                    'mode': mode,
+                    'model': 'tm-cache',
+                    'latency_ms': round(cache_latency_ms, 1),
+                    'tokens_in': tokens_in,
+                    'tokens_out': tokens_out,
+                    'pivot_used': cached_log.pivot_used,
+                    'pivot_language': cached_pivot_language or None,
+                    'route_strategy': cached_route_strategy,
+                    'route_confidence': cached_route_confidence,
+                    'is_cached': True,
+                }
+                if wiki_data:
+                    payload['wiki_voz'] = wiki_data
+                return Response(payload)
 
         # 4. Short-circuit: same source and target language -----------------
         if source_lang == target_lang or (
@@ -725,7 +947,58 @@ class TranslateView(APIView):
                 payload['wiki_voz'] = wiki_data
             return Response(payload)
 
-        # 5. Prepare logging entry ------------------------------------------
+        # 5. Ultra-fast low-RAM rule fallback ------------------------------
+        # This keeps basic greeting translation available even when the full
+        # model is not loaded on 8GB devices.
+        fast_translated_text, fast_route_strategy = _apply_identity_guard_rule_fallback(
+            input_text=text,
+            output_text=text,
+            src_code=source_lang,
+            tgt_code=target_lang,
+        )
+        if fast_route_strategy:
+            fallback_tokens_in = _estimate_token_count(text)
+            fallback_tokens_out = _estimate_token_count(fast_translated_text)
+            fallback_latency_ms = (time.perf_counter() - request_started) * 1000
+
+            TranslationLog.objects.create(
+                source_lang=source_lang,
+                target_lang=target_lang,
+                mode=mode,
+                input_text=text,
+                input_chars=len(text),
+                input_tokens=fallback_tokens_in,
+                output_text=fast_translated_text,
+                output_tokens=fallback_tokens_out,
+                model_name='rule-based-fallback',
+                pivot_used=False,
+                route_confidence=1.0,
+                latency_ms=fallback_latency_ms,
+                status='success',
+                wiki_voz_triggered=wiki_match is not None,
+                wiki_voz_term=wiki_match.term if wiki_match else '',
+            )
+
+            payload = {
+                'translated_text': fast_translated_text,
+                'source_lang': source_lang,
+                'target_lang': target_lang,
+                'mode': mode,
+                'model': 'rule-based-fallback',
+                'latency_ms': round(fallback_latency_ms, 1),
+                'tokens_in': fallback_tokens_in,
+                'tokens_out': fallback_tokens_out,
+                'pivot_used': False,
+                'pivot_language': None,
+                'route_strategy': f'fast-{fast_route_strategy}',
+                'route_confidence': 1.0,
+                'is_cached': False,
+            }
+            if wiki_data:
+                payload['wiki_voz'] = wiki_data
+            return Response(payload)
+
+        # 6. Prepare logging entry ------------------------------------------
         start_time = time.perf_counter()
         log_entry = TranslationLog(
             source_lang=source_lang,
@@ -735,7 +1008,7 @@ class TranslateView(APIView):
             input_chars=len(text),
         )
 
-        # 6. Translate — strict local edge inference (no outbound API calls) --
+        # 7. Translate — strict local edge inference (no outbound API calls) --
         if not CoreApiConfig.model_loaded:
             err_msg = (
                 'Local NLLB model is unavailable. Place the model under '
@@ -798,12 +1071,12 @@ class TranslateView(APIView):
                 retryable=True,
             )
 
-        # 7. Save log entry -------------------------------------------------
+        # 8. Save log entry -------------------------------------------------
         log_entry.wiki_voz_triggered = wiki_match is not None
         log_entry.wiki_voz_term = wiki_match.term if wiki_match else ''
         log_entry.save()
 
-        # 8. Response -------------------------------------------------------
+        # 9. Response -------------------------------------------------------
         payload = {
             'translated_text': translated_text,
             'source_lang': source_lang,

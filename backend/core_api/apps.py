@@ -88,7 +88,14 @@ class CoreApiConfig(AppConfig):
             )
 
             load_kwargs = {'local_files_only': True}
-            using_int8 = False
+            can_use_low_cpu_mem = False
+
+            try:
+                import accelerate  # noqa: F401
+
+                can_use_low_cpu_mem = True
+            except ImportError:
+                can_use_low_cpu_mem = False
 
             if torch.cuda.is_available():
                 try:
@@ -98,19 +105,92 @@ class CoreApiConfig(AppConfig):
                         'load_in_8bit': True,
                         'device_map': 'auto',
                     })
-                    using_int8 = True
                     logger.info('CUDA + bitsandbytes detected: using 8-bit model loading.')
                 except ImportError:
-                    load_kwargs['torch_dtype'] = torch.float16
+                    load_kwargs['dtype'] = torch.float16
                     logger.info('CUDA detected without bitsandbytes: using float16 model loading.')
             else:
-                load_kwargs['torch_dtype'] = torch.float32
-                logger.info('CUDA unavailable: using CPU float32 model loading.')
+                cpu_threads = min(2, os.cpu_count() or 2)
+                torch.set_num_threads(cpu_threads)
+                try:
+                    torch.set_num_interop_threads(1)
+                except RuntimeError:
+                    # Safe to ignore if thread pool already initialized.
+                    pass
+                load_kwargs['dtype'] = torch.float32
+                if can_use_low_cpu_mem:
+                    load_kwargs['low_cpu_mem_usage'] = True
+                logger.info(
+                    'CUDA unavailable: using CPU float32 model loading (threads=%s).',
+                    cpu_threads,
+                )
 
             logger.info('Loading local NLLB base model from %s (offline enforced).', model_path)
-            model = AutoModelForSeq2SeqLM.from_pretrained(str(model_path), **load_kwargs)
-            if not using_int8:
-                model = model.to('cuda' if torch.cuda.is_available() else 'cpu')
+            model = None
+            last_error = None
+            used_load_kwargs = dict(load_kwargs)
+
+            load_attempts = [dict(load_kwargs)]
+            if 'load_in_8bit' in load_kwargs:
+                # Compatibility fallback for environments where 8-bit kwargs are
+                # accepted by transformers but rejected by model constructors.
+                fallback_kwargs = dict(load_kwargs)
+                fallback_kwargs.pop('load_in_8bit', None)
+                fallback_kwargs.pop('device_map', None)
+                fallback_kwargs['dtype'] = torch.float16
+                load_attempts.append(fallback_kwargs)
+
+            for attempt_kwargs in load_attempts:
+                try:
+                    model = AutoModelForSeq2SeqLM.from_pretrained(
+                        str(model_path),
+                        **attempt_kwargs,
+                    )
+                    used_load_kwargs = attempt_kwargs
+                    break
+                except TypeError as exc:
+                    exc_text = str(exc)
+
+                    if 'dtype' in exc_text and 'dtype' in attempt_kwargs:
+                        compat_kwargs = dict(attempt_kwargs)
+                        compat_kwargs['torch_dtype'] = compat_kwargs.pop('dtype')
+                        try:
+                            model = AutoModelForSeq2SeqLM.from_pretrained(
+                                str(model_path),
+                                **compat_kwargs,
+                            )
+                            used_load_kwargs = compat_kwargs
+                            break
+                        except TypeError as compat_exc:
+                            if (
+                                'load_in_8bit' in str(compat_exc)
+                                and 'load_in_8bit' in compat_kwargs
+                            ):
+                                logger.warning(
+                                    '8-bit load unsupported in this runtime; retrying without quantization.'
+                                )
+                                last_error = compat_exc
+                                continue
+                            last_error = compat_exc
+                            continue
+
+                    if 'load_in_8bit' in exc_text and 'load_in_8bit' in attempt_kwargs:
+                        logger.warning(
+                            '8-bit load unsupported in this runtime; retrying without quantization.'
+                        )
+                        last_error = exc
+                        continue
+
+                    last_error = exc
+
+            if model is None:
+                if last_error:
+                    raise last_error
+                raise RuntimeError('Model loading failed with no captured exception.')
+
+            using_int8 = bool(used_load_kwargs.get('load_in_8bit'))
+            if torch.cuda.is_available() and not using_int8:
+                model = model.to('cuda')
             model.eval()
 
             loaded_adapters = {}

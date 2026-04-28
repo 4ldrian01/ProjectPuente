@@ -3,7 +3,6 @@
  *
  * Phase 4 God Mode split:
  * - Keeps user preferences (theme, default languages)
- * - Adds mock Max VRAM allocation slider
  * - Keeps connection status panel (Backend, NLLB-200, edge-tts)
  */
 
@@ -11,7 +10,6 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   ChevronDown,
   CheckCircle2,
-  Cpu,
   Gauge,
   KeyRound,
   RefreshCcw,
@@ -49,38 +47,7 @@ const TARGET_OPTIONS = [
   { value: 'tl', label: 'Tagalog' },
 ].filter((option) => TARGET_LANGUAGE_CODES.includes(option.value))
 
-const VRAM_PREF_STORAGE_KEY = 'puente_mock_max_vram_allocation'
-const DEFAULT_VRAM_ALLOCATION = 70
-const VRAM_FALLBACK_BUDGET_GB = 8
 
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value))
-}
-
-function loadMockVramAllocation() {
-  try {
-    const raw = localStorage.getItem(VRAM_PREF_STORAGE_KEY)
-    const parsed = Number(raw)
-    if (!Number.isFinite(parsed)) {
-      return DEFAULT_VRAM_ALLOCATION
-    }
-    return clamp(Math.round(parsed), 10, 100)
-  } catch {
-    return DEFAULT_VRAM_ALLOCATION
-  }
-}
-
-function saveMockVramAllocation(value) {
-  const sanitized = clamp(Math.round(Number(value) || DEFAULT_VRAM_ALLOCATION), 10, 100)
-
-  try {
-    localStorage.setItem(VRAM_PREF_STORAGE_KEY, String(sanitized))
-  } catch {
-    // Ignore localStorage failures; slider still updates in-memory state.
-  }
-
-  return sanitized
-}
 
 function timeAgo(timestamp) {
   if (!timestamp) return 'never'
@@ -125,7 +92,6 @@ export default function SettingsScreen({ health, onRefreshHealth, onClose, activ
   const [defaultSourceLang, setDefaultSourceLang] = useState(saved.defaultSourceLang)
   const [defaultTargetLang, setDefaultTargetLang] = useState(saved.defaultTargetLang)
   const [theme, setTheme] = useState(saved.theme || activeTheme)
-  const [mockVramAllocation, setMockVramAllocation] = useState(loadMockVramAllocation())
   const [, setTick] = useState(0)
 
   useEffect(() => {
@@ -147,11 +113,6 @@ export default function SettingsScreen({ health, onRefreshHealth, onClose, activ
     }
 
     const handleStorage = (event) => {
-      if (event.key === VRAM_PREF_STORAGE_KEY) {
-        setMockVramAllocation(loadMockVramAllocation())
-        return
-      }
-
       if (event.key && event.key !== SETTINGS_STORAGE_KEY) return
       applyIncomingSettings(loadSettings())
     }
@@ -190,15 +151,7 @@ export default function SettingsScreen({ health, onRefreshHealth, onClose, activ
     commitSettings({ theme: theme === 'dark' ? 'light' : 'dark' })
   }
 
-  const handleVramSliderChange = (event) => {
-    const value = saveMockVramAllocation(event.target.value)
-    setMockVramAllocation(value)
-  }
 
-  const handleApplyVramPreset = (value) => {
-    const next = saveMockVramAllocation(value)
-    setMockVramAllocation(next)
-  }
 
   const handleResetDefaults = () => {
     commitSettings({
@@ -206,10 +159,8 @@ export default function SettingsScreen({ health, onRefreshHealth, onClose, activ
       defaultTargetLang: 'cbk',
       theme: activeTheme,
     })
-    setMockVramAllocation(saveMockVramAllocation(DEFAULT_VRAM_ALLOCATION))
   }
 
-  const estimatedVramCapGb = ((mockVramAllocation / 100) * VRAM_FALLBACK_BUDGET_GB).toFixed(2)
   const lastChecked = health?._lastChecked
 
   const connectionItems = [
@@ -223,7 +174,7 @@ export default function SettingsScreen({ health, onRefreshHealth, onClose, activ
     },
     {
       key: 'nllb',
-      icon: Cpu,
+      icon: Server,
       label: 'NLLB-200 Runtime',
       value: health?.nllbLoaded ? 'Loaded' : 'Not loaded',
       healthy: Boolean(health?.nllbLoaded),
@@ -264,9 +215,6 @@ export default function SettingsScreen({ health, onRefreshHealth, onClose, activ
           <div>
             <p className="a26-subtitle">Settings and Health</p>
             <h2 className="a26-hero-title mt-1 font-semibold text-text-primary">Operator Preferences</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-text-secondary">
-              Personalized control layer for language defaults, visual theme, and runtime resource policy.
-            </p>
           </div>
 
           <div className="flex items-center gap-2">
@@ -351,46 +299,7 @@ export default function SettingsScreen({ health, onRefreshHealth, onClose, activ
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border-subtle/70 bg-bg-elevated/45 p-3.5">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="inline-flex items-center gap-2 text-sm font-semibold text-text-primary">
-                  <Cpu className="h-4 w-4 text-accent-magenta" />
-                  Max VRAM Allocation
-                </p>
-                <p className="mt-1 text-xs text-text-secondary">Mock resource governor for enterprise operator profiles.</p>
-              </div>
-              <span className="text-sm font-semibold text-accent-magenta">{mockVramAllocation}%</span>
-            </div>
 
-            <input
-              type="range"
-              min="10"
-              max="100"
-              step="1"
-              value={mockVramAllocation}
-              onChange={handleVramSliderChange}
-              className="mt-3 h-2 w-full cursor-pointer appearance-none rounded-lg bg-bg-card"
-              aria-label="Max VRAM allocation"
-            />
-
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              {[55, 70, 85].map((preset) => (
-                <button
-                  type="button"
-                  key={preset}
-                  onClick={() => handleApplyVramPreset(preset)}
-                  className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-all active:scale-[0.98] ${mockVramAllocation === preset ? 'border-accent-magenta/55 bg-accent-magenta/14 text-accent-magenta' : 'border-border-subtle/70 bg-bg-card text-text-secondary hover:text-text-primary'}`}
-                >
-                  {preset}% preset
-                </button>
-              ))}
-            </div>
-
-            <p className="mt-2 text-xs text-text-secondary">
-              Target cap (mock): <span className="font-semibold text-text-primary">{estimatedVramCapGb} GB</span> of {VRAM_FALLBACK_BUDGET_GB.toFixed(2)} GB budget.
-            </p>
-          </div>
 
           <button
             type="button"

@@ -1350,9 +1350,6 @@ export default function TranslateScreen({
 
             <div className="relative">
               <h2 className="a26-hero-title mt-1 font-semibold text-text-primary">Sociolinguistic Translation Studio</h2>
-              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-text-secondary">
-                Route Formal or Street translation paths, validate source-language intent before inference, and review latency, token flow, and telemetry diagnostics after each run.
-              </p>
 
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <span className="a26-chip">Mode {activeModeLabel}</span>

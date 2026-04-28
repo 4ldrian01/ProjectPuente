@@ -24,7 +24,6 @@ Local fallback supported by launcher:
 | `lucide-react` | Icon set used across UI panels and controls |
 | `react` | UI runtime |
 | `react-dom` | Browser renderer |
-| `react-is` | React runtime compatibility helpers used by charting/tooling integrations |
 
 ## Development/build dependencies (`devDependencies`)
 

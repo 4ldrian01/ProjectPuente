@@ -92,20 +92,6 @@ export default function ActivityLogsScreen({ apiUrl, backendUp, notify, isActive
   }, [notify])
 
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      const visible = document.visibilityState === 'visible'
-      setIsDocumentVisible(visible)
-
-      if (visible && isActive && backendUp) {
-        fetchLogs({ silent: true })
-      }
-    }
-
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
-  }, [backendUp, fetchLogs, isActive])
-
-  useEffect(() => {
     return () => {
       if (inFlightControllerRef.current) {
         inFlightControllerRef.current.abort()
@@ -243,6 +229,20 @@ export default function ActivityLogsScreen({ apiUrl, backendUp, notify, isActive
       }
     }
   }, [apiUrl, backendUp, debouncedQuery, emitToast, isActive, isDocumentVisible, sourceFilter, statusFilter, targetFilter])
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      const visible = document.visibilityState === 'visible'
+      setIsDocumentVisible(visible)
+
+      if (visible && isActive && backendUp) {
+        fetchLogs({ silent: true })
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [backendUp, fetchLogs, isActive])
 
   useEffect(() => {
     if (!isActive) {
@@ -450,9 +450,6 @@ export default function ActivityLogsScreen({ apiUrl, backendUp, notify, isActive
           <div>
             <p className="a26-subtitle">Observer Agent</p>
             <h2 className="a26-hero-title mt-1 font-semibold text-text-primary">Activity Logs</h2>
-            <p className="mt-2 max-w-3xl text-sm text-text-secondary">
-              Offline MLOps trace surface for translation outcomes, pivot routing, intervention tags, and recovery diagnostics.
-            </p>
           </div>
 
           <div className="ml-auto flex shrink-0 items-start">
@@ -512,15 +509,16 @@ export default function ActivityLogsScreen({ apiUrl, backendUp, notify, isActive
               Query and Filter Controls
             </div>
 
-            <button
-              type="button"
-              onClick={handleResetFilters}
-              disabled={!hasActiveFilters}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border-subtle/70 bg-bg-elevated/65 px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-text-secondary transition-colors hover:bg-bg-card hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-45"
-            >
-              <RefreshCw className="h-3 w-3" />
-              Reset Filters
-            </button>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border-subtle/70 bg-bg-elevated/65 px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-text-secondary transition-colors hover:bg-bg-card hover:text-text-primary"
+              >
+                <RefreshCw className="h-3 w-3" />
+                Reset Filters
+              </button>
+            )}
           </div>
 
           <div className="space-y-3 p-3.5">

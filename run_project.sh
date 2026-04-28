@@ -46,12 +46,12 @@ if [ ! -f "$SCRIPT_DIR/frontend/package.json" ]; then
 	exit 1
 fi
 
-if [ -n "${VIRTUAL_ENV:-}" ] && [ -x "$VIRTUAL_ENV/bin/python" ]; then
-	PYTHON_CMD="$VIRTUAL_ENV/bin/python"
+if [ -x "$SCRIPT_DIR/venv/bin/python" ]; then
+	PYTHON_CMD="$SCRIPT_DIR/venv/bin/python"
 elif [ -x "$SCRIPT_DIR/.venv/bin/python" ]; then
 	PYTHON_CMD="$SCRIPT_DIR/.venv/bin/python"
-elif [ -x "$SCRIPT_DIR/venv/bin/python" ]; then
-	PYTHON_CMD="$SCRIPT_DIR/venv/bin/python"
+elif [ -n "${VIRTUAL_ENV:-}" ] && [ -x "$VIRTUAL_ENV/bin/python" ]; then
+	PYTHON_CMD="$VIRTUAL_ENV/bin/python"
 elif [ -x "$SCRIPT_DIR/../.venv/bin/python" ]; then
 	PYTHON_CMD="$SCRIPT_DIR/../.venv/bin/python"
 elif command -v python3 >/dev/null 2>&1; then
@@ -79,15 +79,56 @@ else
 	exit 1
 fi
 
+# Keep CPU pressure bounded on low-memory laptops.
+export TOKENIZERS_PARALLELISM="${TOKENIZERS_PARALLELISM:-false}"
+export OMP_NUM_THREADS="${OMP_NUM_THREADS:-2}"
+export MKL_NUM_THREADS="${MKL_NUM_THREADS:-2}"
+
 MODEL_PATH="$SCRIPT_DIR/ml_models/nllb-200-distilled-600M"
+
+normalize_bool_flag() {
+	local raw_value
+	raw_value="$(printf '%s' "${1:-}" | tr '[:upper:]' '[:lower:]' | xargs || true)"
+	case "$raw_value" in
+		1|true|yes|on)
+			echo "true"
+			;;
+		*)
+			echo "false"
+			;;
+	esac
+}
+
+read_backend_env_preload_flag() {
+	local env_file="$SCRIPT_DIR/backend/.env"
+	local raw_line
+	local raw_value
+
+	if [ ! -f "$env_file" ]; then
+		echo ""
+		return
+	fi
+
+	raw_line="$(grep -E '^[[:space:]]*PUENTE_LOAD_MODEL_ON_STARTUP[[:space:]]*=' "$env_file" | tail -n 1 || true)"
+	if [ -z "$raw_line" ]; then
+		echo ""
+		return
+	fi
+
+	raw_value="${raw_line#*=}"
+	raw_value="${raw_value%%#*}"
+	raw_value="$(printf '%s' "$raw_value" | tr -d "'\"" | xargs || true)"
+	echo "$raw_value"
+}
+
 MODEL_PRELOAD_FLAG="${PUENTE_LOAD_MODEL_ON_STARTUP:-}"
 if [ -z "$MODEL_PRELOAD_FLAG" ]; then
-	if [ -d "$MODEL_PATH" ]; then
-		MODEL_PRELOAD_FLAG="true"
-	else
-		MODEL_PRELOAD_FLAG="false"
-	fi
+	MODEL_PRELOAD_FLAG="$(read_backend_env_preload_flag)"
 fi
+if [ -z "$MODEL_PRELOAD_FLAG" ]; then
+	MODEL_PRELOAD_FLAG="false"
+fi
+MODEL_PRELOAD_FLAG="$(normalize_bool_flag "$MODEL_PRELOAD_FLAG")"
 
 resolve_lan_ip() {
 	if command -v hostname >/dev/null 2>&1; then
@@ -194,8 +235,13 @@ echo ""
 if [ "$MODEL_PRELOAD_FLAG" = "true" ]; then
 	echo "  [INFO] Model preload: enabled (path: $MODEL_PATH)"
 else
-	echo "  [INFO] Model preload: disabled (missing local model path: $MODEL_PATH)"
-	echo "         Backend still starts; translate/BTVL will return 503 until model files are available."
+	echo "  [INFO] Model preload: disabled (PUENTE_LOAD_MODEL_ON_STARTUP=false)"
+	if [ -d "$MODEL_PATH" ]; then
+		echo "         Enable manually when needed: PUENTE_LOAD_MODEL_ON_STARTUP=true ./run_project.sh"
+	else
+		echo "         Local model path missing: $MODEL_PATH"
+		echo "         Backend still starts; translate/BTVL will return 503 until model files are available."
+	fi
 fi
 echo ""
 

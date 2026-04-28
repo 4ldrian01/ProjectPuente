@@ -28,7 +28,6 @@ const NAV_GROUPS = [
       {
         id: 'translate',
         title: 'Translation Studio',
-        subtitle: 'Inference console',
         icon: TranslationStudioIcon,
       },
     ],
@@ -45,13 +44,11 @@ const NAV_GROUPS = [
       {
         id: 'activity-logs',
         title: 'Activity Logs',
-        subtitle: 'Observer telemetry',
         icon: ClipboardList,
       },
       {
         id: 'evaluation',
         title: 'System Evaluation',
-        subtitle: 'Metrics and QA',
         icon: BarChart3,
       },
     ],
@@ -63,13 +60,11 @@ const NAV_GROUPS = [
       {
         id: 'db-admin',
         title: 'Database Admin',
-        subtitle: 'CulturalTerm records',
         icon: Database,
       },
       {
         id: 'settings',
         title: 'Settings & Health',
-        subtitle: 'Runtime controls',
         icon: Settings2,
       },
     ],
@@ -196,11 +191,6 @@ export default function SidebarNav({
                       >
                         <span className="block truncate text-sm font-semibold leading-tight">
                           {item.title}
-                        </span>
-                        <span className="mt-1 block">
-                          <span className="block truncate text-xs text-text-secondary/95">
-                            {item.subtitle}
-                          </span>
                         </span>
                       </span>
                     </div>

@@ -50,8 +50,6 @@ media/
 
 # ── ML Models (large binary weights) ─────────────────────────
 ml_models/nllb-200-distilled-600M/
-ml_models/lora-cbk-formal/
-ml_models/lora-cbk-street/
 ml_models/*.bin
 ml_models/*.safetensors
 ml_models/*.pt

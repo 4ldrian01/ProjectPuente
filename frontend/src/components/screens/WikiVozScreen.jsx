@@ -364,15 +364,6 @@ export default function WikiVozScreen({ apiUrl, backendUp, ttsAvailable, notify 
           <div>
             <p className="a26-subtitle">Wiki-Voz Intelligence Panel</p>
             <h2 className="a26-hero-title mt-1 font-semibold text-text-primary">Wiki-Voz Lexicon</h2>
-            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-text-secondary sm:text-[15px]">
-              Data-driven sociolinguistic cards synchronized with wiki_voz_kb.json for explainable translation context.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-wide">
-            <span className="a26-chip">{totalCountLabel}</span>
-            <span className="a26-chip">{languageOptions.length - 1} languages</span>
-            <span className="a26-chip">{categoryOptions.length - 1} categories</span>
           </div>
         </div>
       </div>
@@ -407,9 +398,10 @@ export default function WikiVozScreen({ apiUrl, backendUp, ttsAvailable, notify 
 
         <div className="mt-2 flex items-center justify-between text-[11px]">
           <span className={searchValidationMessage ? 'text-status-warning-text' : 'text-text-secondary'}>
-            {searchValidationMessage || 'Live API filtering is active.'}
           </span>
-          <span className="text-text-secondary">{searchQuery.length}/{SEARCH_QUERY_MAX_LENGTH}</span>
+          {searchQuery.length > 0 && (
+            <span className="text-text-secondary">{searchQuery.length}/{SEARCH_QUERY_MAX_LENGTH}</span>
+          )}
         </div>
 
         <div className="mt-4 space-y-3 rounded-2xl border border-border-subtle/80 bg-bg-elevated/35 p-3.5">

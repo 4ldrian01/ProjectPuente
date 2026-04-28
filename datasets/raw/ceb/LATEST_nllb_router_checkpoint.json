@@ -1,0 +1,9 @@
+{
+  "dataset_id": "allenai/nllb",
+  "dataset_config": "ceb_Latn-eng_Latn",
+  "split": "train",
+  "scanned_rows": 46210,
+  "street_count": 5000,
+  "formal_count": 5000,
+  "updated_at": "2026-04-20T22:08:05.612732+00:00"
+}
