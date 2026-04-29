@@ -18,6 +18,9 @@ export default function AppScreenStack({
   loading,
   error,
   wikiData,
+  wikiMetadata,
+  gapAnalysisData,
+  btvlData,
   apiUrl,
   health,
   clientApiKeyConfigured,
@@ -40,6 +43,9 @@ export default function AppScreenStack({
           error={error}
           apiReady={health.backendUp && health.nllbLoaded && (!health.apiKeyRequired || clientApiKeyConfigured)}
           wikiData={wikiData}
+          wikiMetadata={wikiMetadata}
+          gapAnalysisData={gapAnalysisData}
+          btvlData={btvlData}
           apiUrl={apiUrl}
           backendUp={health.backendUp}
           ttsAvailable={health.ttsAvailable}

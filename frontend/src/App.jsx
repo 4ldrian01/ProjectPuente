@@ -51,6 +51,8 @@ const DEFAULT_TRANSLATION_META = {
   pivotUsed: false,
   model: '',
   isCached: false,
+  routeConfidence: null,
+  accuracyConfidence: null,
 }
 
 function App() {
@@ -78,6 +80,9 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [wikiData, setWikiData] = useState(null)
+  const [wikiMetadata, setWikiMetadata] = useState([])
+  const [gapAnalysisData, setGapAnalysisData] = useState(null)
+  const [btvlData, setBtvlData] = useState(null)
   const [translationMeta, setTranslationMeta] = useState(DEFAULT_TRANSLATION_META)
   const { toasts, showToast, dismissToast } = useToastQueue()
   const { health, latencyMs, refreshHealth } = useBackendHealth(apiUrl)
@@ -382,6 +387,9 @@ function App() {
 
     setLoading(true)
     setError('')
+    setWikiMetadata([])
+    setGapAnalysisData(null)
+    setBtvlData(null)
 
     try {
       const response = await axios.post(`${apiUrl}/translate/`, payload, {
@@ -394,14 +402,20 @@ function App() {
         return
       }
 
-      setTranslatedText(response.data.translated_text)
+      const translationOutput = response.data.translation ?? response.data.translated_text ?? ''
+      setTranslatedText(translationOutput)
       setWikiData(response.data.wiki_voz ?? null)
+      setWikiMetadata(Array.isArray(response.data.metadata) ? response.data.metadata : [])
+      setGapAnalysisData(response.data.gap_analysis_data ?? null)
+      setBtvlData(response.data.btvl_data ?? null)
       setTranslationMeta({
         routeStrategy: String(response.data.route_strategy || (response.data.pivot_used ? 'proximate-pivot' : 'direct')),
         pivotLanguage: response.data.pivot_language || null,
         pivotUsed: Boolean(response.data.pivot_used),
         model: String(response.data.model || ''),
         isCached: Boolean(response.data.is_cached),
+        routeConfidence: response.data.route_confidence ?? null,
+        accuracyConfidence: response.data.accuracy_confidence ?? response.data.route_confidence ?? null,
       })
 
       // Keep status badges fresh if backend had recently been marked unavailable.
@@ -420,6 +434,9 @@ function App() {
       const message = extractApiErrorMessage(err.response?.data, 'Connection failed. Is the backend running?')
       setError(message)
       setTranslationMeta(DEFAULT_TRANSLATION_META)
+      setWikiMetadata([])
+      setGapAnalysisData(null)
+      setBtvlData(null)
 
       if (options.trigger === 'manual') {
         showToast({
@@ -507,6 +524,9 @@ function App() {
             loading={loading}
             error={error}
             wikiData={wikiData}
+            wikiMetadata={wikiMetadata}
+            gapAnalysisData={gapAnalysisData}
+            btvlData={btvlData}
             apiUrl={apiUrl}
             health={health}
             clientApiKeyConfigured={clientApiKeyConfigured}

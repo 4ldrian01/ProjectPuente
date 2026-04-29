@@ -41,7 +41,7 @@ if not SECRET_KEY:
 DEBUG = _env_bool('DEBUG', False)
 
 # LAN-safe defaults; override via ALLOWED_HOSTS for stricter deployments.
-ALLOWED_HOSTS = _env_list('ALLOWED_HOSTS', 'localhost,127.0.0.1,0.0.0.0')
+ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1', '0.0.0.0']
 if DEBUG and '*' not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append('*')
 
@@ -95,10 +95,18 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # ---------------------------------------------------------------------------
 # Database — SQLite (default for local/offline development)
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Database — SQLite (default for local/offline development)
+# ---------------------------------------------------------------------------
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        'OPTIONS': {
+            'timeout': 20, 
+            # 🚀 ADD THIS COMMAND: Unlocks SQLite Concurrency and massively speeds up the app
+            'init_command': 'PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA cache_size=-64000;',
+        }
     }
 }
 

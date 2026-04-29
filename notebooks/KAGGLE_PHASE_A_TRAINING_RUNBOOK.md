@@ -114,6 +114,35 @@ for p in checks:
     print(p, '->', 'OK' if p.exists() else 'MISSING')
 ```
 
+### 2.1) If your dataset is a zipped Kaggle input
+
+If you uploaded a combined ZIP dataset to Kaggle, extract it into the canonical split folder before training:
+
+```python
+from pathlib import Path
+import zipfile
+
+kaggle_input = Path('/kaggle/input')
+zip_candidates = list(kaggle_input.rglob('*.zip'))
+if not zip_candidates:
+    raise RuntimeError('No .zip files found under /kaggle/input. Upload your dataset ZIP first.')
+
+# Pick the first ZIP found (update this if you have more than one)
+zip_path = zip_candidates[0]
+target_dir = Path('/kaggle/working/ProjectPuente/datasets/processed/80-10-10_split')
+target_dir.mkdir(parents=True, exist_ok=True)
+
+with zipfile.ZipFile(zip_path, 'r') as zf:
+    zf.extractall(target_dir)
+
+print('Extracted:', zip_path)
+print('Into:', target_dir)
+```
+
+If your ZIP contains a top-level folder (example: `80-10-10_split/`), ensure the final files land at:
+
+`/kaggle/working/ProjectPuente/datasets/processed/80-10-10_split/...`
+
 The launcher auto-detects split filename triplets inside the selected dataset directory (LATEST-first):
 
 - `LATEST_es_en_train.jsonl`, `LATEST_es_en_val.jsonl`, `LATEST_es_en_test.jsonl`
@@ -237,6 +266,7 @@ env.update({
     'PUENTE_TEST_FILENAME': 'LATEST_es_en_test.jsonl',
     'PUENTE_RUN_NAME': 'lora-es-full-kaggle',
     'PUENTE_REQUIRE_GPU': 'true',
+    'PUENTE_SAVE_TOTAL_LIMIT': '2',
 })
 
 # Optional resume:

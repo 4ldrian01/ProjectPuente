@@ -536,7 +536,7 @@ def build_config() -> ColabConfig:
         logging_steps=env_int('PUENTE_LOGGING_STEPS', 20),
         eval_steps=env_int('PUENTE_EVAL_STEPS', 100),
         save_steps=env_int('PUENTE_SAVE_STEPS', 500),
-        save_total_limit=env_int('PUENTE_SAVE_TOTAL_LIMIT', 3),
+        save_total_limit=env_int('PUENTE_SAVE_TOTAL_LIMIT', 2),
         gradient_checkpointing=env_bool('PUENTE_GRADIENT_CHECKPOINTING', True),
         require_gpu=env_bool('PUENTE_REQUIRE_GPU', False),
         resume_from_checkpoint=(env_str('PUENTE_RESUME_FROM_CHECKPOINT', '') or None),

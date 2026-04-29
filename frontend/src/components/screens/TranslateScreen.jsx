@@ -28,8 +28,6 @@ import {
   escapeRegex,
   FALLBACK_GPU_TOTAL_GB,
   FALLBACK_RAM_TOTAL_GB,
-  formatGb,
-  estimateTokenCount,
   LANGUAGE_LABELS,
   normalizeWikiCardEntry,
   SOCIOLINGUISTIC_SAMPLE_CASES,
@@ -42,6 +40,44 @@ import {
 } from '../../lib/translateWorkbench'
 import { useSettingsSync } from '../../hooks/useSettingsSync'
 
+const normalizeConfidencePercent = (value) => {
+  const numeric = Number(value)
+  if (!Number.isFinite(numeric)) {
+    return null
+  }
+
+  if (numeric >= 0 && numeric <= 1) {
+    return clampPercent(numeric * 100)
+  }
+
+  return clampPercent(numeric)
+}
+
+const formatConfidencePercent = (value) => {
+  const percent = normalizeConfidencePercent(value)
+  if (percent === null) {
+    return '--'
+  }
+  return `${Math.round(percent)}%`
+}
+
+const resolveConfidenceToneClass = (value) => {
+  const percent = normalizeConfidencePercent(value)
+  if (percent === null) {
+    return 'border-border-subtle/60 bg-bg-elevated/50 text-text-secondary'
+  }
+
+  if (percent >= 75) {
+    return 'border-status-success-border/70 bg-status-success-bg/70 text-status-success-text'
+  }
+
+  if (percent >= 45) {
+    return 'border-status-warning-border/70 bg-status-warning-bg/70 text-status-warning-text'
+  }
+
+  return 'border-status-danger-border/70 bg-status-danger-bg/70 text-status-danger-text'
+}
+
 /* ── Component ───────────────────────────────────────────────── */
 export default function TranslateScreen({
   isActive = true,
@@ -51,6 +87,9 @@ export default function TranslateScreen({
   error,
   apiReady,
   wikiData,
+  wikiMetadata,
+  gapAnalysisData,
+  btvlData,
   apiUrl,
   backendUp,
   ttsAvailable,
@@ -83,8 +122,6 @@ export default function TranslateScreen({
   const [btvlError, setBtvlError] = useState('')
   const [btvlResult, setBtvlResult] = useState(null)
   const [systemLogs, setSystemLogs] = useState([])
-  const [postProfiler, setPostProfiler] = useState(null)
-  const [profilerFlash, setProfilerFlash] = useState(false)
   const [telemetry, setTelemetry] = useState({
     loading: true,
     error: '',
@@ -107,7 +144,6 @@ export default function TranslateScreen({
   const forceRef = useRef(false)
   const sourceTextareaRef = useRef(null)
   const copyResetTimerRef = useRef(null)
-  const inferenceStartRef = useRef(null)
   const lastErrorToastRef = useRef('')
   const telemetryCaptureRef = useRef({
     baselineGpu: 0,
@@ -125,6 +161,17 @@ export default function TranslateScreen({
   const isCharLimitExceeded = sourceCharCount > CHAR_LIMIT
   const canTranslate = normalizedText.length > 0 && !isCharLimitExceeded
   const hasTranslatedText = Boolean(translatedText?.trim())
+  const normalizedWikiMetadata = useMemo(
+    () => (Array.isArray(wikiMetadata) ? wikiMetadata : []),
+    [wikiMetadata],
+  )
+  const outputWikiMetadata = useMemo(
+    () => normalizedWikiMetadata.filter((entry) => entry?.source === 'output'),
+    [normalizedWikiMetadata],
+  )
+  const activeGapAnalysisData = gapAnalysisData || null
+  const activeBtvlData = btvlData || null
+  const revealAnalysisPanels = Boolean(hasTranslatedText && (activeGapAnalysisData || activeBtvlData))
   const { matches: lexiconMatches } = useWikiVozLexicon(translatedText, {
     enabled: hasTranslatedText,
     path: '/data/wiki_voz_kb.json',
@@ -149,17 +196,22 @@ export default function TranslateScreen({
     }
 
     pushIfNew(wikiData)
+    normalizedWikiMetadata.forEach((entry) => pushIfNew(entry))
     lexiconMatches.forEach((entry) => pushIfNew(entry))
 
     return deduped
-  }, [lexiconMatches, wikiData])
+  }, [lexiconMatches, normalizedWikiMetadata, wikiData])
   const primaryWikiEntry = matchedWikiEntries[0] || null
   const effectiveSourceLang = sourceLang === 'auto' ? 'en' : sourceLang
   const canUseTts = backendUp && ttsAvailable
   const canVerifyBtvl = apiReady && hasTranslatedText && !btvlLoading
   const canExport = hasTranslatedText && !loading
-  const gpuTotalGb = telemetry.gpuTotalGb > 0 ? telemetry.gpuTotalGb : FALLBACK_GPU_TOTAL_GB
-  const ramTotalGb = telemetry.ramTotalGb > 0 ? telemetry.ramTotalGb : FALLBACK_RAM_TOTAL_GB
+  const accuracyConfidence = translationMeta?.accuracyConfidence ?? translationMeta?.routeConfidence ?? null
+  const accuracyLabel = formatConfidencePercent(accuracyConfidence)
+  const accuracyToneClass = resolveConfidenceToneClass(accuracyConfidence)
+  const btvlAccuracyLabel = formatConfidencePercent(
+    btvlResult?.accuracyConfidence ?? btvlResult?.routeConfidence ?? null,
+  )
 
   const preflightLid = useMemo(
     () => detectMockLanguage(normalizedText),
@@ -251,6 +303,7 @@ export default function TranslateScreen({
   }, [activeMode, activeModeLabel, apiKeyRequired, backendUp, clientApiKeyConfigured, loraAdapters, nllbLoaded, sourceCharCount])
 
   /* ── Terminal transaction simulation logs ───────────────────────────── */
+  /* ── Unified Terminal Simulation Logs ── */
   useEffect(() => {
     if (loading) {
       setSystemLogs([
@@ -262,22 +315,16 @@ export default function TranslateScreen({
       return
     }
 
-    if (!translatedText) {
-      return
-    }
+    if (!translatedText) return
 
     const routeStrategy = String(translationMeta?.routeStrategy || '').trim()
     const pivotLanguage = String(translationMeta?.pivotLanguage || '').trim()
     const pivotSuffix = pivotLanguage ? ` (${pivotLanguage.toUpperCase()} proximate pivot)` : ''
 
     let routeLabel = 'resolved via direct path'
-    if (translationMeta?.isCached) {
-      routeLabel = 'resolved via Translation Memory cache'
-    } else if (routeStrategy === 'proximate-pivot') {
-      routeLabel = `resolved via proximate pivot${pivotSuffix}`
-    } else if (routeStrategy === 'passthrough') {
-      routeLabel = 'resolved via passthrough short-circuit'
-    }
+    if (translationMeta?.isCached) routeLabel = 'resolved via Translation Memory cache'
+    else if (routeStrategy === 'proximate-pivot') routeLabel = `resolved via proximate pivot${pivotSuffix}`
+    else if (routeStrategy === 'passthrough') routeLabel = 'resolved via passthrough short-circuit'
 
     const nextLogs = [
       `ROUTING :: ${sourceLang} -> ${targetLang} ${routeLabel} on edge runtime`,
@@ -287,30 +334,21 @@ export default function TranslateScreen({
     ]
 
     if (matchedWikiEntries.length > 0) {
-      const termPreview = matchedWikiEntries
-        .slice(0, 2)
-        .map((entry) => entry.term)
-        .join(', ')
+      const termPreview = matchedWikiEntries.slice(0, 2).map((entry) => entry.term).join(', ')
       const overflow = matchedWikiEntries.length > 2 ? ` (+${matchedWikiEntries.length - 2} more)` : ''
       nextLogs.splice(2, 0, `INTERCEPT_TRIGGERED :: ${termPreview}${overflow} semantic override surfaced`)
     }
 
-    setSystemLogs(nextLogs)
-  }, [activeMode, loading, matchedWikiEntries, sourceLang, targetLang, translatedText, translationMeta])
-
-  useEffect(() => {
-    if (!postProfiler) {
-      return
+    // FIXED: BTVL is securely appended without being erased
+    if (btvlResult?.verifiedText) {
+      const btvlRouteLabel = btvlResult.routeStrategy === 'proximate-pivot'
+        ? `proximate-pivot${btvlResult.pivotLanguage ? ` (${btvlResult.pivotLanguage.toUpperCase()})` : ''}`
+        : (btvlResult.routeStrategy || (btvlResult.pivotUsed ? 'pivot' : 'direct'))
+      nextLogs.push(`BTVL_CHECK :: Verified in ${btvlResult.latencyMs ?? 0}ms with ${btvlRouteLabel} route`)
     }
 
-    setSystemLogs((prev) => {
-      const withoutProfiler = prev.filter((line) => !line.startsWith('PROFILER ::'))
-      return [
-        ...withoutProfiler,
-        `PROFILER :: ${postProfiler.inferenceMs.toFixed(2)}ms | ${postProfiler.speedTps.toFixed(1)} t/s | VRAM +${postProfiler.vramSpikeGb.toFixed(3)} GB`,
-      ]
-    })
-  }, [postProfiler])
+    setSystemLogs(nextLogs)
+  }, [activeMode, loading, matchedWikiEntries, sourceLang, targetLang, translatedText, translationMeta, btvlResult])
 
   useEffect(() => {
     if (!btvlResult?.verifiedText) {
@@ -393,30 +431,20 @@ export default function TranslateScreen({
   }, [])
 
   useEffect(() => {
-    if (!isActive) {
-      return
-    }
+    if (!isActive) return
 
     if (!backendUp) {
-      setTelemetry((prev) => ({
-        ...prev,
-        loading: false,
-        error: 'Backend offline. Telemetry is unavailable.',
-      }))
+      setTelemetry((prev) => ({ ...prev, loading: false, error: 'Backend offline. Telemetry is unavailable.' }))
       return
     }
 
-    if (!isDocumentVisible) {
-      return
-    }
+    if (!isDocumentVisible) return
 
     let disposed = false
     const controller = new AbortController()
+    let timerId = null
 
-    setTelemetry((prev) => ({
-      ...prev,
-      loading: true,
-    }))
+    setTelemetry((prev) => ({ ...prev, loading: true }))
 
     const pollTelemetry = async () => {
       try {
@@ -427,11 +455,7 @@ export default function TranslateScreen({
         })
 
         const payload = await response.json().catch(() => ({}))
-
-        if (!response.ok) {
-          throw new Error(payload?.error || 'Telemetry endpoint unavailable.')
-        }
-
+        if (!response.ok) throw new Error(payload?.error || 'Telemetry endpoint unavailable.')
         if (disposed) return
 
         const ram = payload?.ram || {}
@@ -451,27 +475,22 @@ export default function TranslateScreen({
           gpuReason: String(gpu.reason || ''),
         })
       } catch (err) {
-        if (err?.name === 'AbortError') {
-          return
+        if (err?.name === 'AbortError' || disposed) return
+        setTelemetry((prev) => ({ ...prev, loading: false, error: err?.message || 'Unable to load telemetry.' }))
+      } finally {
+        if (!disposed) {
+          // FIXED: Recursive timeout prevents network DDoS crashes
+          timerId = setTimeout(pollTelemetry, TELEMETRY_POLL_INTERVAL_MS)
         }
-
-        if (disposed) return
-
-        setTelemetry((prev) => ({
-          ...prev,
-          loading: false,
-          error: err?.message || 'Unable to load telemetry.',
-        }))
       }
     }
 
     pollTelemetry()
-    const timer = setInterval(pollTelemetry, TELEMETRY_POLL_INTERVAL_MS)
 
     return () => {
       disposed = true
       controller.abort()
-      clearInterval(timer)
+      if (timerId) clearTimeout(timerId)
     }
   }, [apiUrl, backendUp, isActive, isDocumentVisible])
 
@@ -484,57 +503,6 @@ export default function TranslateScreen({
     capture.peakGpu = Math.max(Number(capture.peakGpu ?? 0), Number(telemetry.gpuUsedGb ?? 0))
     capture.peakRam = Math.max(Number(capture.peakRam ?? 0), Number(telemetry.ramUsedGb ?? 0))
   }, [loading, telemetry.gpuUsedGb, telemetry.ramUsedGb])
-
-  useEffect(() => {
-    let flashTimer
-
-    if (loading) {
-      const now = typeof performance !== 'undefined' ? performance.now() : Date.now()
-      inferenceStartRef.current = now
-      telemetryCaptureRef.current = {
-        baselineGpu: Number(telemetry.gpuUsedGb ?? 0),
-        peakGpu: Number(telemetry.gpuUsedGb ?? 0),
-        baselineRam: Number(telemetry.ramUsedGb ?? 0),
-        peakRam: Number(telemetry.ramUsedGb ?? 0),
-      }
-    } else if (inferenceStartRef.current !== null && translatedText?.trim()) {
-      const finishedAt = typeof performance !== 'undefined' ? performance.now() : Date.now()
-      const inferenceMs = Math.max(100, finishedAt - inferenceStartRef.current)
-      const capture = telemetryCaptureRef.current
-
-      const baselineGpu = Number(capture.baselineGpu ?? telemetry.gpuUsedGb ?? 0)
-      const peakGpu = Number(capture.peakGpu ?? telemetry.gpuUsedGb ?? 0)
-      let vramSpikeGb = Math.max(0, peakGpu - baselineGpu)
-
-      if (!Number.isFinite(vramSpikeGb) || vramSpikeGb === 0) {
-        vramSpikeGb = telemetry.gpuAvailable
-          ? Math.max(0.03, Number((telemetry.gpuUsedGb || 0) * 0.02))
-          : 0
-      }
-
-      const tokenEstimate = estimateTokenCount(translatedText)
-      const speedTps = tokenEstimate / Math.max(inferenceMs / 1000, 0.001)
-
-      setPostProfiler({
-        inferenceMs: Number(inferenceMs.toFixed(2)),
-        speedTps: Number(speedTps.toFixed(1)),
-        vramSpikeGb: Number(vramSpikeGb.toFixed(3)),
-        observedGpuUsedGb: Number((telemetry.gpuUsedGb || 0).toFixed(3)),
-        observedRamUsedGb: Number((telemetry.ramUsedGb || 0).toFixed(3)),
-        engine: translationEngine || 'unknown',
-        gpuName: telemetry.gpuName || 'Unknown GPU',
-        timestamp: Date.now(),
-      })
-
-      setProfilerFlash(true)
-      flashTimer = setTimeout(() => setProfilerFlash(false), 900)
-      inferenceStartRef.current = null
-    }
-
-    return () => {
-      if (flashTimer) clearTimeout(flashTimer)
-    }
-  }, [loading, telemetry.gpuAvailable, telemetry.gpuName, telemetry.gpuUsedGb, telemetry.ramUsedGb, translatedText, translationEngine])
 
   useEffect(() => {
     if (!lidMismatchDetected) {
@@ -758,7 +726,7 @@ export default function TranslateScreen({
         body: JSON.stringify({
           text: translatedText.trim(),
           source_lang: targetLang,
-          target_lang: 'en',
+          target_lang: effectiveSourceLang, // FIXED: Mathematically forces circular translation!
         }),
       })
 
@@ -786,6 +754,8 @@ export default function TranslateScreen({
         pivotLanguage: payloadResponse?.pivot_language || '',
         routeStrategy: payloadResponse?.route_strategy || (payloadResponse?.pivot_used ? 'proximate-pivot' : 'direct'),
         targetLang: payloadResponse?.target_lang || 'en',
+        routeConfidence: payloadResponse?.route_confidence ?? null,
+        accuracyConfidence: payloadResponse?.accuracy_confidence ?? payloadResponse?.route_confidence ?? null,
       })
       emitToast({
         title: 'BTVL completed',
@@ -866,32 +836,102 @@ export default function TranslateScreen({
   /* ── Cultural-term highlighting ── */
   const renderHighlightedText = () => {
     if (!translatedText) return null
-    if (!primaryWikiEntry || !primaryWikiEntry.term) return <span>{translatedText}</span>
+    const metadataMatches = outputWikiMetadata
+      .map((entry) => {
+        const start = Number(entry?.index_start)
+        const end = Number(entry?.index_end)
 
-    const searchStr = primaryWikiEntry.term.toLowerCase()
-    const regex = new RegExp(`(${escapeRegex(primaryWikiEntry.term)})`, 'gi')
+        if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
+          return null
+        }
 
-    return translatedText.split(regex).map((part, index) => {
-      if (part.toLowerCase() === searchStr) {
-        return (
-          <span
-            key={`${part}-${index}`}
-            className="cultural-term cursor-pointer text-accent-gold underline decoration-accent-gold decoration-2 underline-offset-2 transition-colors hover:text-accent-gold/80"
-            onMouseEnter={(event) => {
-              setHoveredWikiTerm(primaryWikiEntry)
-              updateTooltipPosition(event)
-            }}
-            onMouseMove={updateTooltipPosition}
-            onMouseLeave={() => setHoveredWikiTerm(null)}
-            onClick={() => setSelectedTerm(primaryWikiEntry)}
-          >
-            {part}
-          </span>
+        return {
+          start: Math.max(0, Math.min(translatedText.length, start)),
+          end: Math.max(0, Math.min(translatedText.length, end)),
+          entry,
+        }
+      })
+      .filter(Boolean)
+      .sort((a, b) => (a.start - b.start) || (b.end - a.end))
+
+    if (metadataMatches.length === 0) {
+      if (!primaryWikiEntry || !primaryWikiEntry.term) return <span>{translatedText}</span>
+
+      const searchStr = primaryWikiEntry.term.toLowerCase()
+      const regex = new RegExp(`(${escapeRegex(primaryWikiEntry.term)})`, 'gi')
+
+      return translatedText.split(regex).map((part, index) => {
+        if (part.toLowerCase() === searchStr) {
+          return (
+            <span
+              key={`${part}-${index}`}
+              className="cultural-term cursor-pointer text-accent-gold underline decoration-accent-gold decoration-2 underline-offset-2 transition-colors hover:text-accent-gold/80"
+              onMouseEnter={(event) => {
+                setHoveredWikiTerm(primaryWikiEntry)
+                updateTooltipPosition(event)
+              }}
+              onMouseMove={updateTooltipPosition}
+              onMouseLeave={() => setHoveredWikiTerm(null)}
+              onClick={() => setSelectedTerm(primaryWikiEntry)}
+            >
+              {part}
+            </span>
+          )
+        }
+
+        return <span key={`${part}-${index}`}>{part}</span>
+      })
+    }
+
+    const segments = []
+    let cursor = 0
+
+    metadataMatches.forEach((match, idx) => {
+      if (match.start < cursor) {
+        return
+      }
+
+      if (match.start > cursor) {
+        segments.push(
+          <span key={`text-${cursor}`}>{translatedText.slice(cursor, match.start)}</span>,
         )
       }
 
-      return <span key={`${part}-${index}`}>{part}</span>
+      const matchText = translatedText.slice(match.start, match.end)
+      const resolvedEntry = normalizeWikiCardEntry(match.entry) || primaryWikiEntry
+
+      if (!resolvedEntry) {
+        segments.push(<span key={`match-${match.start}-${idx}`}>{matchText}</span>)
+        cursor = match.end
+        return
+      }
+
+      segments.push(
+        <span
+          key={`match-${match.start}-${idx}`}
+          className="cultural-term cursor-pointer text-accent-gold underline decoration-accent-gold decoration-2 underline-offset-2 transition-colors hover:text-accent-gold/80"
+          onMouseEnter={(event) => {
+            setHoveredWikiTerm(resolvedEntry)
+            updateTooltipPosition(event)
+          }}
+          onMouseMove={updateTooltipPosition}
+          onMouseLeave={() => setHoveredWikiTerm(null)}
+          onClick={() => setSelectedTerm(resolvedEntry)}
+        >
+          {matchText}
+        </span>,
+      )
+
+      cursor = match.end
     })
+
+    if (cursor < translatedText.length) {
+      segments.push(
+        <span key={`tail-${cursor}`}>{translatedText.slice(cursor)}</span>,
+      )
+    }
+
+    return segments
   }
 
   /* ════════════════════════════════════════════════════════════
@@ -1180,6 +1220,12 @@ export default function TranslateScreen({
             {btvlLoading ? '🔄 BTVL…' : '🔄 BTVL'}
           </button>
 
+          {hasTranslatedText && (
+            <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${accuracyToneClass}`}>
+              Accuracy {accuracyLabel}
+            </span>
+          )}
+
           <button
             type="button"
             onClick={() => handleSpeak(translatedText, targetLang, 'target')}
@@ -1267,6 +1313,7 @@ export default function TranslateScreen({
               {' '}| Route: <span className="text-text-primary">{btvlResult.routeStrategy || (btvlResult.pivotUsed ? 'proximate-pivot' : 'direct')}</span>
               {' '}| Pivot: <span className="text-text-primary">{btvlResult.pivotLanguage || 'none'}</span>
               {' '}| Target: <span className="text-text-primary">{btvlResult.targetLang || 'en'}</span>
+              {' '}| Confidence: <span className="text-text-primary">{btvlAccuracyLabel}</span>
             </p>
           </div>
         )}
@@ -1274,66 +1321,70 @@ export default function TranslateScreen({
     </div>
   )
 
-  const renderProfilerCard = () => (
-    <section
-      className={`flex h-full min-h-40 flex-col rounded-[1.25rem] border border-border-subtle bg-bg-card transition-shadow ${
-        profilerFlash ? 'shadow-[0_0_0_1px_rgba(217,70,239,0.45),0_0_25px_rgba(217,70,239,0.18)]' : 'shadow-sm'
-      }`}
-    >
+  const renderBtvlCard = () => (
+    <section className="flex h-full min-h-40 flex-col rounded-[1.25rem] border border-border-subtle bg-bg-card shadow-sm">
       <div className="flex items-center justify-between border-b border-border-subtle/55 px-4 py-2.5">
-        <span className="text-xs font-semibold uppercase tracking-[0.13em] text-text-secondary">Post-Inference Profiler</span>
-        <span className={`text-[11px] font-semibold ${postProfiler ? 'text-accent-magenta' : 'text-text-secondary/70'}`}>
-          {postProfiler ? 'Captured' : 'Awaiting Run'}
+        <span className="text-xs font-semibold uppercase tracking-[0.13em] text-text-secondary">BTVL Card</span>
+        <span className={`text-[11px] font-semibold ${activeBtvlData ? 'text-accent-magenta' : 'text-text-secondary/70'}`}>
+          {activeBtvlData ? 'Ready' : 'Hidden'}
         </span>
       </div>
 
       <div className="flex-1 space-y-3 px-4 py-3">
-        {!postProfiler ? (
+        {!activeBtvlData ? (
           <div className="space-y-1.5 text-sm text-text-secondary/80">
-            <p>Run a translation to trigger profiler capture.</p>
-            <p>Metrics will update only after inference completes.</p>
+            <p>Run a successful translation to reveal BTVL telemetry.</p>
+            <p>Verification data will appear here after inference completes.</p>
           </div>
         ) : (
           <>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <div className="rounded-lg border border-border-subtle bg-bg-elevated/50 p-2.5">
-                <p className="text-[11px] uppercase tracking-wide text-text-secondary">Inference Time</p>
-                <p className="mt-1 text-lg font-semibold text-text-primary">{postProfiler.inferenceMs.toFixed(2)} ms</p>
+                <p className="text-[11px] uppercase tracking-wide text-text-secondary">Status</p>
+                <p className="mt-1 text-lg font-semibold text-text-primary">{activeBtvlData.status || 'not_run'}</p>
               </div>
 
               <div className="rounded-lg border border-border-subtle bg-bg-elevated/50 p-2.5">
-                <p className="text-[11px] uppercase tracking-wide text-text-secondary">Speed</p>
-                <p className="mt-1 text-lg font-semibold text-text-primary">{postProfiler.speedTps.toFixed(1)} t/s</p>
+                <p className="text-[11px] uppercase tracking-wide text-text-secondary">Route</p>
+                <p className="mt-1 text-lg font-semibold text-text-primary">{activeBtvlData.linguistics?.route_strategy || 'direct'}</p>
               </div>
 
               <div className="rounded-lg border border-border-subtle bg-bg-elevated/50 p-2.5">
-                <p className="text-[11px] uppercase tracking-wide text-text-secondary">VRAM Spike</p>
-                <p className="mt-1 text-lg font-semibold text-text-primary">+{postProfiler.vramSpikeGb.toFixed(3)} GB</p>
+                <p className="text-[11px] uppercase tracking-wide text-text-secondary">Confidence</p>
+                <p className="mt-1 text-lg font-semibold text-text-primary">{formatConfidencePercent(activeBtvlData.linguistics?.route_confidence)}</p>
               </div>
             </div>
 
             <p className="text-xs text-text-secondary">
-              Engine: <span className="text-text-primary">{postProfiler.engine}</span>
-              {' '}| GPU: <span className="text-text-primary">{postProfiler.gpuName}</span>
+              Available: <span className="text-text-primary">{activeBtvlData.available ? 'Yes' : 'No'}</span>
+              {' '}| Target: <span className="text-text-primary">{activeBtvlData.recommended_target || 'en'}</span>
             </p>
 
             <p className="text-xs text-text-secondary">
-              Live usage snapshot: VRAM <span className="text-text-primary">{formatGb(postProfiler.observedGpuUsedGb)} / {formatGb(gpuTotalGb)}</span>
-              {' '}| RAM <span className="text-text-primary">{formatGb(postProfiler.observedRamUsedGb)} / {formatGb(ramTotalGb)}</span>
+              Tokens: <span className="text-text-primary">{activeBtvlData.telemetry?.tokens_in ?? 0} {'→'} {activeBtvlData.telemetry?.tokens_out ?? 0}</span>
+              {' '}| Pivot: <span className="text-text-primary">{activeBtvlData.linguistics?.pivot_language || 'none'}</span>
             </p>
+
+            <button
+              type="button"
+              onClick={handleVerifyBackTranslation}
+              disabled={!apiReady || btvlLoading || !hasTranslatedText}
+              className="w-full rounded-xl border border-border-subtle px-3 py-2 text-sm font-semibold text-text-primary transition-colors hover:border-accent-magenta/45 hover:bg-bg-elevated disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              {btvlLoading ? 'Running BTVL…' : 'Run BTVL'}
+            </button>
           </>
         )}
 
-        {telemetry.loading && (
-          <p className="text-xs text-text-secondary/80">Syncing telemetry feed...</p>
+        {btvlError && (
+          <p className="text-xs text-status-warning-text">{btvlError}</p>
         )}
 
-        {telemetry.error && (
-          <p className="text-xs text-status-warning-text">{telemetry.error}</p>
-        )}
-
-        {!telemetry.gpuAvailable && telemetry.gpuReason && (
-          <p className="text-xs text-status-warning-text">GPU reason: {telemetry.gpuReason}</p>
+        {btvlResult?.verifiedText && (
+          <div className="rounded-lg border border-border-subtle/70 bg-bg-elevated/45 px-3 py-2 text-xs text-text-secondary">
+            <p className="font-semibold text-accent-gold">Latest verification</p>
+            <p className="mt-1 leading-relaxed text-text-primary">{btvlResult.verifiedText}</p>
+          </div>
         )}
       </div>
     </section>
@@ -1373,14 +1424,16 @@ export default function TranslateScreen({
           {renderOutputBox()}
         </div>
 
-        <div className="mt-4 grid auto-rows-fr grid-cols-2 gap-4">
-          <GapAnalysisTerminal
-            logs={systemLogs}
-            isFlushing={loading}
-            className="h-full min-h-40"
-          />
-          {renderProfilerCard()}
-        </div>
+        {revealAnalysisPanels && (
+          <div className="mt-4 grid auto-rows-fr grid-cols-2 gap-4">
+            <GapAnalysisTerminal
+              logs={systemLogs}
+              isFlushing={loading}
+              className="h-full min-h-40"
+            />
+            {renderBtvlCard()}
+          </div>
+        )}
       </div>
 
       {/* ══ MOBILE ══ (<md) */}
@@ -1393,14 +1446,16 @@ export default function TranslateScreen({
         {renderLidMismatchBanner()}
         {renderOutputBox()}
 
-        <div className="mt-1 flex flex-col gap-2.5">
-          <GapAnalysisTerminal
-            logs={systemLogs}
-            isFlushing={loading}
-            className="min-h-40"
-          />
-          {renderProfilerCard()}
-        </div>
+        {revealAnalysisPanels && (
+          <div className="mt-1 flex flex-col gap-2.5">
+            <GapAnalysisTerminal
+              logs={systemLogs}
+              isFlushing={loading}
+              className="min-h-40"
+            />
+            {renderBtvlCard()}
+          </div>
+        )}
       </div>
 
       <div className="mt-3 flex flex-col items-center gap-2">

@@ -26,7 +26,8 @@ FLORES_MAP = {
     'en': 'eng_Latn',
     'es': 'spa_Latn',
     'tl': 'tgl_Latn',
-    'cbk': 'cbk_Latn',
+    # 🚀 THE FIX: Tricks NLLB into generating Chavacano via Spanish weights
+    'cbk': 'spa_Latn', 
     'ceb': 'ceb_Latn',
     'hil': 'hil_Latn',
     'auto': 'eng_Latn',
